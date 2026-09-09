@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Last Shelter</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #0d0f0d;
+    color: #e8e6df;
+    font-family: -apple-system, sans-serif;
+    padding: 16px;
+    padding-bottom: 60px;
+  }
+  h1 {
+    font-size: 22px;
+    letter-spacing: 1px;
+    text-align: center;
+    color: #c9c2a8;
+    margin-bottom: 16px;
+  }
+  #stats {
+    background: #161815;
+    border: 1px solid #2a2d27;
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+  }
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    margin: 4px 0;
+    font-size: 15px;
+  }
+  .stat-label { color: #9a9689; }
+  #log {
+    background: #14150f;
+    border: 1px solid #2a2d27;
+    border-radius: 12px;
+    padding: 12px;
+    min-height: 60px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    color: #b8b4a5;
+  }
+  #cards {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .card {
+    background: linear-gradient(180deg, #1c1f19, #14160f);
+    border: 1px solid #3a3d31;
+    border-radius: 14px;
+    padding: 20px;
+    text-align: center;
+    font-size: 18px;
+    color: #d8d4c4;
+  }
+  .card:active { background: #24261e; }
+  #inventory {
+    background: #161815;
+    border: 1px solid #2a2d27;
+    border-radius: 12px;
+    padding: 12px 16px;
+  }
+  #inventory h2 { font-size: 16px; margin: 0 0 8px 0; color: #c9c2a8; }
+  #invList { font-size: 14px; color: #b8b4a5; line-height: 1.6; }
+  #campBtn {
+    width: 100%;
+    padding: 14px;
+    margin-top: 12px;
+    background: #2a3126;
+    border: 1px solid #465340;
+    border-radius: 12px;
+    color: #d8e4c8;
+    font-size: 16px;
+  }
+</style>
+</head>
+<body>
+
+<h1>LAST SHELTER</h1>
+
+<div id="stats"></div>
+<div id="log">Willkommen. Wähle ein Gebiet zum Erkunden.</div>
+
+<div id="cards"></div>
+
+<button id="campBtn" onclick="restAtCamp()">Zurück ins Lager (ausruhen)</button>
+
+<div id="inventory">
+  <h2>Inventar</h2>
+  <div id="invList"></div>
+</div>
+
+<script>
+let state = {
+  health: 100,
+  hunger: 100,
+  energy: 100,
+  xp: 0,
+  level: 1,
+  inventory: []
+};
+
+const locations = ["Dichter Wald", "Verlassene Ruinen", "Flussufer"];
+
+function loadGame() {
+  const saved = localStorage.getItem("lastShelterSave");
+  if (saved) {
+    state = JSON.parse(saved);
+  }
+}
+
+function saveGame() {
+  localStorage.setItem("lastShelterSave", JSON.stringify(state));
+}
+
+function render() {
+  document.getElementById("stats").innerHTML = `
+    <div class="stat-row"><span class="stat-label">Leben</span><span>${state.health}</span></div>
+    <div class="stat-row"><span class="stat-label">Hunger</span><span>${state.hunger}</span></div>
+    <div class="stat-row"><span class="stat-label">Energie</span><span>${state.energy}</span></div>
+    <div class="stat-row"><span class="stat-label">XP</span><span>${state.xp}</span></div>
+    <div class="stat-row"><span class="stat-label">Level</span><span>${state.level}</span></div>
+  `;
+
+  const cardsDiv = document.getElementById("cards");
+  cardsDiv.innerHTML = "";
+  locations.forEach(loc => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.textContent = loc;
+    card.onclick = () => explore(loc);
+    cardsDiv.appendChild(card);
+  });
+
+  const invList = document.getElementById("invList");
+  invList.innerHTML = state.inventory.length
+    ? state.inventory.join(", ")
+    : "leer";
+}
+
+function log(msg) {
+  document.getElementById("log").textContent = msg;
+}
+
+function explore(loc) {
+  if (state.energy < 10) {
+    log("Zu wenig Energie zum Erkunden! Geh zurück ins Lager.");
+    return;
+  }
+
+  state.energy -= 10;
+  state.hunger -= 5;
+
+  const roll = Math.random();
+  if (roll < 0.25) {
+    state.inventory.push("Holz");
+    log(`${loc}: Du hast Holz gefunden.`);
+  } else if (roll < 0.45) {
+    state.inventory.push("Beeren");
+    state.hunger = Math.min(100, state.hunger + 10);
+    log(`${loc}: Du hast Beeren gefunden und etwas gegessen.`);
+  } else if (roll < 0.65) {
+    state.health -= 15;
+    log(`${loc}: Ein Gegner hat dich angegriffen! Du verlierst Leben.`);
+  } else if (roll < 0.8) {
+    state.health -= 5;
+    log(`${loc}: Du hast dich leicht verletzt.`);
+  } else if (roll < 0.95) {
+    state.xp += 10;
+    log(`${loc}: Nichts Besonderes, aber du hast Erfahrung gesammelt.`);
+  } else {
+    state.xp += 25;
+    log(`${loc}: Seltenes Ereignis! Du fühlst dich gestärkt.`);
+  }
+
+  checkLevelUp();
+  checkDeathConditions();
+  saveGame();
+  render();
+}
+
+function restAtCamp() {
+  state.energy = Math.min(100, state.energy + 40);
+  state.hunger = Math.max(0, state.hunger - 10);
+  log("Du hast dich im Lager ausgeruht. Energie steigt, aber du wirst etwas hungriger.");
+  checkDeathConditions();
+  saveGame();
+  render();
+}
+
+function checkLevelUp() {
+  const needed = state.level * 50;
+  if (state.xp >= needed) {
+    state.level += 1;
+    state.xp = 0;
+    log(`Level Up! Du bist jetzt Level ${state.level}.`);
+  }
+}
+
+function checkDeathConditions() {
+  if (state.hunger <= 0) {
+    state.health -= 5;
+  }
+  if (state.health <= 0) {
+    state.health = 100;
+    state.hunger = 100;
+    state.energy = 100;
+    log("Du bist zusammengebrochen und wurdest gerettet. Werte zurückgesetzt.");
+  }
+}
+
+loadGame();
+render();
+</script>
+
+</body>
+</html>
