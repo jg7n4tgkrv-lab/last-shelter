@@ -79,45 +79,154 @@
     color: #d8e4c8;
     font-size: 16px;
   }
+
+  /* Kampf-Screen */
+  #combatScreen { display: none; }
+  #enemyBox {
+    background: #1a1414;
+    border: 1px solid #3d2a2a;
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    text-align: center;
+  }
+  #enemyName { font-size: 18px; color: #e0b8b0; margin-bottom: 6px; }
+  .barOuter {
+    background: #241818;
+    border-radius: 8px;
+    height: 14px;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+  .barInner {
+    height: 100%;
+    background: #b0453a;
+  }
+  .barInnerPlayer { background: #4a8a4a; }
+  .barInnerBlock { background: #4a7a9a; }
+  #combatStatus {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: #b8b4a5;
+    margin-bottom: 14px;
+  }
+  #hand {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .handCard {
+    background: linear-gradient(180deg, #1c1f19, #14160f);
+    border: 1px solid #3a3d31;
+    border-radius: 12px;
+    padding: 14px;
+    color: #d8d4c4;
+  }
+  .handCard .cName { font-size: 16px; font-weight: bold; }
+  .handCard .cDesc { font-size: 13px; color: #9a9689; margin-top: 2px; }
+  .handCard .cCost { float: right; color: #d8c878; }
+  .handCard:active { background: #24261e; }
+  .handCard.disabled { opacity: 0.4; }
+  #endTurnBtn {
+    width: 100%;
+    padding: 14px;
+    background: #33291f;
+    border: 1px solid #5a4530;
+    border-radius: 12px;
+    color: #e8d4b8;
+    font-size: 16px;
+  }
 </style>
 </head>
 <body>
 
 <h1>LAST SHELTER</h1>
 
-<div id="stats"></div>
-<div id="log">Willkommen. Wähle ein Gebiet zum Erkunden.</div>
+<!-- Normaler Erkundungs-Screen -->
+<div id="exploreScreen">
+  <div id="stats"></div>
+  <div id="log">Willkommen. Wähle ein Gebiet zum Erkunden.</div>
 
-<div id="cards"></div>
+  <div id="cards"></div>
 
-<button id="campBtn" onclick="restAtCamp()">Zurück ins Lager (ausruhen)</button>
+  <button id="campBtn" onclick="restAtCamp()">Zurück ins Lager (ausruhen)</button>
 
-<div id="inventory">
-  <h2>Inventar</h2>
-  <div id="invList"></div>
+  <div id="inventory">
+    <h2>Inventar</h2>
+    <div id="invList"></div>
+  </div>
+</div>
+
+<!-- Kampf-Screen -->
+<div id="combatScreen">
+  <div id="enemyBox">
+    <div id="enemyName"></div>
+    <div class="barOuter"><div id="enemyBar" class="barInner" style="width:100%"></div></div>
+  </div>
+
+  <div id="combatStatus"></div>
+
+  <div class="barOuter" style="margin-bottom:14px;">
+    <div id="playerBar" class="barInner barInnerPlayer" style="width:100%"></div>
+  </div>
+
+  <div id="hand"></div>
+
+  <button id="endTurnBtn" onclick="endTurn()">Zug beenden</button>
 </div>
 
 <script>
+const CARD_DB = {
+  attack: { name: "Angriff", cost: 1, desc: "8–12 Schaden" },
+  defend: { name: "Verteidigen", cost: 1, desc: "+8 Block" },
+  dodge:  { name: "Ausweichen", cost: 1, desc: "Blockt den nächsten Angriff komplett" },
+  heavy:  { name: "Schwerer Schlag", cost: 2, desc: "18–22 Schaden" },
+  heal:   { name: "Erste Hilfe", cost: 1, desc: "+15 Leben" }
+};
+
+const DEFAULT_DECK = ["attack","attack","attack","attack","attack","defend","defend","dodge","heavy","heal"];
+
+const ENEMY_TYPES = [
+  { name: "Wolf", maxHp: 35, dmgMin: 8, dmgMax: 14 },
+  { name: "Plünderer", maxHp: 45, dmgMin: 10, dmgMax: 18 }
+];
+
 let state = {
   health: 100,
   hunger: 100,
   energy: 100,
   xp: 0,
   level: 1,
-  inventory: []
+  inventory: [],
+  deck: [...DEFAULT_DECK]
 };
+
+let combat = null; // nicht gespeichert, nur während eines Kampfes aktiv
 
 const locations = ["Dichter Wald", "Verlassene Ruinen", "Flussufer"];
 
 function loadGame() {
   const saved = localStorage.getItem("lastShelterSave");
   if (saved) {
-    state = JSON.parse(saved);
+    const loaded = JSON.parse(saved);
+    state = Object.assign({ deck: [...DEFAULT_DECK] }, loaded);
+    if (!state.deck || state.deck.length === 0) state.deck = [...DEFAULT_DECK];
   }
 }
 
 function saveGame() {
   localStorage.setItem("lastShelterSave", JSON.stringify(state));
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
 }
 
 function render() {
@@ -140,9 +249,7 @@ function render() {
   });
 
   const invList = document.getElementById("invList");
-  invList.innerHTML = state.inventory.length
-    ? state.inventory.join(", ")
-    : "leer";
+  invList.innerHTML = state.inventory.length ? state.inventory.join(", ") : "leer";
 }
 
 function log(msg) {
@@ -162,25 +269,32 @@ function explore(loc) {
   if (roll < 0.25) {
     state.inventory.push("Holz");
     log(`${loc}: Du hast Holz gefunden.`);
+    saveGame(); render();
   } else if (roll < 0.45) {
     state.inventory.push("Beeren");
     state.hunger = Math.min(100, state.hunger + 10);
     log(`${loc}: Du hast Beeren gefunden und etwas gegessen.`);
+    saveGame(); render();
   } else if (roll < 0.65) {
-    state.health -= 15;
-    log(`${loc}: Ein Gegner hat dich angegriffen! Du verlierst Leben.`);
+    const enemyType = ENEMY_TYPES[Math.floor(Math.random() * ENEMY_TYPES.length)];
+    startCombat(enemyType, loc);
+    return; // Kampf übernimmt den Screen
   } else if (roll < 0.8) {
     state.health -= 5;
     log(`${loc}: Du hast dich leicht verletzt.`);
+    saveGame(); render();
   } else if (roll < 0.95) {
     state.xp += 10;
     log(`${loc}: Nichts Besonderes, aber du hast Erfahrung gesammelt.`);
+    checkLevelUp();
+    saveGame(); render();
   } else {
     state.xp += 25;
     log(`${loc}: Seltenes Ereignis! Du fühlst dich gestärkt.`);
+    checkLevelUp();
+    saveGame(); render();
   }
 
-  checkLevelUp();
   checkDeathConditions();
   saveGame();
   render();
@@ -214,6 +328,140 @@ function checkDeathConditions() {
     state.energy = 100;
     log("Du bist zusammengebrochen und wurdest gerettet. Werte zurückgesetzt.");
   }
+}
+
+/* ---------- KAMPF ---------- */
+
+function startCombat(enemyType, loc) {
+  combat = {
+    enemyName: enemyType.name,
+    enemyHp: enemyType.maxHp,
+    enemyMaxHp: enemyType.maxHp,
+    dmgMin: enemyType.dmgMin,
+    dmgMax: enemyType.dmgMax,
+    drawPile: shuffle(state.deck),
+    hand: [],
+    discardPile: [],
+    ap: 3,
+    maxAp: 3,
+    block: 0,
+    locName: loc
+  };
+  drawCards(5);
+  document.getElementById("exploreScreen").style.display = "none";
+  document.getElementById("combatScreen").style.display = "block";
+  renderCombat();
+}
+
+function drawCards(n) {
+  for (let i = 0; i < n; i++) {
+    if (combat.drawPile.length === 0) {
+      if (combat.discardPile.length === 0) return;
+      combat.drawPile = shuffle(combat.discardPile);
+      combat.discardPile = [];
+    }
+    combat.hand.push(combat.drawPile.pop());
+  }
+}
+
+function renderCombat() {
+  document.getElementById("enemyName").textContent =
+    `${combat.enemyName}  (${combat.enemyHp}/${combat.enemyMaxHp})`;
+  document.getElementById("enemyBar").style.width =
+    Math.max(0, (combat.enemyHp / combat.enemyMaxHp) * 100) + "%";
+
+  document.getElementById("playerBar").style.width =
+    Math.max(0, state.health) + "%";
+
+  document.getElementById("combatStatus").innerHTML =
+    `<span>Leben: ${state.health}</span><span>Block: ${combat.block}</span><span>AP: ${combat.ap}/${combat.maxAp}</span>`;
+
+  const handDiv = document.getElementById("hand");
+  handDiv.innerHTML = "";
+  combat.hand.forEach((cardId, index) => {
+    const info = CARD_DB[cardId];
+    const el = document.createElement("div");
+    el.className = "handCard" + (info.cost > combat.ap ? " disabled" : "");
+    el.innerHTML = `<span class="cCost">${info.cost} AP</span><div class="cName">${info.name}</div><div class="cDesc">${info.desc}</div>`;
+    el.onclick = () => playCard(index);
+    handDiv.appendChild(el);
+  });
+}
+
+function playCard(index) {
+  const cardId = combat.hand[index];
+  const info = CARD_DB[cardId];
+  if (combat.ap < info.cost) return;
+
+  combat.ap -= info.cost;
+
+  if (cardId === "attack") {
+    const dmg = 8 + Math.floor(Math.random() * 5);
+    combat.enemyHp -= dmg;
+  } else if (cardId === "heavy") {
+    const dmg = 18 + Math.floor(Math.random() * 5);
+    combat.enemyHp -= dmg;
+  } else if (cardId === "defend") {
+    combat.block += 8;
+  } else if (cardId === "dodge") {
+    combat.block += 999;
+  } else if (cardId === "heal") {
+    state.health = Math.min(100, state.health + 15);
+  }
+
+  combat.discardPile.push(cardId);
+  combat.hand.splice(index, 1);
+
+  if (combat.enemyHp <= 0) {
+    winCombat();
+    return;
+  }
+
+  renderCombat();
+}
+
+function endTurn() {
+  // Gegner greift an
+  let dmg = combat.dmgMin + Math.floor(Math.random() * (combat.dmgMax - combat.dmgMin + 1));
+  dmg = Math.max(0, dmg - combat.block);
+  state.health -= dmg;
+  combat.block = 0;
+
+  if (state.health <= 0) {
+    loseCombat();
+    return;
+  }
+
+  // Restliche Handkarten abwerfen, neue Hand ziehen
+  combat.discardPile.push(...combat.hand);
+  combat.hand = [];
+  combat.ap = combat.maxAp;
+  drawCards(5);
+
+  renderCombat();
+}
+
+function winCombat() {
+  const xpGain = 20;
+  state.xp += xpGain;
+  checkLevelUp();
+  endCombatScreen(`Sieg gegen ${combat.enemyName}! +${xpGain} XP.`);
+}
+
+function loseCombat() {
+  state.health = 100;
+  state.hunger = Math.max(20, state.hunger - 20);
+  state.energy = Math.max(20, state.energy - 20);
+  endCombatScreen(`Du wurdest besiegt und konntest fliehen. Leben wurde wiederhergestellt.`);
+}
+
+function endCombatScreen(message) {
+  combat = null;
+  document.getElementById("combatScreen").style.display = "none";
+  document.getElementById("exploreScreen").style.display = "block";
+  log(message);
+  saveGame();
+  render();
 }
 
 loadGame();
