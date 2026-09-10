@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Last Shelter</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #0d0f0d;
+    color: #e8e6df;
+    font-family: -apple-system, sans-serif;
+    padding: 16px;
+    padding-bottom: 60px;
+    transition: background 0.6s;
+  }
+  body.night { background: #06070a; }
+  h1 {
+    font-size: 22px;
+    letter-spacing: 1px;
+    text-align: center;
+    color: #c9c2a8;
+    margin-bottom: 16px;
+  }
+  #stats, #attrs, #equipment, #worldInfo {
+    background: #161815;
+    border: 1px solid #2a2d27;
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 14px;
+  }
+  #attrs h2, #equipment h2, #worldInfo h2 { font-size: 14px; margin: 0 0 6px 0; color: #9a9689; font-weight: normal; }
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    margin: 4px 0;
+    font-size: 15px;
+  }
+  .stat-label { color: #9a9689; }
+  #log {
+    background: #14150f;
+    border: 1px solid #2a2d27;
+    border-radius: 12px;
+    padding: 12px;
+    min-height: 60px;
+    margin-bottom: 20px;
+    font-size: 14px;
+    color: #b8b4a5;
+  }
+  #cards {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .card {
+    background: linear-gradient(180deg, #1c1f19, #14160f);
+    border: 1px solid #3a3d31;
+    border-radius: 14px;
+    padding: 20px;
+    text-align: center;
+    font-size: 18px;
+    color: #d8d4c4;
+  }
+  .card:active { background: #24261e; }
+  .card.locked {
+    opacity: 0.4;
+    color: #9a9689;
+  }
+  .card .lockNote { display: block; font-size: 12px; margin-top: 6px; color: #7a776a; }
+  #inventory {
+    background: #161815;
+    border: 1px solid #2a2d27;
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 14px;
+  }
+  #inventory h2 { font-size: 16px; margin: 0 0 8px 0; color: #c9c2a8; }
+  #invList { font-size: 14px; color: #b8b4a5; line-height: 1.6; }
+  #campBtn {
+    width: 100%;
+    padding: 14px;
+    margin-top: 12px;
+    background: #2a3126;
+    border: 1px solid #465340;
+    border-radius: 12px;
+    color: #d8e4c8;
+    font-size: 16px;
+  }
+
+  /* Ausrüstung */
+  .equipRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 6px 0;
+    font-size: 14px;
+  }
+  .equipItem { color: #d8c878; }
+  .equipEmpty { color: #6a675c; font-style: italic; }
+  .equipList-item {
+    background: #1c1f19;
+    border: 1px solid #3a3d31;
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-top: 8px;
+    font-size: 14px;
+    color: #d8d4c4;
+  }
+  .equipList-item:active { background: #24261e; }
+  .equipList-item .iBonus { color: #9a9689; font-size: 12px; }
+
+  /* Kampf-Screen */
+  #combatScreen { display: none; }
+  #enemyBox {
+    background: #1a1414;
+    border: 1px solid #3d2a2a;
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    text-align: center;
+  }
+  #enemyName { font-size: 18px; color: #e0b8b0; margin-bottom: 6px; }
+  .barOuter {
+    background: #241818;
+    border-radius: 8px;
+    height: 14px;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+  .barInner { height: 100%; background: #b0453a; }
+  .barInnerPlayer { background: #4a8a4a; }
+  #combatStatus {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: #b8b4a5;
+    margin-bottom: 14px;
+  }
+  #hand { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+  .handCard {
+    background: linear-gradient(180deg, #1c1f19, #14160f);
+    border: 1px solid #3a3d31;
+    border-radius: 12px;
+    padding: 14px;
+    color: #d8d4c4;
+  }
+  .handCard .cName { font-size: 16px; font-weight: bold; }
+  .handCard .cDesc { font-size: 13px; color: #9a9689; margin-top: 2px; }
+  .handCard .cCost { float: right; color: #d8c878; }
+  .handCard:active { background: #24261e; }
+  .handCard.disabled { opacity: 0.4; }
+  #endTurnBtn {
+    width: 100%;
+    padding: 14px;
+    background: #33291f;
+    border: 1px solid #5a4530;
+    border-radius: 12px;
+    color: #e8d4b8;
+    font-size: 16px;
+  }
+
+  /* Perk-Screen */
+  #perkScreen { display: none; }
+  #perkScreen h2 { font-size: 16px; color: #d8c878; text-align: center; margin-bottom: 14px; }
+  .perkCard {
+    background: linear-gradient(180deg, #241f14, #16130d);
+    border: 1px solid #4a3d24;
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  .perkCard .pName { font-size: 17px; color: #e8d4b8; font-weight: bold; }
+  .perkCard .pDesc { font-size: 13px; color: #b0a68c; margin-top: 4px; }
+  .perkCard:active { background: #2c2517; }
+
+  /* Lager-Screen */
+  #campScreen { display: none; }
+  .campSection {
+    background: #161815;
+    border: 1px solid #2a2d27;
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+  }
+  .campSection h2 { font-size: 15px; margin: 0 0 10px 0; color: #c9c2a8; }
+  .campActionBtn {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 8px;
+    background: #22261f;
+    border: 1px solid #3a3d31;
+    border-radius: 10px;
+    color: #d8d4c4;
+    font-size: 15px;
+    text-align: left;
+  }
+  .campActionBtn:active { background: #2a2e25; }
+  .campActionBtn.disabled { opacity: 0.35; }
+  .campActionBtn .btnSub { display:block; font-size: 12px; color: #9a9689; margin-top: 2px; }
+  #backToExploreBtn {
+    width: 100%;
+    padding: 14px;
+    background: #2a3126;
+    border: 1px solid #465340;
+    border-radius: 12px;
+    color: #d8e4c8;
+    font-size: 16px;
+  }
+</style>
+</head>
+<body>
+
+<h1>LAST SHELTER</h1>
+
+<!-- Erkundungs-Screen -->
+<div id="exploreScreen">
+  <div id="stats"></div>
+  <div id="worldInfo"></div>
+  <div id="attrs"></div>
+  <div id="equipment"></div>
+  <div id="log">Willkommen. Wähle ein Gebiet zum Erkunden.</div>
+
+  <div id="cards"></div>
+
+  <button id="campBtn" onclick="openCamp()">Lager betreten</button>
+
+  <div id="inventory">
+    <h2>Inventar</h2>
+    <div id="invList"></div>
+  </div>
+</div>
+
+<!-- Lager-Screen -->
+<div id="campScreen">
+  <div id="campStats"></div>
+
+  <div class="campSection">
+    <h2>Schlafen</h2>
+    <div id="sleepBtnWrap"></div>
+  </div>
+
+  <div class="campSection">
+    <h2>Essen</h2>
+    <div id="eatBtnWrap"></div>
+  </div>
+
+  <div class="campSection">
+    <h2>Verbände</h2>
+    <div id="bandageBtnWrap"></div>
+  </div>
+
+  <div class="campSection">
+    <h2>Craften</h2>
+    <div id="craftList"></div>
+  </div>
+
+  <button id="backToExploreBtn" onclick="closeCamp()">Lager verlassen</button>
+</div>
+
+<!-- Kampf-Screen -->
+<div id="combatScreen">
+  <div id="enemyBox">
+    <div id="enemyName"></div>
+    <div class="barOuter"><div id="enemyBar" class="barInner" style="width:100%"></div></div>
+  </div>
+  <div id="combatStatus"></div>
+  <div class="barOuter" style="margin-bottom:14px;">
+    <div id="playerBar" class="barInner barInnerPlayer" style="width:100%"></div>
+  </div>
+  <div id="hand"></div>
+  <button id="endTurnBtn" onclick="endTurn()">Zug beenden</button>
+</div>
+
+<!-- Perk-Auswahl-Screen -->
+<div id="perkScreen">
+  <h2>Level Up! Wähle einen Perk:</h2>
+  <div id="perkList"></div>
+</div>
+
+<script>
+const CARD_DB = {
+  attack: { name: "Angriff", cost: 1, desc: "Schaden am Gegner" },
+  defend: { name: "Verteidigen", cost: 1, desc: "Block aufbauen" },
+  dodge:  { name: "Ausweichen", cost: 1, desc: "Blockt den nächsten Angriff komplett" },
+  heavy:  { name: "Schwerer Schlag", cost: 2, desc: "Hoher Schaden am Gegner" },
+  heal:   { name: "Erste Hilfe", cost: 1, desc: "+15 Leben" }
+};
+
+const DEFAULT_DECK = ["attack","attack","attack","attack","attack","defend","defend","dodge","heavy","heal"];
+
+const ENEMY_DB = {
+  wolf:   { name: "Wolf", maxHp: 35, dmgMin: 8, dmgMax: 14 },
+  looter: { name: "Plünderer", maxHp: 45, dmgMin: 10, dmgMax: 18 },
+  bear:   { name: "Bär", maxHp: 70, dmgMin: 14, dmgMax: 22 },
+  swamp_thing: { name: "Sumpfkriecher", maxHp: 60, dmgMin: 16, dmgMax: 24 }
+};
+
+const LOCATIONS = [
+  { id:"wald",   name:"Dichter Wald",       minLevel:1, enemyPool:["wolf","looter"] },
+  { id:"ruinen", name:"Verlassene Ruinen",  minLevel:1, enemyPool:["wolf","looter"] },
+  { id:"fluss",  name:"Flussufer",          minLevel:1, enemyPool:["wolf","looter"] },
+  { id:"berge",  name:"Berge",              minLevel:3, enemyPool:["bear"] },
+  { id:"sumpf",  name:"Sumpf",              minLevel:5, enemyPool:["swamp_thing"] }
+];
+
+const PERKS = [
+  { id:"str", name:"Kraftschub", desc:"+1 Stärke – mehr Schaden im Kampf", attr:"staerke" },
+  { id:"vit", name:"Zähigkeit", desc:"+1 Vitalität – mehr maximales Leben", attr:"vitalitaet" },
+  { id:"dex", name:"Behändigkeit", desc:"+1 Geschicklichkeit – mehr Block", attr:"geschicklichkeit" },
+  { id:"sur", name:"Überlebenswille", desc:"+1 Überleben – weniger Hunger-/Energieverlust", attr:"ueberleben" },
+  { id:"per", name:"Scharfe Sinne", desc:"+1 Wahrnehmung – Kämpfen leichter ausweichen", attr:"wahrnehmung" }
+];
+
+const ITEM_DB = {
+  rusty_knife: { name: "Rostiges Messer", type: "weapon", bonus: 2 },
+  spear:       { name: "Speer", type: "weapon", bonus: 5 },
+  axe:         { name: "Axt", type: "weapon", bonus: 8 },
+  cloth_wrap:  { name: "Stoffwicklung", type: "armor", bonus: 3 },
+  leather:     { name: "Lederrüstung", type: "armor", bonus: 6 },
+  iron_plate:  { name: "Eisenplatte", type: "armor", bonus: 10 },
+  crafted_spear: { name: "Speer (selbst gebaut)", type: "weapon", bonus: 3 },
+  crafted_armor: { name: "Grobe Rüstung", type: "armor", bonus: 3 }
+};
+
+const LOOT_TABLE = ["rusty_knife","spear","axe","cloth_wrap","leather","iron_plate"];
+
+const RECIPES = [
+  { id:"verband", name:"Verband", cost:{Holz:3}, result:"consumable", desc:"Heilt später 25 Leben" },
+  { id:"crafted_spear", name:"Speer bauen", cost:{Holz:5}, result:"weapon", desc:"Waffe, +3 Schaden" },
+  { id:"crafted_armor", name:"Grobe Rüstung bauen", cost:{Holz:5}, result:"armor", desc:"Rüstung, +3 Block" }
+];
+
+const WEATHER_TYPES = ["Klar", "Regen", "Nebel", "Sturm"];
+
+let state = {
+  health: 100,
+  hunger: 100,
+  energy: 100,
+  xp: 0,
+  level: 1,
+  inventory: [],
+  deck: [...DEFAULT_DECK],
+  attributes: { staerke:0, vitalitaet:0, geschicklichkeit:0, ueberleben:0, wahrnehmung:0 },
+  pendingLevelUps: 0,
+  equipmentInventory: [],
+  equipped: { weapon: null, armor: null },
+  consumables: [],
+  timeHour: 8,
+  weather: "Klar"
+};
+
+let combat = null;
+
+function loadGame() {
+  const saved = localStorage.getItem("lastShelterSave");
+  if (saved) {
+    const loaded = JSON.parse(saved);
+    state = Object.assign({
+      deck: [...DEFAULT_DECK],
+      attributes: { staerke:0, vitalitaet:0, geschicklichkeit:0, ueberleben:0, wahrnehmung:0 },
+      pendingLevelUps: 0,
+      equipmentInventory: [],
+      equipped: { weapon: null, armor: null },
+      consumables: [],
+      timeHour: 8,
+      weather: "Klar"
+    }, loaded);
+    if (!state.deck || state.deck.length === 0) state.deck = [...DEFAULT_DECK];
+    if (!state.attributes) state.attributes = { staerke:0, vitalitaet:0, geschicklichkeit:0, ueberleben:0, wahrnehmung:0 };
+    if (!state.equipmentInventory) state.equipmentInventory = [];
+    if (!state.equipped) state.equipped = { weapon: null, armor: null };
+    if (!state.consumables) state.consumables = [];
+    if (state.timeHour === undefined) state.timeHour = 8;
+    if (!state.weather) state.weather = "Klar";
+    state.hunger = Math.max(0, state.hunger);
+    state.energy = Math.max(0, state.energy);
+  }
+}
+
+function saveGame() {
+  localStorage.setItem("lastShelterSave", JSON.stringify(state));
+}
+
+function getMaxHealth() {
+  return 100 + state.attributes.vitalitaet * 5;
+}
+
+function getWeaponBonus() {
+  return state.equipped.weapon ? ITEM_DB[state.equipped.weapon].bonus : 0;
+}
+
+function getArmorBonus() {
+  return state.equipped.armor ? ITEM_DB[state.equipped.armor].bonus : 0;
+}
+
+function countItem(name) {
+  return state.inventory.filter(i => i === name).length;
+}
+
+function removeOneItem(name) {
+  const idx = state.inventory.indexOf(name);
+  if (idx !== -1) state.inventory.splice(idx, 1);
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* ---------- ZEIT & WETTER ---------- */
+
+function getTimeOfDay() {
+  const h = state.timeHour;
+  if (h >= 5 && h < 11) return "Morgen";
+  if (h >= 11 && h < 17) return "Mittag";
+  if (h >= 17 && h < 21) return "Abend";
+  return "Nacht";
+}
+
+function isNight() {
+  return getTimeOfDay() === "Nacht";
+}
+
+function advanceTime(hours) {
+  state.timeHour = (state.timeHour + hours) % 24;
+  if (Math.random() < 0.3) {
+    state.weather = WEATHER_TYPES[Math.floor(Math.random() * WEATHER_TYPES.length)];
+  }
+}
+
+function formatTime() {
+  const h = String(state.timeHour).padStart(2, "0");
+  return `${h}:00`;
+}
+
+function updateBodyClass() {
+  document.body.classList.toggle("night", isNight());
+}
+
+/* ---------- RENDER ---------- */
+
+function render() {
+  updateBodyClass();
+
+  const maxHp = getMaxHealth();
+  document.getElementById("stats").innerHTML = `
+    <div class="stat-row"><span class="stat-label">Leben</span><span>${state.health}/${maxHp}</span></div>
+    <div class="stat-row"><span class="stat-label">Hunger</span><span>${state.hunger}</span></div>
+    <div class="stat-row"><span class="stat-label">Energie</span><span>${state.energy}</span></div>
+    <div class="stat-row"><span class="stat-label">XP</span><span>${state.xp}</span></div>
+    <div class="stat-row"><span class="stat-label">Level</span><span>${state.level}</span></div>
+  `;
+
+  document.getElementById("worldInfo").innerHTML = `
+    <h2>Welt</h2>
+    <div class="stat-row"><span class="stat-label">Zeit</span><span>${formatTime()} – ${getTimeOfDay()}</span></div>
+    <div class="stat-row"><span class="stat-label">Wetter</span><span>${state.weather}</span></div>
+  `;
+
+  const a = state.attributes;
+  document.getElementById("attrs").innerHTML = `
+    <h2>Attribute</h2>
+    <div class="stat-row"><span class="stat-label">Stärke</span><span>${a.staerke}</span></div>
+    <div class="stat-row"><span class="stat-label">Vitalität</span><span>${a.vitalitaet}</span></div>
+    <div class="stat-row"><span class="stat-label">Geschicklichkeit</span><span>${a.geschicklichkeit}</span></div>
+    <div class="stat-row"><span class="stat-label">Überleben</span><span>${a.ueberleben}</span></div>
+    <div class="stat-row"><span class="stat-label">Wahrnehmung</span><span>${a.wahrnehmung}</span></div>
+  `;
+
+  renderEquipment();
+
+  const cardsDiv = document.getElementById("cards");
+  cardsDiv.innerHTML = "";
+  LOCATIONS.forEach(loc => {
+    const card = document.createElement("div");
+    const unlocked = state.level >= loc.minLevel;
+    card.className = "card" + (unlocked ? "" : " locked");
+    if (unlocked) {
+      card.textContent = loc.name;
+      card.onclick = () => explore(loc);
+    } else {
+      card.innerHTML = `${loc.name}<span class="lockNote">🔒 Ab Level ${loc.minLevel}</span>`;
+    }
+    cardsDiv.appendChild(card);
+  });
+
+  const invList = document.getElementById("invList");
+  invList.innerHTML = state.inventory.length ? state.inventory.join(", ") : "leer";
+}
+
+function renderEquipment() {
+  const box = document.getElementById("equipment");
+  const weapon = state.equipped.weapon ? ITEM_DB[state.equipped.weapon] : null;
+  const armor = state.equipped.armor ? ITEM_DB[state.equipped.armor] : null;
+
+  let html = `<h2>Ausrüstung</h2>`;
+  html += `<div class="equipRow"><span class="stat-label">Waffe</span><span class="${weapon ? 'equipItem' : 'equipEmpty'}">${weapon ? weapon.name + " (+" + weapon.bonus + " Schaden)" : "keine"}</span></div>`;
+  html += `<div class="equipRow"><span class="stat-label">Rüstung</span><span class="${armor ? 'equipItem' : 'equipEmpty'}">${armor ? armor.name + " (+" + armor.bonus + " Block)" : "keine"}</span></div>`;
+
+  if (state.equipmentInventory.length > 0) {
+    html += `<div style="margin-top:8px; font-size:13px; color:#9a9689;">Zum Ausrüsten antippen:</div>`;
+    state.equipmentInventory.forEach((itemId, index) => {
+      const item = ITEM_DB[itemId];
+      const bonusLabel = item.type === "weapon" ? "+" + item.bonus + " Schaden" : "+" + item.bonus + " Block";
+      html += `<div class="equipList-item" onclick="equipItem(${index})">${item.name} <span class="iBonus">(${bonusLabel})</span></div>`;
+    });
+  }
+
+  box.innerHTML = html;
+}
+
+function equipItem(index) {
+  const itemId = state.equipmentInventory[index];
+  const item = ITEM_DB[itemId];
+  const slot = item.type;
+
+  const currentlyEquipped = state.equipped[slot];
+  if (currentlyEquipped) {
+    state.equipmentInventory.push(currentlyEquipped);
+  }
+
+  state.equipped[slot] = itemId;
+  state.equipmentInventory.splice(index, 1);
+
+  saveGame();
+  render();
+}
+
+function log(msg) {
+  document.getElementById("log").textContent = msg;
+}
+
+function explore(loc) {
+  if (state.energy < 10) {
+    log("Zu wenig Energie zum Erkunden! Geh ins Lager.");
+    return;
+  }
+
+  const ueb = state.attributes.ueberleben;
+  let energyCost = Math.max(4, 10 - ueb);
+  let hungerCost = Math.max(2, 5 - Math.floor(ueb / 2));
+
+  if (state.weather === "Sturm") energyCost += 5;
+  if (state.weather === "Regen") hungerCost += 3;
+
+  state.energy = Math.max(0, state.energy - energyCost);
+  state.hunger = Math.max(0, state.hunger - hungerCost);
+
+  advanceTime(2 + Math.floor(Math.random() * 3)); // 2-4 Stunden
+
+  let dangerRoll = Math.random();
+  let dangerThreshold = 0.65; // Grenze für "Gegner"-Ereignis
+  if (isNight()) dangerThreshold -= 0.15; // nachts häufiger Gefahr
+
+  let roll = Math.random();
+
+  if (roll < 0.25) {
+    state.inventory.push("Holz");
+    log(`${loc.name}: Du hast Holz gefunden.`);
+  } else if (roll < 0.45) {
+    state.inventory.push("Beeren");
+    log(`${loc.name}: Du hast Beeren gefunden.`);
+  } else if (roll < dangerThreshold) {
+    let avoidChance = state.attributes.wahrnehmung * 0.03;
+    if (state.weather === "Nebel") avoidChance += 0.1;
+
+    if (Math.random() < avoidChance) {
+      state.inventory.push("Holz");
+      log(`${loc.name}: Deine Wahrnehmung hat dich vor einer Gefahr gewarnt – du hast stattdessen Holz gefunden.`);
+    } else {
+      const enemyId = loc.enemyPool[Math.floor(Math.random() * loc.enemyPool.length)];
+      const nightNote = isNight() ? " In der Dunkelheit wirkt der Gegner gefährlicher." : "";
+      startCombat(ENEMY_DB[enemyId], loc.name, nightNote);
+      return;
+    }
+  } else if (roll < 0.85) {
+    state.health -= 5;
+    log(`${loc.name}: Du hast dich leicht verletzt.`);
+  } else if (roll < 0.95) {
+    state.xp += 10;
+    log(`${loc.name}: Nichts Besonderes, aber du hast Erfahrung gesammelt.`);
+    checkLevelUp();
+  } else {
+    state.xp += 25;
+    log(`${loc.name}: Seltenes Ereignis! Du fühlst dich gestärkt.`);
+    checkLevelUp();
+  }
+
+  checkDeathConditions();
+  saveGame();
+  render();
+  maybeShowPerkSelection();
+}
+
+function checkLevelUp() {
+  const needed = state.level * 50;
+  if (state.xp >= needed) {
+    state.level += 1;
+    state.xp = 0;
+    state.pendingLevelUps = (state.pendingLevelUps || 0) + 1;
+    log(`Level Up! Du bist jetzt Level ${state.level}.`);
+  }
+}
+
+function checkDeathConditions() {
+  if (state.hunger <= 0) {
+    state.health -= 5;
+  }
+  if (state.health <= 0) {
+    state.health = getMaxHealth();
+    state.hunger = 100;
+    state.energy = 100;
+    log("Du bist zusammengebrochen und wurdest gerettet. Werte zurückgesetzt.");
+  }
+}
+
+/* ---------- LAGER ---------- */
+
+function openCamp() {
+  document.getElementById("exploreScreen").style.display = "none";
+  document.getElementById("campScreen").style.display = "block";
+  renderCamp();
+}
+
+function closeCamp() {
+  document.getElementById("campScreen").style.display = "none";
+  document.getElementById("exploreScreen").style.display = "block";
+  render();
+}
+
+function renderCamp() {
+  updateBodyClass();
+  const maxHp = getMaxHealth();
+  document.getElementById("campStats").innerHTML = `
+    <div class="stat-row"><span class="stat-label">Leben</span><span>${state.health}/${maxHp}</span></div>
+    <div class="stat-row"><span class="stat-label">Hunger</span><span>${state.hunger}</span></div>
+    <div class="stat-row"><span class="stat-label">Energie</span><span>${state.energy}</span></div>
+    <div class="stat-row"><span class="stat-label">Zeit</span><span>${formatTime()} – ${getTimeOfDay()}</span></div>
+    <div class="stat-row"><span class="stat-label">Wetter</span><span>${state.weather}</span></div>
+  `;
+
+  document.getElementById("sleepBtnWrap").innerHTML =
+    `<button class="campActionBtn" onclick="sleepAtCamp()">Schlafen<span class="btnSub">Energie voll, +15 Leben, -15 Hunger, springt zum Morgen</span></button>`;
+
+  const beerenCount = countItem("Beeren");
+  document.getElementById("eatBtnWrap").innerHTML =
+    beerenCount > 0
+      ? `<button class="campActionBtn" onclick="eatBerries()">Beeren essen (${beerenCount} verfügbar)<span class="btnSub">+15 Hunger</span></button>`
+      : `<button class="campActionBtn disabled">Keine Beeren im Inventar</button>`;
+
+  const bandageCount = state.consumables.filter(c => c === "verband").length;
+  document.getElementById("bandageBtnWrap").innerHTML =
+    bandageCount > 0
+      ? `<button class="campActionBtn" onclick="useBandage()">Verband benutzen (${bandageCount} verfügbar)<span class="btnSub">+25 Leben</span></button>`
+      : `<button class="campActionBtn disabled">Keine Verbände vorhanden</button>`;
+
+  const craftDiv = document.getElementById("craftList");
+  craftDiv.innerHTML = "";
+  RECIPES.forEach(recipe => {
+    const holzHave = countItem("Holz");
+    const holzNeed = recipe.cost.Holz;
+    const canCraft = holzHave >= holzNeed;
+    const btn = document.createElement("button");
+    btn.className = "campActionBtn" + (canCraft ? "" : " disabled");
+    btn.innerHTML = `${recipe.name} (${holzNeed} Holz)<span class="btnSub">${recipe.desc} – du hast ${holzHave} Holz</span>`;
+    btn.onclick = canCraft ? () => craftItem(recipe) : null;
+    craftDiv.appendChild(btn);
+  });
+}
+
+function sleepAtCamp() {
+  state.energy = 100;
+  state.health = Math.min(getMaxHealth(), state.health + 15);
+  state.hunger = Math.max(0, state.hunger - 15);
+  state.timeHour = 7;
+  state.weather = WEATHER_TYPES[Math.floor(Math.random() * WEATHER_TYPES.length)];
+  log("Du hast im Lager geschlafen und dich erholt. Ein neuer Morgen beginnt.");
+  checkDeathConditions();
+  saveGame();
+  renderCamp();
+}
+
+function eatBerries() {
+  if (countItem("Beeren") === 0) return;
+  removeOneItem("Beeren");
+  state.hunger = Math.min(100, state.hunger + 15);
+  saveGame();
+  renderCamp();
+}
+
+function useBandage() {
+  const idx = state.consumables.indexOf("verband");
+  if (idx === -1) return;
+  state.consumables.splice(idx, 1);
+  state.health = Math.min(getMaxHealth(), state.health + 25);
+  saveGame();
+  renderCamp();
+}
+
+function craftItem(recipe) {
+  const holzHave = countItem("Holz");
+  if (holzHave < recipe.cost.Holz) return;
+
+  for (let i = 0; i < recipe.cost.Holz; i++) {
+    removeOneItem("Holz");
+  }
+
+  if (recipe.result === "consumable") {
+    state.consumables.push(recipe.id);
+  } else {
+    state.equipmentInventory.push(recipe.id);
+  }
+
+  saveGame();
+  renderCamp();
+}
+
+/* ---------- PERK-AUSWAHL ---------- */
+
+function maybeShowPerkSelection() {
+  if (state.pendingLevelUps > 0) {
+    showPerkScreen();
+  }
+}
+
+function showPerkScreen() {
+  document.getElementById("exploreScreen").style.display = "none";
+  document.getElementById("combatScreen").style.display = "none";
+  document.getElementById("campScreen").style.display = "none";
+  document.getElementById("perkScreen").style.display = "block";
+
+  const choices = shuffle(PERKS).slice(0, 3);
+  const list = document.getElementById("perkList");
+  list.innerHTML = "";
+  choices.forEach(perk => {
+    const el = document.createElement("div");
+    el.className = "perkCard";
+    el.innerHTML = `<div class="pName">${perk.name}</div><div class="pDesc">${perk.desc}</div>`;
+    el.onclick = () => choosePerk(perk);
+    list.appendChild(el);
+  });
+}
+
+function choosePerk(perk) {
+  state.attributes[perk.attr] += 1;
+  state.pendingLevelUps -= 1;
+  saveGame();
+
+  if (state.pendingLevelUps > 0) {
+    showPerkScreen();
+  } else {
+    document.getElementById("perkScreen").style.display = "none";
+    document.getElementById("exploreScreen").style.display = "block";
+    render();
+  }
+}
+
+/* ---------- KAMPF ---------- */
+
+function startCombat(enemyType, locName, extraNote) {
+  const nightBonus = isNight() ? 1.2 : 1.0;
+  combat = {
+    enemyName: enemyType.name,
+    enemyHp: enemyType.maxHp,
+    enemyMaxHp: enemyType.maxHp,
+    dmgMin: Math.round(enemyType.dmgMin * nightBonus),
+    dmgMax: Math.round(enemyType.dmgMax * nightBonus),
+    drawPile: shuffle(state.deck),
+    hand: [],
+    discardPile: [],
+    ap: 3,
+    maxAp: 3,
+    block: 0,
+    locName: locName
+  };
+  drawCards(5);
+  document.getElementById("exploreScreen").style.display = "none";
+  document.getElementById("combatScreen").style.display = "block";
+  renderCombat();
+  if (extraNote) log(extraNote);
+}
+
+function drawCards(n) {
+  for (let i = 0; i < n; i++) {
+    if (combat.drawPile.length === 0) {
+      if (combat.discardPile.length === 0) return;
+      combat.drawPile = shuffle(combat.discardPile);
+      combat.discardPile = [];
+    }
+    combat.hand.push(combat.drawPile.pop());
+  }
+}
+
+function renderCombat() {
+  updateBodyClass();
+  const maxHp = getMaxHealth();
+  document.getElementById("enemyName").textContent =
+    `${combat.enemyName}  (${combat.enemyHp}/${combat.enemyMaxHp})`;
+  document.getElementById("enemyBar").style.width =
+    Math.max(0, (combat.enemyHp / combat.enemyMaxHp) * 100) + "%";
+
+  document.getElementById("playerBar").style.width =
+    Math.max(0, (state.health / maxHp) * 100) + "%";
+
+  document.getElementById("combatStatus").innerHTML =
+    `<span>Leben: ${state.health}/${maxHp}</span><span>Block: ${combat.block}</span><span>AP: ${combat.ap}/${combat.maxAp}</span>`;
+
+  const handDiv = document.getElementById("hand");
+  handDiv.innerHTML = "";
+  combat.hand.forEach((cardId, index) => {
+    const info = CARD_DB[cardId];
+    const el = document.createElement("div");
+    el.className = "handCard" + (info.cost > combat.ap ? " disabled" : "");
+    el.innerHTML = `<span class="cCost">${info.cost} AP</span><div class="cName">${info.name}</div><div class="cDesc">${info.desc}</div>`;
+    el.onclick = () => playCard(index);
+    handDiv.appendChild(el);
+  });
+}
+
+function playCard(index) {
+  const cardId = combat.hand[index];
+  const info = CARD_DB[cardId];
+  if (combat.ap < info.cost) return;
+
+  combat.ap -= info.cost;
+  const str = state.attributes.staerke;
+  const dex = state.attributes.geschicklichkeit;
+  const weaponBonus = getWeaponBonus();
+  const armorBonus = getArmorBonus();
+
+  if (cardId === "attack") {
+    const dmg = 8 + Math.floor(Math.random() * 5) + str * 2 + weaponBonus;
+    combat.enemyHp -= dmg;
+  } else if (cardId === "heavy") {
+    const dmg = 18 + Math.floor(Math.random() * 5) + str * 3 + weaponBonus;
+    combat.enemyHp -= dmg;
+  } else if (cardId === "defend") {
+    combat.block += 8 + dex * 2 + armorBonus;
+  } else if (cardId === "dodge") {
+    combat.block += 999;
+  } else if (cardId === "heal") {
+    state.health = Math.min(getMaxHealth(), state.health + 15);
+  }
+
+  combat.discardPile.push(cardId);
+  combat.hand.splice(index, 1);
+
+  if (combat.enemyHp <= 0) {
+    winCombat();
+    return;
+  }
+
+  renderCombat();
+}
+
+function endTurn() {
+  let dmg = combat.dmgMin + Math.floor(Math.random() * (combat.dmgMax - combat.dmgMin + 1));
+  dmg = Math.max(0, dmg - combat.block);
+  state.health -= dmg;
+  combat.block = 0;
+
+  if (state.health <= 0) {
+    loseCombat();
+    return;
+  }
+
+  combat.discardPile.push(...combat.hand);
+  combat.hand = [];
+  combat.ap = combat.maxAp;
+  drawCards(5);
+
+  renderCombat();
+}
+
+function winCombat() {
+  const xpGain = 20;
+  state.xp += xpGain;
+  checkLevelUp();
+
+  let lootMsg = "";
+  if (Math.random() < 0.4) {
+    const itemId = LOOT_TABLE[Math.floor(Math.random() * LOOT_TABLE.length)];
+    state.equipmentInventory.push(itemId);
+    lootMsg = ` Beute gefunden: ${ITEM_DB[itemId].name}!`;
+  }
+
+  endCombatScreen(`Sieg gegen ${combat.enemyName}! +${xpGain} XP.${lootMsg}`);
+}
+
+function loseCombat() {
+  state.health = getMaxHealth();
+  state.hunger = Math.max(0, state.hunger - 20);
+  state.energy = Math.max(0, state.energy - 20);
+  endCombatScreen(`Du wurdest besiegt und konntest fliehen. Leben wurde wiederhergestellt.`);
+}
+
+function endCombatScreen(message) {
+  combat = null;
+  document.getElementById("combatScreen").style.display = "none";
+  document.getElementById("exploreScreen").style.display = "block";
+  log(message);
+  saveGame();
+  render();
+  maybeShowPerkSelection();
+}
+
+loadGame();
+render();
+maybeShowPerkSelection();
+</script>
+
+</body>
+</html>
