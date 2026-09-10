@@ -21,13 +21,14 @@
     color: #c9c2a8;
     margin-bottom: 16px;
   }
-  #stats {
+  #stats, #attrs, #equipment {
     background: #161815;
     border: 1px solid #2a2d27;
     border-radius: 12px;
     padding: 12px 16px;
-    margin-bottom: 20px;
+    margin-bottom: 14px;
   }
+  #attrs h2, #equipment h2 { font-size: 14px; margin: 0 0 6px 0; color: #9a9689; font-weight: normal; }
   .stat-row {
     display: flex;
     justify-content: space-between;
@@ -66,6 +67,7 @@
     border: 1px solid #2a2d27;
     border-radius: 12px;
     padding: 12px 16px;
+    margin-bottom: 14px;
   }
   #inventory h2 { font-size: 16px; margin: 0 0 8px 0; color: #c9c2a8; }
   #invList { font-size: 14px; color: #b8b4a5; line-height: 1.6; }
@@ -79,6 +81,28 @@
     color: #d8e4c8;
     font-size: 16px;
   }
+
+  /* Ausrüstung */
+  .equipRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 6px 0;
+    font-size: 14px;
+  }
+  .equipItem { color: #d8c878; }
+  .equipEmpty { color: #6a675c; font-style: italic; }
+  .equipList-item {
+    background: #1c1f19;
+    border: 1px solid #3a3d31;
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-top: 8px;
+    font-size: 14px;
+    color: #d8d4c4;
+  }
+  .equipList-item:active { background: #24261e; }
+  .equipList-item .iBonus { color: #9a9689; font-size: 12px; }
 
   /* Kampf-Screen */
   #combatScreen { display: none; }
@@ -98,12 +122,8 @@
     overflow: hidden;
     margin-top: 4px;
   }
-  .barInner {
-    height: 100%;
-    background: #b0453a;
-  }
+  .barInner { height: 100%; background: #b0453a; }
   .barInnerPlayer { background: #4a8a4a; }
-  .barInnerBlock { background: #4a7a9a; }
   #combatStatus {
     display: flex;
     justify-content: space-between;
@@ -111,12 +131,7 @@
     color: #b8b4a5;
     margin-bottom: 14px;
   }
-  #hand {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-bottom: 14px;
-  }
+  #hand { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
   .handCard {
     background: linear-gradient(180deg, #1c1f19, #14160f);
     border: 1px solid #3a3d31;
@@ -138,15 +153,32 @@
     color: #e8d4b8;
     font-size: 16px;
   }
+
+  /* Perk-Screen */
+  #perkScreen { display: none; }
+  #perkScreen h2 { font-size: 16px; color: #d8c878; text-align: center; margin-bottom: 14px; }
+  .perkCard {
+    background: linear-gradient(180deg, #241f14, #16130d);
+    border: 1px solid #4a3d24;
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  .perkCard .pName { font-size: 17px; color: #e8d4b8; font-weight: bold; }
+  .perkCard .pDesc { font-size: 13px; color: #b0a68c; margin-top: 4px; }
+  .perkCard:active { background: #2c2517; }
 </style>
 </head>
 <body>
 
 <h1>LAST SHELTER</h1>
 
-<!-- Normaler Erkundungs-Screen -->
+<!-- Erkundungs-Screen -->
 <div id="exploreScreen">
   <div id="stats"></div>
+  <div id="attrs"></div>
+  <div id="equipment"></div>
   <div id="log">Willkommen. Wähle ein Gebiet zum Erkunden.</div>
 
   <div id="cards"></div>
@@ -165,24 +197,26 @@
     <div id="enemyName"></div>
     <div class="barOuter"><div id="enemyBar" class="barInner" style="width:100%"></div></div>
   </div>
-
   <div id="combatStatus"></div>
-
   <div class="barOuter" style="margin-bottom:14px;">
     <div id="playerBar" class="barInner barInnerPlayer" style="width:100%"></div>
   </div>
-
   <div id="hand"></div>
-
   <button id="endTurnBtn" onclick="endTurn()">Zug beenden</button>
+</div>
+
+<!-- Perk-Auswahl-Screen -->
+<div id="perkScreen">
+  <h2>Level Up! Wähle einen Perk:</h2>
+  <div id="perkList"></div>
 </div>
 
 <script>
 const CARD_DB = {
-  attack: { name: "Angriff", cost: 1, desc: "8–12 Schaden" },
-  defend: { name: "Verteidigen", cost: 1, desc: "+8 Block" },
+  attack: { name: "Angriff", cost: 1, desc: "Schaden am Gegner" },
+  defend: { name: "Verteidigen", cost: 1, desc: "Block aufbauen" },
   dodge:  { name: "Ausweichen", cost: 1, desc: "Blockt den nächsten Angriff komplett" },
-  heavy:  { name: "Schwerer Schlag", cost: 2, desc: "18–22 Schaden" },
+  heavy:  { name: "Schwerer Schlag", cost: 2, desc: "Hoher Schaden am Gegner" },
   heal:   { name: "Erste Hilfe", cost: 1, desc: "+15 Leben" }
 };
 
@@ -193,6 +227,25 @@ const ENEMY_TYPES = [
   { name: "Plünderer", maxHp: 45, dmgMin: 10, dmgMax: 18 }
 ];
 
+const PERKS = [
+  { id:"str", name:"Kraftschub", desc:"+1 Stärke – mehr Schaden im Kampf", attr:"staerke" },
+  { id:"vit", name:"Zähigkeit", desc:"+1 Vitalität – mehr maximales Leben", attr:"vitalitaet" },
+  { id:"dex", name:"Behändigkeit", desc:"+1 Geschicklichkeit – mehr Block", attr:"geschicklichkeit" },
+  { id:"sur", name:"Überlebenswille", desc:"+1 Überleben – weniger Hunger-/Energieverlust", attr:"ueberleben" },
+  { id:"per", name:"Scharfe Sinne", desc:"+1 Wahrnehmung – Kämpfen leichter ausweichen", attr:"wahrnehmung" }
+];
+
+const ITEM_DB = {
+  rusty_knife: { name: "Rostiges Messer", type: "weapon", bonus: 2 },
+  spear:       { name: "Speer", type: "weapon", bonus: 5 },
+  axe:         { name: "Axt", type: "weapon", bonus: 8 },
+  cloth_wrap:  { name: "Stoffwicklung", type: "armor", bonus: 3 },
+  leather:     { name: "Lederrüstung", type: "armor", bonus: 6 },
+  iron_plate:  { name: "Eisenplatte", type: "armor", bonus: 10 }
+};
+
+const LOOT_TABLE = ["rusty_knife","spear","axe","cloth_wrap","leather","iron_plate"];
+
 let state = {
   health: 100,
   hunger: 100,
@@ -200,10 +253,14 @@ let state = {
   xp: 0,
   level: 1,
   inventory: [],
-  deck: [...DEFAULT_DECK]
+  deck: [...DEFAULT_DECK],
+  attributes: { staerke:0, vitalitaet:0, geschicklichkeit:0, ueberleben:0, wahrnehmung:0 },
+  pendingLevelUps: 0,
+  equipmentInventory: [],
+  equipped: { weapon: null, armor: null }
 };
 
-let combat = null; // nicht gespeichert, nur während eines Kampfes aktiv
+let combat = null;
 
 const locations = ["Dichter Wald", "Verlassene Ruinen", "Flussufer"];
 
@@ -211,13 +268,34 @@ function loadGame() {
   const saved = localStorage.getItem("lastShelterSave");
   if (saved) {
     const loaded = JSON.parse(saved);
-    state = Object.assign({ deck: [...DEFAULT_DECK] }, loaded);
+    state = Object.assign({
+      deck: [...DEFAULT_DECK],
+      attributes: { staerke:0, vitalitaet:0, geschicklichkeit:0, ueberleben:0, wahrnehmung:0 },
+      pendingLevelUps: 0,
+      equipmentInventory: [],
+      equipped: { weapon: null, armor: null }
+    }, loaded);
     if (!state.deck || state.deck.length === 0) state.deck = [...DEFAULT_DECK];
+    if (!state.attributes) state.attributes = { staerke:0, vitalitaet:0, geschicklichkeit:0, ueberleben:0, wahrnehmung:0 };
+    if (!state.equipmentInventory) state.equipmentInventory = [];
+    if (!state.equipped) state.equipped = { weapon: null, armor: null };
   }
 }
 
 function saveGame() {
   localStorage.setItem("lastShelterSave", JSON.stringify(state));
+}
+
+function getMaxHealth() {
+  return 100 + state.attributes.vitalitaet * 5;
+}
+
+function getWeaponBonus() {
+  return state.equipped.weapon ? ITEM_DB[state.equipped.weapon].bonus : 0;
+}
+
+function getArmorBonus() {
+  return state.equipped.armor ? ITEM_DB[state.equipped.armor].bonus : 0;
 }
 
 function shuffle(arr) {
@@ -230,13 +308,26 @@ function shuffle(arr) {
 }
 
 function render() {
+  const maxHp = getMaxHealth();
   document.getElementById("stats").innerHTML = `
-    <div class="stat-row"><span class="stat-label">Leben</span><span>${state.health}</span></div>
+    <div class="stat-row"><span class="stat-label">Leben</span><span>${state.health}/${maxHp}</span></div>
     <div class="stat-row"><span class="stat-label">Hunger</span><span>${state.hunger}</span></div>
     <div class="stat-row"><span class="stat-label">Energie</span><span>${state.energy}</span></div>
     <div class="stat-row"><span class="stat-label">XP</span><span>${state.xp}</span></div>
     <div class="stat-row"><span class="stat-label">Level</span><span>${state.level}</span></div>
   `;
+
+  const a = state.attributes;
+  document.getElementById("attrs").innerHTML = `
+    <h2>Attribute</h2>
+    <div class="stat-row"><span class="stat-label">Stärke</span><span>${a.staerke}</span></div>
+    <div class="stat-row"><span class="stat-label">Vitalität</span><span>${a.vitalitaet}</span></div>
+    <div class="stat-row"><span class="stat-label">Geschicklichkeit</span><span>${a.geschicklichkeit}</span></div>
+    <div class="stat-row"><span class="stat-label">Überleben</span><span>${a.ueberleben}</span></div>
+    <div class="stat-row"><span class="stat-label">Wahrnehmung</span><span>${a.wahrnehmung}</span></div>
+  `;
+
+  renderEquipment();
 
   const cardsDiv = document.getElementById("cards");
   cardsDiv.innerHTML = "";
@@ -252,6 +343,44 @@ function render() {
   invList.innerHTML = state.inventory.length ? state.inventory.join(", ") : "leer";
 }
 
+function renderEquipment() {
+  const box = document.getElementById("equipment");
+  const weapon = state.equipped.weapon ? ITEM_DB[state.equipped.weapon] : null;
+  const armor = state.equipped.armor ? ITEM_DB[state.equipped.armor] : null;
+
+  let html = `<h2>Ausrüstung</h2>`;
+  html += `<div class="equipRow"><span class="stat-label">Waffe</span><span class="${weapon ? 'equipItem' : 'equipEmpty'}">${weapon ? weapon.name + " (+" + weapon.bonus + " Schaden)" : "keine"}</span></div>`;
+  html += `<div class="equipRow"><span class="stat-label">Rüstung</span><span class="${armor ? 'equipItem' : 'equipEmpty'}">${armor ? armor.name + " (+" + armor.bonus + " Block)" : "keine"}</span></div>`;
+
+  if (state.equipmentInventory.length > 0) {
+    html += `<div style="margin-top:8px; font-size:13px; color:#9a9689;">Zum Ausrüsten antippen:</div>`;
+    state.equipmentInventory.forEach((itemId, index) => {
+      const item = ITEM_DB[itemId];
+      const bonusLabel = item.type === "weapon" ? "+" + item.bonus + " Schaden" : "+" + item.bonus + " Block";
+      html += `<div class="equipList-item" onclick="equipItem(${index})">${item.name} <span class="iBonus">(${bonusLabel})</span></div>`;
+    });
+  }
+
+  box.innerHTML = html;
+}
+
+function equipItem(index) {
+  const itemId = state.equipmentInventory[index];
+  const item = ITEM_DB[itemId];
+  const slot = item.type; // "weapon" oder "armor"
+
+  const currentlyEquipped = state.equipped[slot];
+  if (currentlyEquipped) {
+    state.equipmentInventory.push(currentlyEquipped);
+  }
+
+  state.equipped[slot] = itemId;
+  state.equipmentInventory.splice(index, 1);
+
+  saveGame();
+  render();
+}
+
 function log(msg) {
   document.getElementById("log").textContent = msg;
 }
@@ -262,42 +391,46 @@ function explore(loc) {
     return;
   }
 
-  state.energy -= 10;
-  state.hunger -= 5;
+  const ueb = state.attributes.ueberleben;
+  state.energy -= Math.max(4, 10 - ueb);
+  state.hunger -= Math.max(2, 5 - Math.floor(ueb / 2));
 
-  const roll = Math.random();
+  let roll = Math.random();
+
   if (roll < 0.25) {
     state.inventory.push("Holz");
     log(`${loc}: Du hast Holz gefunden.`);
-    saveGame(); render();
   } else if (roll < 0.45) {
     state.inventory.push("Beeren");
     state.hunger = Math.min(100, state.hunger + 10);
     log(`${loc}: Du hast Beeren gefunden und etwas gegessen.`);
-    saveGame(); render();
   } else if (roll < 0.65) {
-    const enemyType = ENEMY_TYPES[Math.floor(Math.random() * ENEMY_TYPES.length)];
-    startCombat(enemyType, loc);
-    return; // Kampf übernimmt den Screen
+    const avoidChance = state.attributes.wahrnehmung * 0.03;
+    if (Math.random() < avoidChance) {
+      state.inventory.push("Holz");
+      log(`${loc}: Deine Wahrnehmung hat dich vor einer Gefahr gewarnt – du hast stattdessen Holz gefunden.`);
+    } else {
+      const enemyType = ENEMY_TYPES[Math.floor(Math.random() * ENEMY_TYPES.length)];
+      startCombat(enemyType, loc);
+      return;
+    }
   } else if (roll < 0.8) {
     state.health -= 5;
     log(`${loc}: Du hast dich leicht verletzt.`);
-    saveGame(); render();
   } else if (roll < 0.95) {
     state.xp += 10;
     log(`${loc}: Nichts Besonderes, aber du hast Erfahrung gesammelt.`);
     checkLevelUp();
-    saveGame(); render();
   } else {
     state.xp += 25;
     log(`${loc}: Seltenes Ereignis! Du fühlst dich gestärkt.`);
     checkLevelUp();
-    saveGame(); render();
   }
 
   checkDeathConditions();
   saveGame();
   render();
+  maybeShowPerkSelection();
 }
 
 function restAtCamp() {
@@ -314,6 +447,7 @@ function checkLevelUp() {
   if (state.xp >= needed) {
     state.level += 1;
     state.xp = 0;
+    state.pendingLevelUps = (state.pendingLevelUps || 0) + 1;
     log(`Level Up! Du bist jetzt Level ${state.level}.`);
   }
 }
@@ -323,10 +457,49 @@ function checkDeathConditions() {
     state.health -= 5;
   }
   if (state.health <= 0) {
-    state.health = 100;
+    state.health = getMaxHealth();
     state.hunger = 100;
     state.energy = 100;
     log("Du bist zusammengebrochen und wurdest gerettet. Werte zurückgesetzt.");
+  }
+}
+
+/* ---------- PERK-AUSWAHL ---------- */
+
+function maybeShowPerkSelection() {
+  if (state.pendingLevelUps > 0) {
+    showPerkScreen();
+  }
+}
+
+function showPerkScreen() {
+  document.getElementById("exploreScreen").style.display = "none";
+  document.getElementById("combatScreen").style.display = "none";
+  document.getElementById("perkScreen").style.display = "block";
+
+  const choices = shuffle(PERKS).slice(0, 3);
+  const list = document.getElementById("perkList");
+  list.innerHTML = "";
+  choices.forEach(perk => {
+    const el = document.createElement("div");
+    el.className = "perkCard";
+    el.innerHTML = `<div class="pName">${perk.name}</div><div class="pDesc">${perk.desc}</div>`;
+    el.onclick = () => choosePerk(perk);
+    list.appendChild(el);
+  });
+}
+
+function choosePerk(perk) {
+  state.attributes[perk.attr] += 1;
+  state.pendingLevelUps -= 1;
+  saveGame();
+
+  if (state.pendingLevelUps > 0) {
+    showPerkScreen();
+  } else {
+    document.getElementById("perkScreen").style.display = "none";
+    document.getElementById("exploreScreen").style.display = "block";
+    render();
   }
 }
 
@@ -365,16 +538,17 @@ function drawCards(n) {
 }
 
 function renderCombat() {
+  const maxHp = getMaxHealth();
   document.getElementById("enemyName").textContent =
     `${combat.enemyName}  (${combat.enemyHp}/${combat.enemyMaxHp})`;
   document.getElementById("enemyBar").style.width =
     Math.max(0, (combat.enemyHp / combat.enemyMaxHp) * 100) + "%";
 
   document.getElementById("playerBar").style.width =
-    Math.max(0, state.health) + "%";
+    Math.max(0, (state.health / maxHp) * 100) + "%";
 
   document.getElementById("combatStatus").innerHTML =
-    `<span>Leben: ${state.health}</span><span>Block: ${combat.block}</span><span>AP: ${combat.ap}/${combat.maxAp}</span>`;
+    `<span>Leben: ${state.health}/${maxHp}</span><span>Block: ${combat.block}</span><span>AP: ${combat.ap}/${combat.maxAp}</span>`;
 
   const handDiv = document.getElementById("hand");
   handDiv.innerHTML = "";
@@ -394,19 +568,23 @@ function playCard(index) {
   if (combat.ap < info.cost) return;
 
   combat.ap -= info.cost;
+  const str = state.attributes.staerke;
+  const dex = state.attributes.geschicklichkeit;
+  const weaponBonus = getWeaponBonus();
+  const armorBonus = getArmorBonus();
 
   if (cardId === "attack") {
-    const dmg = 8 + Math.floor(Math.random() * 5);
+    const dmg = 8 + Math.floor(Math.random() * 5) + str * 2 + weaponBonus;
     combat.enemyHp -= dmg;
   } else if (cardId === "heavy") {
-    const dmg = 18 + Math.floor(Math.random() * 5);
+    const dmg = 18 + Math.floor(Math.random() * 5) + str * 3 + weaponBonus;
     combat.enemyHp -= dmg;
   } else if (cardId === "defend") {
-    combat.block += 8;
+    combat.block += 8 + dex * 2 + armorBonus;
   } else if (cardId === "dodge") {
     combat.block += 999;
   } else if (cardId === "heal") {
-    state.health = Math.min(100, state.health + 15);
+    state.health = Math.min(getMaxHealth(), state.health + 15);
   }
 
   combat.discardPile.push(cardId);
@@ -421,7 +599,6 @@ function playCard(index) {
 }
 
 function endTurn() {
-  // Gegner greift an
   let dmg = combat.dmgMin + Math.floor(Math.random() * (combat.dmgMax - combat.dmgMin + 1));
   dmg = Math.max(0, dmg - combat.block);
   state.health -= dmg;
@@ -432,7 +609,6 @@ function endTurn() {
     return;
   }
 
-  // Restliche Handkarten abwerfen, neue Hand ziehen
   combat.discardPile.push(...combat.hand);
   combat.hand = [];
   combat.ap = combat.maxAp;
@@ -445,11 +621,19 @@ function winCombat() {
   const xpGain = 20;
   state.xp += xpGain;
   checkLevelUp();
-  endCombatScreen(`Sieg gegen ${combat.enemyName}! +${xpGain} XP.`);
+
+  let lootMsg = "";
+  if (Math.random() < 0.4) {
+    const itemId = LOOT_TABLE[Math.floor(Math.random() * LOOT_TABLE.length)];
+    state.equipmentInventory.push(itemId);
+    lootMsg = ` Beute gefunden: ${ITEM_DB[itemId].name}!`;
+  }
+
+  endCombatScreen(`Sieg gegen ${combat.enemyName}! +${xpGain} XP.${lootMsg}`);
 }
 
 function loseCombat() {
-  state.health = 100;
+  state.health = getMaxHealth();
   state.hunger = Math.max(20, state.hunger - 20);
   state.energy = Math.max(20, state.energy - 20);
   endCombatScreen(`Du wurdest besiegt und konntest fliehen. Leben wurde wiederhergestellt.`);
@@ -462,10 +646,12 @@ function endCombatScreen(message) {
   log(message);
   saveGame();
   render();
+  maybeShowPerkSelection();
 }
 
 loadGame();
 render();
+maybeShowPerkSelection();
 </script>
 
 </body>
