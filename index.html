@@ -6,7 +6,7 @@
 <title>Last Shelter</title>
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body {
+  html, body
     height: 100%;
     margin: 0;
     background: #0b0d0b;
@@ -743,6 +743,11 @@ const RECIPES = [
   { id:"crafted_spear", name:"Speer bauen", cost:{Holz:5}, result:"weapon", desc:"Waffe, +3 Schaden", icon:"🔱" },
   { id:"crafted_armor", name:"Grobe Rüstung bauen", cost:{Holz:5}, result:"armor", desc:"Rüstung, +3 Block", icon:"🛡️" }
 ];
+ const RECIPE_ICON_FILES = {
+  verband: "images/icons/heal.png",
+  crafted_spear: "images/icons/sword.png",
+  crafted_armor: "images/icons/shield.png"
+};
 
 const WEATHER_TYPES = ["Klar", "Regen", "Nebel", "Sturm"];
 const WEATHER_ICONS = {
@@ -1260,7 +1265,18 @@ document.getElementById("bandageBtnWrap").innerHTML =
     const canCraft = holzHave >= recipe.cost.Holz;
     const btn = document.createElement("button");
     btn.className = "campActionBtn" + (canCraft ? "" : " disabled");
-    btn.innerHTML = `<span class="cIcon2">${recipe.icon}</span><span class="btnText">${recipe.name} (${recipe.cost.Holz} Holz)<span class="btnSub">${recipe.desc} – du hast ${holzHave} Holz</span></span>`;
+    btn.innerHTML = `
+  <span class="cIcon2">
+    <img src="${RECIPE_ICON_FILES[recipe.id]}" alt="">
+  </span>
+
+  <span class="btnText">
+    ${recipe.name} (${recipe.cost.Holz} Holz)
+    <span class="btnSub">
+      ${recipe.desc} – du hast ${holzHave} Holz
+    </span>
+  </span>
+`;
     btn.onclick = canCraft ? () => craftItem(recipe) : null;
     craftDiv.appendChild(btn);
   });
