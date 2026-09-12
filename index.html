@@ -618,7 +618,10 @@
 </div>
 
 <div class="overlay" id="perkOverlay">
-  <h2>🎉 Level Up! Wähle einen Perk:</h2>
+  <h2>
+  <img src="images/icons/level-up.png" alt="">
+  Level Up! Wähle einen Perk:
+</h2>
   <div id="perkList"></div>
 </div>
 
@@ -671,6 +674,19 @@ const PERKS = [
   { id:"upgrade_atk", type:"card", effect:"upgradeCard", from:"attack", to:"attack_plus", requiresCard:"attack", name:"Scharfe Klinge", desc:"Verbessert eine Angriffskarte im Deck zu Angriff+", icon:"🗡️" },
   { id:"upgrade_def", type:"card", effect:"upgradeCard", from:"defend", to:"defend_plus", requiresCard:"defend", name:"Verstärkter Schild", desc:"Verbessert eine Verteidigen-Karte im Deck zu Verteidigen+", icon:"🔰" }
 ];
+ const PERK_ICON_FILES = {
+  str: "images/icons/attack.png",
+  vit: "images/icons/health.png",
+  dex: "images/icons/flee.png",
+  sur: "images/icons/campfire.png",
+  per: "images/icons/compass.png",
+
+  add_atk: "images/icons/attack.png",
+  add_def: "images/icons/shield.png",
+  trim_def: "images/icons/tools.png",
+  upgrade_atk: "images/icons/sword.png",
+  upgrade_def: "images/icons/shield.png"
+};
 
 const ITEM_DB = {
   rusty_knife: { name: "Rostiges Messer", type: "weapon", bonus: 2, icon:"🔪" },
@@ -1138,7 +1154,14 @@ function showPerkOverlay() {
   choices.forEach(perk => {
     const el = document.createElement("div");
     el.className = "perkCard";
-    el.innerHTML = `<span class="pIcon">${perk.icon}</span><div class="pName">${perk.name}</div><div class="pDesc">${perk.desc}</div>`;
+    el.innerHTML = `
+  <span class="pIcon">
+    <img src="${PERK_ICON_FILES[perk.id]}" alt="">
+  </span>
+
+  <div class="pName">${perk.name}</div>
+  <div class="pDesc">${perk.desc}</div>
+`;
     el.onclick = () => choosePerk(perk);
     list.appendChild(el);
   });
