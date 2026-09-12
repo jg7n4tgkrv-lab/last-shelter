@@ -283,7 +283,109 @@
   .perkCard .pName { font-size: 17px; color: #e8d4b8; font-weight: bold; }
   .perkCard .pDesc { font-size: 13px; color: #b0a68c; margin-top: 4px; }
   .perkCard:active { background: #332a18; transform: scale(0.97); }
-</style>
+/* =========================================
+   PHASE 9.2 – LOCATION ART
+   ========================================= */
+
+#cards .card {
+  min-height: 138px;
+  padding: 82px 10px 14px;
+  overflow: hidden;
+
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  border: 1px solid rgba(255,255,255,0.14);
+  border-left: 3px solid var(--accent, #5a6b4a);
+
+  color: #ffffff;
+  font-weight: 700;
+
+  text-shadow:
+    0 2px 4px rgba(0,0,0,0.95),
+    0 0 10px rgba(0,0,0,0.75);
+
+  box-shadow:
+    inset 0 -70px 60px -30px rgba(0,0,0,0.9),
+    0 4px 10px rgba(0,0,0,0.35);
+}
+
+/* Emoji der Location-Karten ausblenden */
+#cards .card .cIcon {
+  display: none;
+}
+
+/* 1 – Dichter Wald */
+#cards .card:nth-child(1) {
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(5,8,5,0.05) 20%,
+      rgba(5,8,5,0.25) 55%,
+      rgba(5,8,5,0.92) 100%
+    ),
+    url("images/backgrounds/forest-day.jpg");
+}
+
+/* 2 – Verlassene Ruinen */
+#cards .card:nth-child(2) {
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(5,8,5,0.05) 20%,
+      rgba(5,8,5,0.25) 55%,
+      rgba(5,8,5,0.92) 100%
+    ),
+    url("images/backgrounds/ruins-sunset.jpg");
+}
+
+/* 3 – Flussufer */
+#cards .card:nth-child(3) {
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(5,8,5,0.05) 20%,
+      rgba(5,8,5,0.25) 55%,
+      rgba(5,8,5,0.92) 100%
+    ),
+    url("images/backgrounds/river-mountains-day.jpg");
+}
+
+/* 4 – Berge */
+#cards .card:nth-child(4) {
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(5,8,5,0.05) 20%,
+      rgba(5,8,5,0.25) 55%,
+      rgba(5,8,5,0.92) 100%
+    ),
+    url("images/backgrounds/snow-mountains.jpg");
+}
+
+/* 5 – Sumpf */
+#cards .card:nth-child(5) {
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(5,8,5,0.05) 20%,
+      rgba(5,8,5,0.25) 55%,
+      rgba(5,8,5,0.92) 100%
+    ),
+    url("images/backgrounds/swamp-fog.jpg");
+}
+
+/* Gesperrte Gebiete weiterhin eindeutig erkennen */
+#cards .card.locked {
+  opacity: 0.46;
+  filter: grayscale(0.7);
+}
+
+#cards .card.locked .lockNote {
+  color: rgba(255,255,255,0.75);
+  text-shadow: 0 1px 4px #000;
+}</style>
 </head>
 <body>
 
