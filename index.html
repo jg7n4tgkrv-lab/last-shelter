@@ -680,43 +680,73 @@ function render() {
   updateBodyClass();
   const maxHp = getMaxHealth();
 
-  document.getElementById("worldLine").innerHTML = `
-  <span>
-    <img class="worldIcon" src="${TIME_ICONS[timeOfDay]}" alt="">
-    ${formatTime()} · ${timeOfDay}
-  </span>
+  document.getElementById("quickStats").innerHTML = `
+    <div class="qBlock">
+      <span class="qLabel">
+        <img class="uiIcon" src="images/icons/health.png" alt="">
+        LEBEN
+      </span>
+      <span class="qVal qHealth">${state.health}/${maxHp}</span>
+    </div>
 
-  <span>
-    <img class="worldIcon" src="${WEATHER_ICONS[state.weather]}" alt="">
-    ${state.weather}
-  </span>
+    <div class="qBlock">
+      <span class="qLabel">
+        <img class="uiIcon" src="images/icons/hunger.png" alt="">
+        HUNGER
+      </span>
+      <span class="qVal qHunger">${state.hunger}</span>
+    </div>
 
-  <span>
-    <img class="worldIcon" src="images/icons/star.png" alt="">
-    Lv. ${state.level}
-  </span>
-`;
+    <div class="qBlock">
+      <span class="qLabel">
+        <img class="uiIcon" src="images/icons/energy.png" alt="">
+        ENERGIE
+      </span>
+      <span class="qVal qEnergy">${state.energy}</span>
+    </div>
+  `;
+
   const timeOfDay = getTimeOfDay();
-  document.getElementById("worldLine").innerHTML =
-    `<span>${TIME_ICONS[timeOfDay]} ${formatTime()} · ${timeOfDay}</span><span>${WEATHER_ICONS[state.weather]} ${state.weather}</span><span>⭐ Lv. ${state.level}</span>`;
+
+  document.getElementById("worldLine").innerHTML = `
+    <span>
+      <img class="worldIcon" src="${TIME_ICONS[timeOfDay]}" alt="">
+      ${formatTime()} · ${timeOfDay}
+    </span>
+
+    <span>
+      <img class="worldIcon" src="${WEATHER_ICONS[state.weather]}" alt="">
+      ${state.weather}
+    </span>
+
+    <span>
+      <img class="worldIcon" src="images/icons/star.png" alt="">
+      Lv. ${state.level}
+    </span>
+  `;
 
   const cardsDiv = document.getElementById("cards");
   cardsDiv.innerHTML = "";
+
   LOCATIONS.forEach(loc => {
     const card = document.createElement("div");
     const unlocked = state.level >= loc.minLevel;
+
     card.className = "card" + (unlocked ? "" : " locked");
     card.style.setProperty("--accent", loc.accent);
+
     if (unlocked) {
       card.innerHTML = `<span class="cIcon">${loc.icon}</span>${loc.name}`;
       card.onclick = () => explore(loc);
     } else {
       card.innerHTML = `<span class="cIcon">${loc.icon}</span>${loc.name}<span class="lockNote">🔒 Ab Level ${loc.minLevel}</span>`;
     }
+
     cardsDiv.appendChild(card);
   });
 
-  document.getElementById("invList").textContent = state.inventory.length ? state.inventory.join(", ") : "leer";
+  document.getElementById("invList").textContent =
+    state.inventory.length ? state.inventory.join(", ") : "leer";
 
   if (currentTab === "screenCharacter") renderCharacter();
   if (currentTab === "screenCamp") renderCamp();
