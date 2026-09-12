@@ -509,6 +509,19 @@
   height: 22px;
   object-fit: contain;
   display: block;
+}/* PHASE 9.2 – LOCK ICON */
+
+#cards .card .lockNote {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+#cards .card .lockIcon {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
 }</style>
 </head>
 <body>
@@ -905,7 +918,15 @@ function render() {
       card.innerHTML = `<span class="cIcon">${loc.icon}</span>${loc.name}`;
       card.onclick = () => explore(loc);
     } else {
-      card.innerHTML = `<span class="cIcon">${loc.icon}</span>${loc.name}<span class="lockNote">🔒 Ab Level ${loc.minLevel}</span>`;
+      card.innerHTML = `
+  <span class="cIcon">${loc.icon}</span>
+  ${loc.name}
+
+  <span class="lockNote">
+    <img class="lockIcon" src="images/icons/locked.png" alt="">
+    Ab Level ${loc.minLevel}
+  </span>
+`;
     }
 
     cardsDiv.appendChild(card);
