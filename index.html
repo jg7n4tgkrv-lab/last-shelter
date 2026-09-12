@@ -1388,46 +1388,179 @@ function render() {
 
 function renderCharacter() {
   const needed = state.level * 50;
+
   document.getElementById("charLevel").textContent = state.level;
   document.getElementById("charXp").textContent = `${state.xp} / ${needed}`;
-  document.getElementById("xpBarInner").style.width = Math.min(100, (state.xp / needed) * 100) + "%";
+  document.getElementById("xpBarInner").style.width =
+    Math.min(100, (state.xp / needed) * 100) + "%";
 
   const a = state.attributes;
+
   document.getElementById("attrsBox").innerHTML = `
-    <h2>📊 Attribute</h2>
-    <div class="stat-row"><span class="stat-label"><span class="icn">💪</span>Stärke</span><span>${a.staerke}</span></div>
-    <div class="stat-row"><span class="stat-label"><span class="icn">❤️</span>Vitalität</span><span>${a.vitalitaet}</span></div>
-    <div class="stat-row"><span class="stat-label"><span class="icn">🤸</span>Geschicklichkeit</span><span>${a.geschicklichkeit}</span></div>
-    <div class="stat-row"><span class="stat-label"><span class="icn">🔥</span>Überleben</span><span>${a.ueberleben}</span></div>
-    <div class="stat-row"><span class="stat-label"><span class="icn">👁️</span>Wahrnehmung</span><span>${a.wahrnehmung}</span></div>
+    <h2 class="sectionTitle">
+      <img src="images/icons/character.png" alt="">
+      Attribute
+    </h2>
+
+    <div class="stat-row">
+      <span class="stat-label">
+        <span class="icn"><img src="${ATTRIBUTE_ICON_FILES.staerke}" alt=""></span>
+        Stärke
+      </span>
+      <span>${a.staerke}</span>
+    </div>
+
+    <div class="stat-row">
+      <span class="stat-label">
+        <span class="icn"><img src="${ATTRIBUTE_ICON_FILES.vitalitaet}" alt=""></span>
+        Vitalität
+      </span>
+      <span>${a.vitalitaet}</span>
+    </div>
+
+    <div class="stat-row">
+      <span class="stat-label">
+        <span class="icn"><img src="${ATTRIBUTE_ICON_FILES.geschicklichkeit}" alt=""></span>
+        Geschicklichkeit
+      </span>
+      <span>${a.geschicklichkeit}</span>
+    </div>
+
+    <div class="stat-row">
+      <span class="stat-label">
+        <span class="icn"><img src="${ATTRIBUTE_ICON_FILES.ueberleben}" alt=""></span>
+        Überleben
+      </span>
+      <span>${a.ueberleben}</span>
+    </div>
+
+    <div class="stat-row">
+      <span class="stat-label">
+        <span class="icn"><img src="${ATTRIBUTE_ICON_FILES.wahrnehmung}" alt=""></span>
+        Wahrnehmung
+      </span>
+      <span>${a.wahrnehmung}</span>
+    </div>
   `;
 
-  const weapon = state.equipped.weapon ? ITEM_DB[state.equipped.weapon] : null;
-  const armor = state.equipped.armor ? ITEM_DB[state.equipped.armor] : null;
-  let html = `<h2>🎽 Ausrüstung</h2>`;
-  html += `<div class="stat-row"><span class="stat-label"><span class="icn">${weapon ? weapon.icon : "⚔️"}</span>Waffe</span><span class="${weapon ? 'equipItem' : 'equipEmpty'}">${weapon ? weapon.name + " (+" + weapon.bonus + ")" : "keine"}</span></div>`;
-  html += `<div class="stat-row"><span class="stat-label"><span class="icn">${armor ? armor.icon : "🛡️"}</span>Rüstung</span><span class="${armor ? 'equipItem' : 'equipEmpty'}">${armor ? armor.name + " (+" + armor.bonus + ")" : "keine"}</span></div>`;
+  const weapon = state.equipped.weapon
+    ? ITEM_DB[state.equipped.weapon]
+    : null;
+
+  const armor = state.equipped.armor
+    ? ITEM_DB[state.equipped.armor]
+    : null;
+
+  let html = `
+    <h2 class="sectionTitle">
+      <img src="images/icons/tools.png" alt="">
+      Ausrüstung
+    </h2>
+  `;
+
+  html += `
+    <div class="stat-row">
+      <span class="stat-label">
+        <span class="icn">
+          <img src="${
+            state.equipped.weapon
+              ? ITEM_ICON_FILES[state.equipped.weapon]
+              : "images/icons/sword.png"
+          }" alt="">
+        </span>
+        Waffe
+      </span>
+
+      <span class="${weapon ? "equipItem" : "equipEmpty"}">
+        ${weapon ? weapon.name + " (+" + weapon.bonus + ")" : "keine"}
+      </span>
+    </div>
+  `;
+
+  html += `
+    <div class="stat-row">
+      <span class="stat-label">
+        <span class="icn">
+          <img src="${
+            state.equipped.armor
+              ? ITEM_ICON_FILES[state.equipped.armor]
+              : "images/icons/shield.png"
+          }" alt="">
+        </span>
+        Rüstung
+      </span>
+
+      <span class="${armor ? "equipItem" : "equipEmpty"}">
+        ${armor ? armor.name + " (+" + armor.bonus + ")" : "keine"}
+      </span>
+    </div>
+  `;
+
   if (state.equipmentInventory.length > 0) {
-    html += `<div style="margin-top:8px; font-size:12px; color:#9a9689;">Zum Ausrüsten antippen:</div>`;
+    html += `
+      <div style="margin-top:8px; font-size:12px; color:#9a9689;">
+        Zum Ausrüsten antippen:
+      </div>
+    `;
+
     state.equipmentInventory.forEach((itemId, index) => {
       const item = ITEM_DB[itemId];
-      const bonusLabel = item.type === "weapon" ? "+" + item.bonus + " Schaden" : "+" + item.bonus + " Block";
-      html += `<div class="equipList-item" onclick="equipItem(${index})"><span>${item.icon} ${item.name}</span><span class="iBonus">${bonusLabel}</span></div>`;
+
+      const bonusLabel =
+        item.type === "weapon"
+          ? "+" + item.bonus + " Schaden"
+          : "+" + item.bonus + " Block";
+
+      html += `
+        <div class="equipList-item" onclick="equipItem(${index})">
+          <span class="equipName">
+            <img src="${ITEM_ICON_FILES[itemId]}" alt="">
+            ${item.name}
+          </span>
+
+          <span class="iBonus">${bonusLabel}</span>
+        </div>
+      `;
     });
   }
+
   document.getElementById("equipmentBox").innerHTML = html;
 
   renderDeckOverview();
 }
+}
 
 function renderDeckOverview() {
   const counts = {};
-  state.deck.forEach(id => counts[id] = (counts[id] || 0) + 1);
-  let html = `<h2>🃏 Deck (${state.deck.length} Karten)</h2>`;
+
+  state.deck.forEach(id => {
+    counts[id] = (counts[id] || 0) + 1;
+  });
+
+  let html = `
+    <h2 class="sectionTitle">
+      <img src="images/icons/attack.png" alt="">
+      Deck (${state.deck.length} Karten)
+    </h2>
+  `;
+
   Object.keys(counts).forEach(cardId => {
     const info = CARD_DB[cardId];
-    html += `<div class="stat-row"><span class="stat-label"><span class="icn">${info.icon}</span>${info.name}</span><span>x${counts[cardId]}</span></div>`;
+
+    html += `
+      <div class="stat-row">
+        <span class="stat-label">
+          <span class="icn">
+            <img src="${CARD_ICON_FILES[cardId]}" alt="">
+          </span>
+          ${info.name}
+        </span>
+
+        <span>x${counts[cardId]}</span>
+      </div>
+    `;
   });
+
   document.getElementById("deckBox").innerHTML = html;
 }
 
