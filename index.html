@@ -502,6 +502,13 @@
   width: 20px;
   height: 20px;
   object-fit: contain;
+}/* PHASE 9.2 – CAMP ACTION ICONS */
+
+.campActionBtn .cIcon2 img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  display: block;
 }</style>
 </head>
 <body>
@@ -1179,18 +1186,72 @@ function checkDeathConditions() {
 }
 
 function renderCamp() {
-  document.getElementById("sleepBtnWrap").innerHTML =
-    `<button class="campActionBtn" onclick="sleepAtCamp()"><span class="cIcon2">😴</span><span class="btnText">Schlafen<span class="btnSub">Energie voll, +15 Leben, -15 Hunger, springt zum Morgen</span></span></button>`;
+  document.getElementById("sleepBtnWrap").innerHTML = `
+  <button class="campActionBtn" onclick="sleepAtCamp()">
+    <span class="cIcon2">
+      <img src="images/icons/sleep.png" alt="">
+    </span>
+    <span class="btnText">
+      Schlafen
+      <span class="btnSub">
+        Energie voll, +15 Leben, -15 Hunger, springt zum Morgen
+      </span>
+    </span>
+  </button>
+`;
 
-  const beerenCount = countItem("Beeren");
-  document.getElementById("eatBtnWrap").innerHTML = beerenCount > 0
-    ? `<button class="campActionBtn" onclick="eatBerries()"><span class="cIcon2">🍓</span><span class="btnText">Beeren essen (${beerenCount})<span class="btnSub">+15 Hunger</span></span></button>`
-    : `<button class="campActionBtn disabled"><span class="cIcon2">🍓</span><span class="btnText">Keine Beeren im Inventar</span></button>`;
+const beerenCount = countItem("Beeren");
 
-  const bandageCount = state.consumables.filter(c => c === "verband").length;
-  document.getElementById("bandageBtnWrap").innerHTML = bandageCount > 0
-    ? `<button class="campActionBtn" onclick="useBandage()"><span class="cIcon2">🩹</span><span class="btnText">Verband benutzen (${bandageCount})<span class="btnSub">+25 Leben</span></span></button>`
-    : `<button class="campActionBtn disabled"><span class="cIcon2">🩹</span><span class="btnText">Keine Verbände vorhanden</span></button>`;
+document.getElementById("eatBtnWrap").innerHTML =
+  beerenCount > 0
+    ? `
+      <button class="campActionBtn" onclick="eatBerries()">
+        <span class="cIcon2">
+          <img src="images/icons/berries.png" alt="">
+        </span>
+        <span class="btnText">
+          Beeren essen (${beerenCount})
+          <span class="btnSub">+15 Hunger</span>
+        </span>
+      </button>
+    `
+    : `
+      <button class="campActionBtn disabled">
+        <span class="cIcon2">
+          <img src="images/icons/berries.png" alt="">
+        </span>
+        <span class="btnText">
+          Keine Beeren im Inventar
+        </span>
+      </button>
+    `;
+
+const bandageCount =
+  state.consumables.filter(c => c === "verband").length;
+
+document.getElementById("bandageBtnWrap").innerHTML =
+  bandageCount > 0
+    ? `
+      <button class="campActionBtn" onclick="useBandage()">
+        <span class="cIcon2">
+          <img src="images/icons/heal.png" alt="">
+        </span>
+        <span class="btnText">
+          Verband benutzen (${bandageCount})
+          <span class="btnSub">+25 Leben</span>
+        </span>
+      </button>
+    `
+    : `
+      <button class="campActionBtn disabled">
+        <span class="cIcon2">
+          <img src="images/icons/heal.png" alt="">
+        </span>
+        <span class="btnText">
+          Keine Verbände vorhanden
+        </span>
+      </button>
+    `;
 
   const craftDiv = document.getElementById("craftList");
   craftDiv.innerHTML = "";
