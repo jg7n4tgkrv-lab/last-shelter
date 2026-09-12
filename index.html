@@ -609,6 +609,15 @@ const CARD_DB = {
   heavy:       { name: "Schwerer Schlag", cost: 2, desc: "Hoher Schaden am Gegner", icon: "🔨" },
   heal:        { name: "Erste Hilfe", cost: 1, desc: "+15 Leben", icon: "❤️‍🩹" }
 };
+ const CARD_ICON_FILES = {
+  attack: "images/icons/attack.png",
+  attack_plus: "images/icons/sword.png",
+  defend: "images/icons/shield.png",
+  defend_plus: "images/icons/shield.png",
+  dodge: "images/icons/flee.png",
+  heavy: "images/icons/sword.png",
+  heal: "images/icons/heal.png"
+};
 
 const DEFAULT_DECK = ["attack","attack","attack","attack","attack","defend","defend","dodge","heavy","heal"];
 
@@ -1179,8 +1188,22 @@ function renderCombat() {
   document.getElementById("enemyName").textContent = `${combat.enemyName}  (${combat.enemyHp}/${combat.enemyMaxHp})`;
   document.getElementById("enemyBar").style.width = Math.max(0, (combat.enemyHp / combat.enemyMaxHp) * 100) + "%";
   document.getElementById("playerBar").style.width = Math.max(0, (state.health / maxHp) * 100) + "%";
-  document.getElementById("combatStatus").innerHTML =
-    `<span>❤️ ${state.health}/${maxHp}</span><span>🛡️ ${combat.block}</span><span>⚡ ${combat.ap}/${combat.maxAp}</span>`;
+  document.getElementById("combatStatus").innerHTML = `
+  <span class="combatStat">
+    <img src="images/icons/health.png" alt="">
+    ${state.health}/${maxHp}
+  </span>
+
+  <span class="combatStat">
+    <img src="images/icons/shield.png" alt="">
+    ${combat.block}
+  </span>
+
+  <span class="combatStat">
+    <img src="images/icons/energy.png" alt="">
+    ${combat.ap}/${combat.maxAp}
+  </span>
+`;
 
   const handDiv = document.getElementById("hand");
   handDiv.innerHTML = "";
@@ -1188,7 +1211,16 @@ function renderCombat() {
     const info = CARD_DB[cardId];
     const el = document.createElement("div");
     el.className = "handCard" + (info.cost > combat.ap ? " disabled" : "");
-    el.innerHTML = `<span class="cCost">${info.cost} AP</span><div class="cName">${info.icon} ${info.name}</div><div class="cDesc">${info.desc}</div>`;
+    el.innerHTML = `
+  <span class="cCost">${info.cost} AP</span>
+
+  <div class="cName">
+    <img src="${CARD_ICON_FILES[cardId]}" alt="">
+    ${info.name}
+  </div>
+
+  <div class="cDesc">${info.desc}</div>
+`;
     el.onclick = () => playCard(index);
     handDiv.appendChild(el);
   });
