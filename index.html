@@ -680,30 +680,21 @@ function render() {
   updateBodyClass();
   const maxHp = getMaxHealth();
 
-  document.getElementById("quickStats").innerHTML = `
-  <div class="qBlock">
-    <span class="qLabel">
-      <img class="uiIcon" src="images/icons/health.png" alt="">
-      LEBEN
-    </span>
-    <span class="qVal qHealth">${state.health}/${maxHp}</span>
-  </div>
+  document.getElementById("worldLine").innerHTML = `
+  <span>
+    <img class="worldIcon" src="${TIME_ICONS[timeOfDay]}" alt="">
+    ${formatTime()} · ${timeOfDay}
+  </span>
 
-  <div class="qBlock">
-    <span class="qLabel">
-      <img class="uiIcon" src="images/icons/hunger.png" alt="">
-      HUNGER
-    </span>
-    <span class="qVal qHunger">${state.hunger}</span>
-  </div>
+  <span>
+    <img class="worldIcon" src="${WEATHER_ICONS[state.weather]}" alt="">
+    ${state.weather}
+  </span>
 
-  <div class="qBlock">
-    <span class="qLabel">
-      <img class="uiIcon" src="images/icons/energy.png" alt="">
-      ENERGIE
-    </span>
-    <span class="qVal qEnergy">${state.energy}</span>
-  </div>
+  <span>
+    <img class="worldIcon" src="images/icons/star.png" alt="">
+    Lv. ${state.level}
+  </span>
 `;
   const timeOfDay = getTimeOfDay();
   document.getElementById("worldLine").innerHTML =
