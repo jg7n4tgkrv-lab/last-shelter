@@ -1135,16 +1135,16 @@ function explore(loc) {
 
   if (roll < 0.25) {
     state.inventory.push("Holz");
-    log(`${loc.icon} ${loc.name}: Du hast Holz gefunden.`);
+    log(`${loc.name}: Du hast Holz gefunden.`);
   } else if (roll < 0.45) {
     state.inventory.push("Beeren");
-    log(`${loc.icon} ${loc.name}: Du hast Beeren gefunden.`);
+    log(`${loc.name}: Du hast Beeren gefunden.`);
   } else if (roll < dangerThreshold) {
     let avoidChance = state.attributes.wahrnehmung * 0.03;
     if (state.weather === "Nebel") avoidChance += 0.1;
     if (Math.random() < avoidChance) {
       state.inventory.push("Holz");
-      log(`${loc.icon} ${loc.name}: Deine Wahrnehmung hat dich vor einer Gefahr gewarnt – du hast stattdessen Holz gefunden.`);
+      log(`${loc.name}: Deine Wahrnehmung hat dich vor einer Gefahr gewarnt – du hast stattdessen Holz gefunden.`);
     } else {
       const enemyId = loc.enemyPool[Math.floor(Math.random() * loc.enemyPool.length)];
       const nightNote = isNight() ? " In der Dunkelheit wirkt der Gegner gefährlicher." : "";
@@ -1153,14 +1153,14 @@ function explore(loc) {
     }
   } else if (roll < 0.85) {
     state.health -= 5;
-    log(`${loc.icon} ${loc.name}: Du hast dich leicht verletzt.`);
+    log(`${loc.name}: Du hast dich leicht verletzt.`);
   } else if (roll < 0.95) {
     state.xp += 10;
-    log(`${loc.icon} ${loc.name}: Nichts Besonderes, aber du hast Erfahrung gesammelt.`);
+    log(`${loc.name}: Nichts Besonderes, aber du hast Erfahrung gesammelt.`);
     checkLevelUp();
   } else {
     state.xp += 25;
-    log(`${loc.icon} ${loc.name}: Seltenes Ereignis! Du fühlst dich gestärkt.`);
+    log(`${loc.name}: Seltenes Ereignis! Du fühlst dich gestärkt.`);
     checkLevelUp();
   }
 
@@ -1176,7 +1176,7 @@ function checkLevelUp() {
     state.level += 1;
     state.xp = 0;
     state.pendingLevelUps = (state.pendingLevelUps || 0) + 1;
-    log(`⭐ Level Up! Du bist jetzt Level ${state.level}.`);
+    log(`Level Up! Du bist jetzt Level ${state.level}.`);
   }
 }
 
@@ -1186,7 +1186,7 @@ function checkDeathConditions() {
     state.health = getMaxHealth();
     state.hunger = 100;
     state.energy = 100;
-    log("💫 Du bist zusammengebrochen und wurdest gerettet. Werte zurückgesetzt.");
+    log("Du bist zusammengebrochen und wurdest gerettet. Werte zurückgesetzt.");
   }
 }
 
@@ -1369,7 +1369,7 @@ function sleepAtCamp() {
   state.hunger = Math.max(0, state.hunger - 15);
   state.timeHour = 7;
   state.weather = WEATHER_TYPES[Math.floor(Math.random() * WEATHER_TYPES.length)];
-  log("😴 Du hast im Lager geschlafen und dich erholt. Ein neuer Morgen beginnt.");
+  log("Du hast im Lager geschlafen und dich erholt. Ein neuer Morgen beginnt.");
   checkDeathConditions();
   saveGame();
   render();
@@ -1615,16 +1615,17 @@ function winCombat() {
   if (Math.random() < 0.4) {
     const itemId = LOOT_TABLE[Math.floor(Math.random() * LOOT_TABLE.length)];
     state.equipmentInventory.push(itemId);
-    lootMsg = ` 🎁 Beute gefunden: ${ITEM_DB[itemId].icon} ${ITEM_DB[itemId].name}!`;
+    lootMsg = ` Beute gefunden: ${ITEM_DB[itemId].name}!`;
   }
-  endCombatOverlay(`🏆 Sieg gegen ${combat.enemyName}! +20 XP.${lootMsg}`);
+  endCombatOverlay(`Sieg gegen ${combat.enemyName}! +20 XP.${lootMsg}`);
 }
 
 function loseCombat() {
   state.health = getMaxHealth();
   state.hunger = Math.max(0, state.hunger - 20);
   state.energy = Math.max(0, state.energy - 20);
-  endCombatOverlay(`💫 Du wurdest besiegt und konntest fliehen. Leben wurde wiederhergestellt.`);
+  endCombatOverlay(`Du wurdest besiegt und konntest fliehen. Leben wurde wiederhergestellt.`);
+
 }
 
 function endCombatOverlay(message) {
