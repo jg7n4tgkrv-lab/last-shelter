@@ -1051,12 +1051,35 @@ function renderCharacter() {
 
 function renderDeckOverview() {
   const counts = {};
-  state.deck.forEach(id => counts[id] = (counts[id] || 0) + 1);
-  let html = `<h2>🃏 Deck (${state.deck.length} Karten)</h2>`;
+
+  state.deck.forEach(id => {
+    counts[id] = (counts[id] || 0) + 1;
+  });
+
+  let html = `
+    <h2 class="sectionTitle">
+      <img src="images/icons/attack.png" alt="">
+      Deck (${state.deck.length} Karten)
+    </h2>
+  `;
+
   Object.keys(counts).forEach(cardId => {
     const info = CARD_DB[cardId];
-    html += `<div class="stat-row"><span class="stat-label"><span class="icn">${info.icon}</span>${info.name}</span><span>x${counts[cardId]}</span></div>`;
+
+    html += `
+      <div class="stat-row">
+        <span class="stat-label">
+          <span class="icn">
+            <img src="${CARD_ICON_FILES[cardId]}" alt="">
+          </span>
+          ${info.name}
+        </span>
+
+        <span>x${counts[cardId]}</span>
+      </div>
+    `;
   });
+
   document.getElementById("deckBox").innerHTML = html;
 }
 
