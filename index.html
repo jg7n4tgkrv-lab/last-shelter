@@ -1293,17 +1293,52 @@ function renderForge() {
   forgeDiv.innerHTML = "";
 
   const entries = [
-    { label: "Angriffskarte schmieden", cost: 4, icon: "⚔️", action: () => forgeCard("attack", 4), can: holz >= 4 },
-    { label: "Verteidigen-Karte schmieden", cost: 4, icon: "🛡️", action: () => forgeCard("defend", 4), can: holz >= 4 },
-    { label: "Angriff verbessern → Angriff+", cost: 6, icon: "🗡️", action: () => upgradeDeckCard("attack", "attack_plus", 6), can: holz >= 6 && atkCount > 0, note: atkCount === 0 ? "Keine Angriffskarte im Deck" : null },
-    { label: "Verteidigen verbessern → Verteidigen+", cost: 6, icon: "🔰", action: () => upgradeDeckCard("defend", "defend_plus", 6), can: holz >= 6 && defCount > 0, note: defCount === 0 ? "Keine Verteidigen-Karte im Deck" : null }
-  ];
+  {
+    label: "Angriffskarte schmieden",
+    cost: 4,
+    icon: "images/icons/attack.png",
+    action: () => forgeCard("attack", 4),
+    can: holz >= 4
+  },
+  {
+    label: "Verteidigen-Karte schmieden",
+    cost: 4,
+    icon: "images/icons/shield.png",
+    action: () => forgeCard("defend", 4),
+    can: holz >= 4
+  },
+  {
+    label: "Angriff verbessern → Angriff+",
+    cost: 6,
+    icon: "images/icons/sword.png",
+    action: () => upgradeDeckCard("attack", "attack_plus", 6),
+    can: holz >= 6 && atkCount > 0,
+    note: atkCount === 0 ? "Keine Angriffskarte im Deck" : null
+  },
+  {
+    label: "Verteidigen verbessern → Verteidigen+",
+    cost: 6,
+    icon: "images/icons/shield.png",
+    action: () => upgradeDeckCard("defend", "defend_plus", 6),
+    can: holz >= 6 && defCount > 0,
+    note: defCount === 0 ? "Keine Verteidigen-Karte im Deck" : null
+  }
+];
 
   entries.forEach(entry => {
     const btn = document.createElement("button");
     btn.className = "campActionBtn" + (entry.can ? "" : " disabled");
     const subText = entry.note ? entry.note : `Kosten: ${entry.cost} Holz – du hast ${holz} Holz`;
-    btn.innerHTML = `<span class="cIcon2">${entry.icon}</span><span class="btnText">${entry.label}<span class="btnSub">${subText}</span></span>`;
+    btn.innerHTML = `
+  <span class="cIcon2">
+    <img src="${entry.icon}" alt="">
+  </span>
+
+  <span class="btnText">
+    ${entry.label}
+    <span class="btnSub">${subText}</span>
+  </span>
+`;
     btn.onclick = entry.can ? entry.action : null;
     forgeDiv.appendChild(btn);
   });
