@@ -623,6 +623,9 @@ body {
   border: 1px solid #3b5538;
   color: #e3e2c9;
 }
+.itemCard.actionable { cursor: pointer; transition: transform 0.12s ease, filter 0.12s ease; }
+.itemCard.actionable:active { transform: scale(0.97); filter: brightness(1.18); }
+.itemAction { display: block; margin-top: 2px; color: #d7c87e; font-size: 9px; }
 .itemCard img { width: 28px; height: 28px; object-fit: contain; flex: 0 0 auto; }
 .itemCardText { min-width: 0; flex: 1; }
 .itemCardName { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
@@ -1115,12 +1118,14 @@ function render() {
 
   const inventoryCards = Object.entries(inventoryCounts).map(([item, count]) => {
     const icon = item === "Holz" ? "images/icons/forest.png" : "images/icons/berries.png";
+    const actionable = item === "Beeren";
     return `
-      <div class="itemCard">
+      <div class="itemCard${actionable ? " actionable" : ""}"${actionable ? ' onclick="eatBerries()"' : ""}>
         <img src="${icon}" alt="">
         <span class="itemCardText">
           <span class="itemCardName">${item}</span>
           <span class="itemCardCount">×${count} gesammelt</span>
+          ${actionable ? '<span class="itemAction">Antippen zum Essen</span>' : ""}
         </span>
       </div>
     `;
@@ -1132,12 +1137,14 @@ function render() {
   });
   Object.entries(equipmentCounts).forEach(([itemId, count]) => {
     const item = ITEM_DB[itemId];
+    const equipmentIndex = state.equipmentInventory.indexOf(itemId);
     inventoryCards.push(`
-      <div class="itemCard equipment">
+      <div class="itemCard equipment actionable" onclick="equipItem(${equipmentIndex})">
         <img src="${ITEM_ICON_FILES[itemId]}" alt="">
         <span class="itemCardText">
           <span class="itemCardName">${item.name}</span>
           <span class="itemCardCount">×${count} Ausrüstung</span>
+          <span class="itemAction">Antippen zum Ausrüsten</span>
         </span>
       </div>
     `);
@@ -1149,12 +1156,14 @@ function render() {
   });
   Object.entries(consumableCounts).forEach(([itemId, count]) => {
     const recipe = RECIPES.find(r => r.id === itemId);
+    const action = itemId === "verband" ? ' onclick="useBandage()"' : "";
     inventoryCards.push(`
-      <div class="itemCard consumable">
+      <div class="itemCard consumable${action ? " actionable" : ""}"${action}>
         <img src="${RECIPE_ICON_FILES[itemId]}" alt="">
         <span class="itemCardText">
           <span class="itemCardName">${recipe ? recipe.name : itemId}</span>
           <span class="itemCardCount">×${count} Verbrauchsgegenstand</span>
+          ${action ? '<span class="itemAction">Antippen zum Benutzen</span>' : ""}
         </span>
       </div>
     `);
@@ -1347,13 +1356,16 @@ function renderDeckOverview() {
 
 function equipItem(index) {
   const itemId = state.equipmentInventory[index];
+  if (!itemId || !ITEM_DB[itemId]) return;
   const item = ITEM_DB[itemId];
   const slot = item.type;
   const currentlyEquipped = state.equipped[slot];
   if (currentlyEquipped) state.equipmentInventory.push(currentlyEquipped);
   state.equipped[slot] = itemId;
   state.equipmentInventory.splice(index, 1);
+  log(`${item.name} ausgerüstet.`);
   saveGame();
+  render();
   renderCharacter();
 }
 
@@ -1630,6 +1642,7 @@ function eatBerries() {
   if (countItem("Beeren") === 0) return;
   removeOneItem("Beeren");
   state.hunger = Math.min(100, state.hunger + 15);
+  log("Du hast Beeren gegessen. Der Hunger ist gesunken.");
   saveGame();
   render();
   renderCamp();
@@ -1640,6 +1653,7 @@ function useBandage() {
   if (idx === -1) return;
   state.consumables.splice(idx, 1);
   state.health = Math.min(getMaxHealth(), state.health + 25);
+  log("Du hast einen Verband benutzt und dich geheilt.");
   saveGame();
   render();
   renderCamp();
