@@ -607,6 +607,34 @@ body {
 #cards .card { min-height: 145px; padding: 102px 10px 13px; border-radius: 17px; font-size: 15px; }
 #cards .card:not(.locked)::before { content: "ERKUNDEN"; position: absolute; top: 11px; left: 11px; font-size: 9px; letter-spacing: 1.5px; color: rgba(255,255,255,0.78); }
 #cards .card.locked { min-height: 145px; }
+#cards .card.selected { outline: 2px solid #d8c878; outline-offset: 2px; }
+
+.actionSection { margin: 4px 0 15px; }
+.actionSectionHead { display: flex; align-items: flex-end; justify-content: space-between; margin: 0 2px 9px; }
+.actionSectionHead h2 { margin: 3px 0 0; color: #eee9d5; font-size: 18px; }
+.actionHint { color: #788275; font-size: 10px; }
+.actionCards { display: grid; gap: 8px; }
+.actionCard {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  text-align: left;
+  padding: 12px;
+  border-radius: 15px;
+  border: 1px solid #3b5137;
+  background: linear-gradient(145deg, #202f20, #172119);
+  color: #e9e7d2;
+  transition: transform 0.12s ease, filter 0.12s ease;
+}
+.actionCard:active { transform: scale(0.98); filter: brightness(1.18); }
+.actionCard.primary { border-color: #887643; background: linear-gradient(145deg, #3b3922, #252519); }
+.actionCardIcon { width: 34px; height: 34px; padding: 6px; border-radius: 10px; background: rgba(0,0,0,0.25); flex: 0 0 auto; }
+.actionCardIcon img { width: 100%; height: 100%; object-fit: contain; }
+.actionCardText { min-width: 0; flex: 1; }
+.actionCardName { display: block; font-size: 14px; font-weight: 700; }
+.actionCardDesc { display: block; margin-top: 3px; color: #aab29e; font-size: 11px; line-height: 1.25; }
+.actionCardCost { color: #d4c879; font-size: 10px; white-space: nowrap; }
 
 #inventory { border-radius: 16px; background: #151c15; border-color: #2d3d2b; padding: 13px 14px; }
 
@@ -685,6 +713,16 @@ body {
     </div>
     <div id="log">Willkommen. Wähle ein Gebiet zum Erkunden.</div>
     <div id="cards"></div>
+    <section class="actionSection">
+      <div class="actionSectionHead">
+        <div>
+          <span class="sectionEyebrow">AKTIONEN</span>
+          <h2 id="selectedLocationLabel">Dichter Wald</h2>
+        </div>
+        <span class="actionHint">Wähle eine Karte</span>
+      </div>
+      <div id="actionCards"></div>
+    </section>
     <div id="inventory">
   <span class="hd sectionTitle">
     <img src="images/icons/backpack.png" alt="">
@@ -937,6 +975,7 @@ let state = {
 
 let combat = null;
 let currentTab = "screenExplore";
+let selectedLocationId = "wald";
 
 function loadGame() {
   const saved = localStorage.getItem("lastShelterSave");
@@ -1021,6 +1060,95 @@ function advanceTime(hours) {
 function formatTime() { return `${String(state.timeHour).padStart(2, "0")}:00`; }
 function updateBodyClass() { document.body.classList.toggle("night", isNight()); }
 
+function getSelectedLocation() {
+  return LOCATIONS.find(loc => loc.id === selectedLocationId) || LOCATIONS[0];
+}
+
+function selectLocation(loc) {
+  if (state.level < loc.minLevel) return;
+  selectedLocationId = loc.id;
+  log(`${loc.name} ausgewählt. Welche Aktion möchtest du ausführen?`);
+  render();
+}
+
+function renderActionCards() {
+  const location = getSelectedLocation();
+  const label = document.getElementById("selectedLocationLabel");
+  const actionDiv = document.getElementById("actionCards");
+  if (!label || !actionDiv) return;
+
+  label.textContent = location.name;
+  actionDiv.className = "actionCards";
+  actionDiv.innerHTML = `
+    <button class="actionCard" onclick="gatherResources()">
+      <span class="actionCardIcon"><img src="images/icons/forest.png" alt=""></span>
+      <span class="actionCardText">
+        <span class="actionCardName">Sorgfältig sammeln</span>
+        <span class="actionCardDesc">Suche nach Holz oder Beeren und bleibe möglichst unauffällig.</span>
+      </span>
+      <span class="actionCardCost">−5 Energie<br>−2 Hunger</span>
+    </button>
+
+    <button class="actionCard primary" onclick="explore(getSelectedLocation())">
+      <span class="actionCardIcon"><img src="images/icons/compass.png" alt=""></span>
+      <span class="actionCardText">
+        <span class="actionCardName">Gebiet erkunden</span>
+        <span class="actionCardDesc">Eine unvorhersehbare Expedition mit Beute, Gefahren und Kämpfen.</span>
+      </span>
+      <span class="actionCardCost">−4–15 Energie</span>
+    </button>
+
+    <button class="actionCard" onclick="trackLocation()">
+      <span class="actionCardIcon"><img src="images/icons/flee.png" alt=""></span>
+      <span class="actionCardText">
+        <span class="actionCardName">Spuren lesen</span>
+        <span class="actionCardDesc">Deine Wahrnehmung hilft dir, Gefahren früh zu erkennen.</span>
+      </span>
+      <span class="actionCardCost">−4 Energie<br>−1 Hunger</span>
+    </button>
+  `;
+}
+
+function gatherResources() {
+  const location = getSelectedLocation();
+  if (state.energy < 5) { log("Zu wenig Energie zum Sammeln."); return; }
+  state.energy = Math.max(0, state.energy - 5);
+  state.hunger = Math.max(0, state.hunger - 2);
+  advanceTime(1);
+  if (Math.random() < 0.58) {
+    state.inventory.push("Holz");
+    log(`${location.name}: Du hast vorsichtig Holz gesammelt.`);
+  } else {
+    state.inventory.push("Beeren");
+    log(`${location.name}: Du hast essbare Beeren gefunden.`);
+  }
+  checkDeathConditions();
+  saveGame();
+  render();
+}
+
+function trackLocation() {
+  const location = getSelectedLocation();
+  if (state.energy < 4) { log("Zu wenig Energie, um Spuren zu lesen."); return; }
+  state.energy = Math.max(0, state.energy - 4);
+  state.hunger = Math.max(0, state.hunger - 1);
+  advanceTime(1);
+  const perceptionChance = Math.min(0.9, 0.45 + state.attributes.wahrnehmung * 0.06);
+  if (Math.random() < perceptionChance) {
+    state.xp += 8;
+    log(`${location.name}: Du hast Spuren entdeckt und +8 XP erhalten.`);
+    checkLevelUp();
+    saveGame();
+    render();
+    maybeShowPerkSelection();
+    return;
+  }
+  const enemyId = location.enemyPool[Math.floor(Math.random() * location.enemyPool.length)];
+  log(`${location.name}: Die Spuren führen direkt zu einer Gefahr.`);
+  saveGame();
+  startCombat(ENEMY_DB[enemyId], location.name, "Du wurdest überrascht!");
+}
+
 function render() {
   updateBodyClass();
   const maxHp = getMaxHealth();
@@ -1090,12 +1218,12 @@ function render() {
     const card = document.createElement("div");
     const unlocked = state.level >= loc.minLevel;
 
-    card.className = "card" + (unlocked ? "" : " locked");
+    card.className = "card" + (unlocked ? "" : " locked") + (loc.id === selectedLocationId ? " selected" : "");
     card.style.setProperty("--accent", loc.accent);
 
     if (unlocked) {
       card.innerHTML = `<span class="cIcon">${loc.icon}</span>${loc.name}`;
-      card.onclick = () => explore(loc);
+      card.onclick = () => selectLocation(loc);
     } else {
       card.innerHTML = `
   <span class="cIcon">${loc.icon}</span>
@@ -1110,6 +1238,8 @@ function render() {
 
     cardsDiv.appendChild(card);
   });
+
+  renderActionCards();
 
   const inventoryCounts = {};
   state.inventory.forEach(item => {
