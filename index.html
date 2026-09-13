@@ -610,6 +610,26 @@ body {
 
 #inventory { border-radius: 16px; background: #151c15; border-color: #2d3d2b; padding: 13px 14px; }
 
+.inventoryGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.inventoryEmpty { grid-column: 1 / -1; color: #6f796d; font-size: 12px; padding: 5px 0 2px; }
+.itemCard {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 9px;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #263526, #1a251a);
+  border: 1px solid #3b5538;
+  color: #e3e2c9;
+}
+.itemCard img { width: 28px; height: 28px; object-fit: contain; flex: 0 0 auto; }
+.itemCardText { min-width: 0; flex: 1; }
+.itemCardName { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+.itemCardCount { display: block; margin-top: 2px; color: #9dac91; font-size: 10px; }
+.itemCard.equipment { background: linear-gradient(145deg, #332d1b, #241f14); border-color: #62502c; }
+.itemCard.consumable { background: linear-gradient(145deg, #26343a, #1b282d); border-color: #3e5c65; }
+
 #tabbar { padding-top: 5px; background: rgba(12,16,12,0.96); backdrop-filter: blur(16px); border-top-color: rgba(132,151,106,0.2); }
 .tabBtn { padding: 9px 0 calc(9px + env(safe-area-inset-bottom)); color: #6d7567; font-size: 11px; }
 .tabBtn.active { color: #e2d28f; }
@@ -667,7 +687,7 @@ body {
     <img src="images/icons/backpack.png" alt="">
     Inventar
   </span>
-  <span id="invList"></span>
+  <div id="invList" class="inventoryGrid"></div>
 </div>
   </div>
 
@@ -959,6 +979,9 @@ function getMaxHealth() { return 100 + state.attributes.vitalitaet * 5; }
 function getWeaponBonus() { return state.equipped.weapon ? ITEM_DB[state.equipped.weapon].bonus : 0; }
 function getArmorBonus() { return state.equipped.armor ? ITEM_DB[state.equipped.armor].bonus : 0; }
 function countItem(name) { return state.inventory.filter(i => i === name).length; }
+function getTotalInventoryCount() {
+  return state.inventory.length + state.equipmentInventory.length + state.consumables.length;
+}
 function removeOneItem(name) { const idx = state.inventory.indexOf(name); if (idx !== -1) state.inventory.splice(idx, 1); }
 function removeOneFromDeck(cardId) { const idx = state.deck.indexOf(cardId); if (idx !== -1) state.deck.splice(idx, 1); }
 
@@ -1054,7 +1077,7 @@ function render() {
     document.getElementById("mobileWeather").textContent = state.weather;
     document.getElementById("mobileWeatherText").textContent = `${state.weather} · ${timeOfDay}`;
     document.getElementById("mobileWeatherIcon").src = WEATHER_ICONS[state.weather];
-    document.getElementById("mobileInvCount").textContent = state.inventory.length;
+    document.getElementById("mobileInvCount").textContent = getTotalInventoryCount();
   }
 
   const cardsDiv = document.getElementById("cards");
@@ -1085,8 +1108,61 @@ function render() {
     cardsDiv.appendChild(card);
   });
 
-  document.getElementById("invList").textContent =
-    state.inventory.length ? state.inventory.join(", ") : "leer";
+  const inventoryCounts = {};
+  state.inventory.forEach(item => {
+    inventoryCounts[item] = (inventoryCounts[item] || 0) + 1;
+  });
+
+  const inventoryCards = Object.entries(inventoryCounts).map(([item, count]) => {
+    const icon = item === "Holz" ? "images/icons/forest.png" : "images/icons/berries.png";
+    return `
+      <div class="itemCard">
+        <img src="${icon}" alt="">
+        <span class="itemCardText">
+          <span class="itemCardName">${item}</span>
+          <span class="itemCardCount">×${count} gesammelt</span>
+        </span>
+      </div>
+    `;
+  });
+
+  const equipmentCounts = {};
+  state.equipmentInventory.forEach(itemId => {
+    equipmentCounts[itemId] = (equipmentCounts[itemId] || 0) + 1;
+  });
+  Object.entries(equipmentCounts).forEach(([itemId, count]) => {
+    const item = ITEM_DB[itemId];
+    inventoryCards.push(`
+      <div class="itemCard equipment">
+        <img src="${ITEM_ICON_FILES[itemId]}" alt="">
+        <span class="itemCardText">
+          <span class="itemCardName">${item.name}</span>
+          <span class="itemCardCount">×${count} Ausrüstung</span>
+        </span>
+      </div>
+    `);
+  });
+
+  const consumableCounts = {};
+  state.consumables.forEach(itemId => {
+    consumableCounts[itemId] = (consumableCounts[itemId] || 0) + 1;
+  });
+  Object.entries(consumableCounts).forEach(([itemId, count]) => {
+    const recipe = RECIPES.find(r => r.id === itemId);
+    inventoryCards.push(`
+      <div class="itemCard consumable">
+        <img src="${RECIPE_ICON_FILES[itemId]}" alt="">
+        <span class="itemCardText">
+          <span class="itemCardName">${recipe ? recipe.name : itemId}</span>
+          <span class="itemCardCount">×${count} Verbrauchsgegenstand</span>
+        </span>
+      </div>
+    `);
+  });
+
+  document.getElementById("invList").innerHTML = inventoryCards.length
+    ? inventoryCards.join("")
+    : `<span class="inventoryEmpty">Noch keine Gegenstände gesammelt.</span>`;
 
   if (currentTab === "screenCharacter") renderCharacter();
   if (currentTab === "screenCamp") renderCamp();
