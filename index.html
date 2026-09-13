@@ -6,7 +6,7 @@
 <title>Last Shelter</title>
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body
+  html, body {
     height: 100%;
     margin: 0;
     background: #0b0d0b;
@@ -595,14 +595,14 @@
     </div>
     <div class="charBox">
       <h2 class="sectionTitle">
-  <img src="images/icons/tools.png" alt="">
+  <img src="images/icons/settings.png" alt="">
   Craften
 </h2>
       <div id="craftList"></div>
     </div>
     <div class="charBox">
       <h2 class="sectionTitle">
-  <img src="images/icons/sword.png" alt="">
+  <img src="images/icons/attack.png" alt="">
   Kartenschmiede
 </h2>
       <div id="forgeList"></div>
@@ -669,11 +669,11 @@ const CARD_DB = {
 };
  const CARD_ICON_FILES = {
   attack: "images/icons/attack.png",
-  attack_plus: "images/icons/sword.png",
+  attack_plus: "images/icons/attack.png",
   defend: "images/icons/shield.png",
   defend_plus: "images/icons/shield.png",
   dodge: "images/icons/flee.png",
-  heavy: "images/icons/sword.png",
+  heavy: "images/icons/attack.png",
   heal: "images/icons/heal.png"
 };
 
@@ -715,8 +715,8 @@ const PERKS = [
 
   add_atk: "images/icons/attack.png",
   add_def: "images/icons/shield.png",
-  trim_def: "images/icons/tools.png",
-  upgrade_atk: "images/icons/sword.png",
+  trim_def: "images/icons/settings.png",
+  upgrade_atk: "images/icons/attack.png",
   upgrade_def: "images/icons/shield.png"
 };
  const ATTRIBUTE_ICON_FILES = {
@@ -729,12 +729,12 @@ const PERKS = [
 
 const ITEM_ICON_FILES = {
   rusty_knife: "images/icons/attack.png",
-  spear: "images/icons/sword.png",
+  spear: "images/icons/attack.png",
   axe: "images/icons/chop-wood.png",
   cloth_wrap: "images/icons/leather.png",
   leather: "images/icons/leather.png",
   iron_plate: "images/icons/shield.png",
-  crafted_spear: "images/icons/sword.png",
+  crafted_spear: "images/icons/attack.png",
   crafted_armor: "images/icons/shield.png"
 };
 
@@ -758,7 +758,7 @@ const RECIPES = [
 ];
  const RECIPE_ICON_FILES = {
   verband: "images/icons/heal.png",
-  crafted_spear: "images/icons/sword.png",
+  crafted_spear: "images/icons/attack.png",
   crafted_armor: "images/icons/shield.png"
 };
 
@@ -767,11 +767,11 @@ const WEATHER_ICONS = {
   "Klar": "images/icons/daylight.png",
   "Regen": "images/icons/rain.png",
   "Nebel": "images/icons/cloudy.png",
-  "Sturm": "images/icons/thunderstorm.png"
+  "Sturm": "images/icons/rain.png"
 };
 
 const TIME_ICONS = {
-  "Morgen": "images/icons/sunrise.png",
+  "Morgen": "images/icons/daylight.png",
   "Mittag": "images/icons/daylight.png",
   "Abend": "images/icons/daylight.png",
   "Nacht": "images/icons/night.png"
@@ -793,8 +793,17 @@ let currentTab = "screenExplore";
 function loadGame() {
   const saved = localStorage.getItem("lastShelterSave");
   if (saved) {
-    const loaded = JSON.parse(saved);
+    let loaded;
+    try {
+      loaded = JSON.parse(saved);
+    } catch (error) {
+      localStorage.removeItem("lastShelterSave");
+      loaded = null;
+    }
+    if (!loaded || typeof loaded !== "object") return;
     state = Object.assign({
+      health: 100, hunger: 100, energy: 100, xp: 0, level: 1,
+      inventory: [],
       deck: [...DEFAULT_DECK],
       attributes: { staerke:0, vitalitaet:0, geschicklichkeit:0, ueberleben:0, wahrnehmung:0 },
       pendingLevelUps: 0,
@@ -802,6 +811,12 @@ function loadGame() {
       consumables: [], timeHour: 8, weather: "Klar"
     }, loaded);
     if (!state.deck || state.deck.length === 0) state.deck = [...DEFAULT_DECK];
+    if (!Array.isArray(state.inventory)) state.inventory = [];
+    if (!Number.isFinite(state.health)) state.health = 100;
+    if (!Number.isFinite(state.hunger)) state.hunger = 100;
+    if (!Number.isFinite(state.energy)) state.energy = 100;
+    if (!Number.isFinite(state.xp)) state.xp = 0;
+    if (!Number.isFinite(state.level) || state.level < 1) state.level = 1;
     if (!state.attributes) state.attributes = { staerke:0, vitalitaet:0, geschicklichkeit:0, ueberleben:0, wahrnehmung:0 };
     if (!state.equipmentInventory) state.equipmentInventory = [];
     if (!state.equipped) state.equipped = { weapon: null, armor: null };
@@ -1006,7 +1021,7 @@ function renderCharacter() {
 
   let html = `
     <h2 class="sectionTitle">
-      <img src="images/icons/tools.png" alt="">
+      <img src="images/icons/settings.png" alt="">
       Ausrüstung
     </h2>
   `;
@@ -1018,7 +1033,7 @@ function renderCharacter() {
           <img src="${
             state.equipped.weapon
               ? ITEM_ICON_FILES[state.equipped.weapon]
-              : "images/icons/sword.png"
+              : "images/icons/attack.png"
           }" alt="">
         </span>
         Waffe
@@ -1331,7 +1346,7 @@ function renderForge() {
   {
     label: "Angriff verbessern → Angriff+",
     cost: 6,
-    icon: "images/icons/sword.png",
+    icon: "images/icons/attack.png",
     action: () => upgradeDeckCard("attack", "attack_plus", 6),
     can: holz >= 6 && atkCount > 0,
     note: atkCount === 0 ? "Keine Angriffskarte im Deck" : null
