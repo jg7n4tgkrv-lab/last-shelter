@@ -522,7 +522,104 @@
   width: 14px;
   height: 14px;
   object-fit: contain;
-}</style>
+}
+
+/* MOBILE CARD SURVIVAL UI */
+body {
+  background:
+    radial-gradient(circle at 50% -10%, rgba(104,128,82,0.22), transparent 42%),
+    #0c100d;
+}
+
+#header {
+  padding: calc(10px + env(safe-area-inset-top)) 18px 12px;
+  background: rgba(13,17,13,0.92);
+  backdrop-filter: blur(14px);
+  border-bottom-color: rgba(132,151,106,0.18);
+}
+
+#header h1 {
+  font-size: 12px;
+  letter-spacing: 3px;
+  color: #d8c996;
+  margin-bottom: 8px;
+}
+
+#quickStats { display: none; }
+#worldLine { gap: 10px; justify-content: space-between; font-size: 11px; }
+#worldLine span { color: #aaa995; }
+#worldLine .worldIcon { width: 16px; height: 16px; }
+
+#main {
+  padding: 14px 14px 24px;
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.mobileOverview {
+  background:
+    linear-gradient(145deg, rgba(80,104,66,0.82), rgba(21,38,27,0.98)),
+    url("images/backgrounds/forest-day.jpg") center/cover;
+  border: 1px solid rgba(211,205,164,0.28);
+  border-radius: 22px;
+  padding: 18px;
+  margin-bottom: 20px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.32), inset 0 1px rgba(255,255,255,0.14);
+  overflow: hidden;
+  position: relative;
+}
+
+.mobileOverview::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(0,0,0,0.04), rgba(2,8,4,0.52));
+}
+
+.overviewTop, .needGrid { position: relative; z-index: 1; }
+.overviewTop { display: flex; justify-content: space-between; align-items: flex-start; }
+.overviewEyebrow, .sectionEyebrow { color: #d7d1a8; font-size: 10px; letter-spacing: 1.7px; font-weight: 700; }
+.overviewTop h2 { margin: 5px 0 2px; color: #fff9df; font-size: 25px; letter-spacing: -0.4px; }
+.overviewTop p { margin: 0; color: rgba(255,250,226,0.76); font-size: 12px; }
+.weatherBadge { min-width: 62px; text-align: center; color: #f4edc9; font-size: 10px; }
+.weatherBadge img { display: block; width: 32px; height: 32px; object-fit: contain; margin: 0 auto 3px; }
+
+.needGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin-top: 18px; }
+.needCard { background: rgba(5,10,7,0.42); border: 1px solid rgba(255,255,255,0.13); border-radius: 12px; padding: 8px 6px; min-width: 0; }
+.needCard span { display: flex; align-items: center; gap: 3px; color: rgba(255,255,255,0.72); font-size: 9px; white-space: nowrap; }
+.needCard img { width: 14px; height: 14px; object-fit: contain; }
+.needCard strong { display: block; margin-top: 4px; color: #fff7d5; font-size: 14px; }
+.needHealth strong { color: #bce08e; }
+.needHunger strong { color: #f0c879; }
+.needEnergy strong { color: #9fd3e8; }
+.needLevel strong { color: #e1d38d; }
+
+.sectionHeading { display: flex; align-items: flex-end; justify-content: space-between; margin: 4px 2px 10px; }
+.sectionHeading h2 { margin: 3px 0 0; font-size: 20px; color: #eee9d5; }
+.inventoryPill { display: flex; align-items: center; gap: 5px; background: #1d2a1d; color: #d9d09d; border: 1px solid #3e5839; border-radius: 99px; padding: 7px 10px; font-weight: 700; }
+.inventoryPill img { width: 17px; height: 17px; object-fit: contain; }
+
+#log { margin-bottom: 13px; padding: 12px 14px; border-radius: 13px; background: rgba(25,34,24,0.88); border-color: rgba(113,139,91,0.28); color: #c6c8b6; font-size: 12px; }
+
+#cards { grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+#cards .card { min-height: 145px; padding: 102px 10px 13px; border-radius: 17px; font-size: 15px; }
+#cards .card:not(.locked)::before { content: "ERKUNDEN"; position: absolute; top: 11px; left: 11px; font-size: 9px; letter-spacing: 1.5px; color: rgba(255,255,255,0.78); }
+#cards .card.locked { min-height: 145px; }
+
+#inventory { border-radius: 16px; background: #151c15; border-color: #2d3d2b; padding: 13px 14px; }
+
+#tabbar { padding-top: 5px; background: rgba(12,16,12,0.96); backdrop-filter: blur(16px); border-top-color: rgba(132,151,106,0.2); }
+.tabBtn { padding: 9px 0 calc(9px + env(safe-area-inset-bottom)); color: #6d7567; font-size: 11px; }
+.tabBtn.active { color: #e2d28f; }
+.tabBtn .tIcon { height: 25px; }
+
+@media (min-width: 600px) {
+  #main { padding-left: 22px; padding-right: 22px; }
+  #cards { grid-template-columns: repeat(3, 1fr); }
+}
+</style>
 </head>
 <body>
 
@@ -535,6 +632,34 @@
 <div id="main">
 
   <div class="screen active" id="screenExplore">
+    <section class="mobileOverview">
+      <div class="overviewTop">
+        <div>
+          <div class="overviewEyebrow">TAG 1 · <span id="mobileTime">08:00</span></div>
+          <h2>Waldgrenze</h2>
+          <p id="mobileWeatherText">Klar · Morgen</p>
+        </div>
+        <div class="weatherBadge">
+          <img id="mobileWeatherIcon" src="images/icons/daylight.png" alt="">
+          <span id="mobileWeather">Klar</span>
+        </div>
+      </div>
+
+      <div class="needGrid">
+        <div class="needCard needHealth"><span><img src="images/icons/health.png" alt=""> Leben</span><strong id="mobileHealth">100/100</strong></div>
+        <div class="needCard needHunger"><span><img src="images/icons/hunger.png" alt=""> Hunger</span><strong id="mobileHunger">100</strong></div>
+        <div class="needCard needEnergy"><span><img src="images/icons/energy.png" alt=""> Energie</span><strong id="mobileEnergy">100</strong></div>
+        <div class="needCard needLevel"><span><img src="images/icons/star.png" alt=""> Fortschritt</span><strong>Lv. <span id="mobileLevel">1</span></strong></div>
+      </div>
+    </section>
+
+    <div class="sectionHeading">
+      <div>
+        <span class="sectionEyebrow">ENTDECKEN</span>
+        <h2>Wohin gehst du?</h2>
+      </div>
+      <span class="inventoryPill"><img src="images/icons/backpack.png" alt=""><span id="mobileInvCount">0</span></span>
+    </div>
     <div id="log">Willkommen. Wähle ein Gebiet zum Erkunden.</div>
     <div id="cards"></div>
     <div id="inventory">
@@ -918,6 +1043,19 @@ function render() {
       Lv. ${state.level}
     </span>
   `;
+
+  const mobileHealth = document.getElementById("mobileHealth");
+  if (mobileHealth) {
+    mobileHealth.textContent = `${state.health}/${maxHp}`;
+    document.getElementById("mobileHunger").textContent = state.hunger;
+    document.getElementById("mobileEnergy").textContent = state.energy;
+    document.getElementById("mobileLevel").textContent = state.level;
+    document.getElementById("mobileTime").textContent = formatTime();
+    document.getElementById("mobileWeather").textContent = state.weather;
+    document.getElementById("mobileWeatherText").textContent = `${state.weather} · ${timeOfDay}`;
+    document.getElementById("mobileWeatherIcon").src = WEATHER_ICONS[state.weather];
+    document.getElementById("mobileInvCount").textContent = state.inventory.length;
+  }
 
   const cardsDiv = document.getElementById("cards");
   cardsDiv.innerHTML = "";
