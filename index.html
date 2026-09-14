@@ -732,6 +732,15 @@ body {
 .shelterProgress span { display: block; height: 100%; background: linear-gradient(90deg, #778844, #c8b85f); border-radius: inherit; transition: width 0.35s ease; }
 .shelterDescription { margin: 0 0 11px; color: #aab29e; font-size: 11px; line-height: 1.35; }
 .shelterUpgrade { margin-bottom: 0; }
+.campStatusGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin: 0 0 10px; }
+.campStatus { min-width: 0; padding: 7px 8px; border: 1px solid #354732; border-radius: 10px; background: rgba(10,18,11,0.4); }
+.campStatusHead { display: flex; align-items: center; justify-content: space-between; gap: 5px; color: #abb5a0; font-size: 10px; }
+.campStatusHead img { width: 14px; height: 14px; object-fit: contain; }
+.campStatusValue { color: #e7dfb7; font-weight: 700; }
+.campStatusBar { height: 5px; margin-top: 5px; overflow: hidden; border-radius: 99px; background: #20271f; }
+.campStatusBar span { display: block; height: 100%; border-radius: inherit; transition: width 0.35s ease; }
+.campMorale .campStatusBar span { background: linear-gradient(90deg, #8a793d, #d2bd61); }
+.campSafety .campStatusBar span { background: linear-gradient(90deg, #4f704b, #8eb66e); }
 
 #inventory { border-radius: 16px; background: #151c15; border-color: #2d3d2b; padding: 13px 14px; }
 
@@ -1092,24 +1101,24 @@ const EVENT_DB = {
     title: "Frische Spuren",
     text: "Im feuchten Boden erkennst du Spuren, die noch nicht alt sein können.",
     choices: [
-      { id:"follow", name:"Den Spuren folgen", desc:"−6 Energie · +15 XP · 1 Holz finden", icon:"images/icons/compass.png" },
-      { id:"avoid", name:"Abstand halten", desc:"Sicher zurückkehren · keine zusätzlichen Kosten", icon:"images/icons/flee.png" }
+      { id:"follow", name:"Den Spuren folgen", desc:"−6 Energie · +15 XP · Moral +4", icon:"images/icons/compass.png" },
+      { id:"avoid", name:"Abstand halten", desc:"Sicher zurückkehren · Sicherheit +2", icon:"images/icons/flee.png" }
     ]
   },
   cache: {
     title: "Verlassene Tasche",
     text: "Zwischen Wurzeln liegt eine alte Tasche. Etwas darin scheint noch brauchbar zu sein.",
     choices: [
-      { id:"take", name:"Tasche öffnen", desc:"1 Verband und 1 Holz erhalten", icon:"images/icons/backpack.png" },
-      { id:"leave", name:"Sie liegen lassen", desc:"+5 XP · kein Risiko eingehen", icon:"images/icons/shelter.png" }
+      { id:"take", name:"Tasche öffnen", desc:"1 Verband und 1 Holz · Moral +3", icon:"images/icons/backpack.png" },
+      { id:"leave", name:"Sie liegen lassen", desc:"+5 XP · Sicherheit +1", icon:"images/icons/shelter.png" }
     ]
   },
   rain: {
     title: "Der Regen wird stärker",
     text: "Dunkle Wolken ziehen auf. Du musst entscheiden, ob du Schutz suchst oder weitermachst.",
     choices: [
-      { id:"shelter", name:"Schutz suchen", desc:"+4 Energie · sicher ins Lager zurückkehren", icon:"images/icons/shelter.png" },
-      { id:"continue", name:"Weitergehen", desc:"−3 Energie · −2 Hunger · +8 XP", icon:"images/icons/forest.png" }
+      { id:"shelter", name:"Schutz suchen", desc:"+4 Energie · Sicherheit +3", icon:"images/icons/shelter.png" },
+      { id:"continue", name:"Weitergehen", desc:"−3 Energie · −2 Hunger · Moral −2", icon:"images/icons/forest.png" }
     ]
   }
 };
@@ -1204,7 +1213,8 @@ let state = {
   pendingLevelUps: 0,
   equipmentInventory: [], equipped: { weapon: null, armor: null },
   consumables: [],
-  timeHour: 8, weather: "Klar", pendingEvent: null
+  timeHour: 8, weather: "Klar", pendingEvent: null,
+  morale: 60, safety: 50
 };
 
 let combat = null;
@@ -1230,7 +1240,8 @@ function loadGame() {
       attributes: { staerke:0, vitalitaet:0, geschicklichkeit:0, ueberleben:0, wahrnehmung:0 },
       pendingLevelUps: 0,
       equipmentInventory: [], equipped: { weapon: null, armor: null },
-      consumables: [], timeHour: 8, weather: "Klar", pendingEvent: null
+      consumables: [], timeHour: 8, weather: "Klar", pendingEvent: null,
+      morale: 60, safety: 50
     }, loaded);
     if (!state.deck || state.deck.length === 0) state.deck = [...DEFAULT_DECK];
     if (!Array.isArray(state.inventory)) state.inventory = [];
@@ -1248,6 +1259,10 @@ function loadGame() {
     if (state.timeHour === undefined) state.timeHour = 8;
     if (!state.weather) state.weather = "Klar";
     if (!state.pendingEvent || !EVENT_DB[state.pendingEvent.id]) state.pendingEvent = null;
+    if (!Number.isFinite(state.morale)) state.morale = 60;
+    if (!Number.isFinite(state.safety)) state.safety = 50;
+    state.morale = Math.max(0, Math.min(100, state.morale));
+    state.safety = Math.max(0, Math.min(100, state.safety));
     state.hunger = Math.max(0, state.hunger);
     state.energy = Math.max(0, state.energy);
   }
@@ -1304,7 +1319,14 @@ function getConditionLabel() {
   if (state.health <= getMaxHealth() * 0.35) return "Verletzt";
   if (state.energy <= 25) return "Erschöpft";
   if (state.hunger <= 25) return "Hungrig";
+  if (state.morale <= 25) return "Niedrige Moral";
+  if (state.safety <= 25) return "Lager unsicher";
   return "Bereit";
+}
+
+function changeCampStatus(moraleDelta = 0, safetyDelta = 0) {
+  state.morale = Math.max(0, Math.min(100, state.morale + moraleDelta));
+  state.safety = Math.max(0, Math.min(100, state.safety + safetyDelta));
 }
 
 function showVitalDelta(elementId, delta) {
@@ -1356,23 +1378,29 @@ function chooseWorldEvent(eventId, choiceId) {
     state.energy = Math.max(0, state.energy - 6);
     state.xp += 15;
     state.inventory.push("Holz");
+    changeCampStatus(4, -3);
     log("Du bist den Spuren gefolgt und hast Holz gefunden. +15 XP.");
   } else if (eventId === "tracks" && choiceId === "avoid") {
+    changeCampStatus(-1, 2);
     log("Du hast Abstand gehalten und bist sicher zurückgekehrt.");
   } else if (eventId === "cache" && choiceId === "take") {
     state.inventory.push("Holz");
     state.consumables.push("verband");
+    changeCampStatus(3, 0);
     log("In der Tasche lagen Holz und ein brauchbarer Verband.");
   } else if (eventId === "cache" && choiceId === "leave") {
     state.xp += 5;
+    changeCampStatus(0, 1);
     log("Du hast die Tasche liegen gelassen und dir den Fundort gemerkt. +5 XP.");
   } else if (eventId === "rain" && choiceId === "shelter") {
     state.energy = Math.min(getMaxEnergy(), state.energy + 4);
+    changeCampStatus(0, 3);
     log("Du hast rechtzeitig Schutz gefunden und etwas Energie zurückgewonnen.");
   } else if (eventId === "rain" && choiceId === "continue") {
     state.energy = Math.max(0, state.energy - 3);
     state.hunger = Math.max(0, state.hunger - 2);
     state.xp += 8;
+    changeCampStatus(-2, -2);
     log("Du bist trotz des Regens weitergegangen. +8 XP.");
   }
 
@@ -1938,6 +1966,7 @@ function checkDeathConditions() {
     state.health = getMaxHealth();
     state.hunger = 100;
     state.energy = getMaxEnergy();
+    changeCampStatus(-10, -5);
     log("Du bist zusammengebrochen und wurdest gerettet. Werte zurückgesetzt.");
   }
 }
@@ -1954,6 +1983,16 @@ function renderCamp() {
       </h2>
       <div class="shelterProgress"><span style="width:${Math.min(100, state.shelterLevel * 20)}%"></span></div>
       <p class="shelterDescription">Jede Ausbaustufe erhöht deine maximale Energie und macht das Lager sicherer.</p>
+      <div class="campStatusGrid">
+        <div class="campStatus campMorale">
+          <div class="campStatusHead"><span><img src="images/icons/star.png" alt=""> Moral</span><span class="campStatusValue">${state.morale}/100</span></div>
+          <div class="campStatusBar"><span style="width:${state.morale}%"></span></div>
+        </div>
+        <div class="campStatus campSafety">
+          <div class="campStatusHead"><span><img src="images/icons/shield.png" alt=""> Sicherheit</span><span class="campStatusValue">${state.safety}/100</span></div>
+          <div class="campStatusBar"><span style="width:${state.safety}%"></span></div>
+        </div>
+      </div>
       <button class="campActionBtn shelterUpgrade${canUpgrade ? "" : " disabled"}" onclick="upgradeShelter()">
         <span class="cIcon2"><img src="images/icons/chop-wood.png" alt=""></span>
         <span class="btnText">
@@ -2133,6 +2172,7 @@ function sleepAtCamp() {
   state.energy = getMaxEnergy();
   state.health = Math.min(getMaxHealth(), state.health + 15);
   state.hunger = Math.max(0, state.hunger - 15);
+  changeCampStatus(5, 2);
   state.timeHour = 7;
   state.day += 1;
   state.weather = WEATHER_TYPES[Math.floor(Math.random() * WEATHER_TYPES.length)];
@@ -2184,6 +2224,7 @@ function upgradeShelter() {
   for (let i = 0; i < cost; i++) removeOneItem("Holz");
   state.shelterLevel += 1;
   state.energy = Math.min(getMaxEnergy(), state.energy + 10);
+  changeCampStatus(0, 10);
   log(`Dein Lager wurde auf Stufe ${state.shelterLevel} ausgebaut. Maximale Energie erhöht.`);
   saveGame();
   render();
@@ -2394,6 +2435,7 @@ function endTurn() {
 
 function winCombat() {
   state.xp += 20;
+  changeCampStatus(6, 3);
   checkLevelUp();
   let lootMsg = "";
   if (Math.random() < 0.4) {
@@ -2408,6 +2450,7 @@ function loseCombat() {
   state.health = getMaxHealth();
   state.hunger = Math.max(0, state.hunger - 20);
   state.energy = Math.max(0, state.energy - 20);
+  changeCampStatus(-8, -6);
   endCombatOverlay(`Du wurdest besiegt und konntest fliehen. Leben wurde wiederhergestellt.`);
 
 }
