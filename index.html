@@ -636,6 +636,10 @@ body {
 .actionCardName { display: block; font-size: 14px; font-weight: 700; }
 .actionCardDesc { display: block; margin-top: 3px; color: #aab29e; font-size: 11px; line-height: 1.25; }
 .actionCardCost { color: #d4c879; font-size: 10px; white-space: nowrap; }
+.shelterProgress { height: 8px; margin: 4px 0 9px; background: #20271f; border: 1px solid #3b4c37; border-radius: 99px; overflow: hidden; }
+.shelterProgress span { display: block; height: 100%; background: linear-gradient(90deg, #778844, #c8b85f); border-radius: inherit; transition: width 0.35s ease; }
+.shelterDescription { margin: 0 0 11px; color: #aab29e; font-size: 11px; line-height: 1.35; }
+.shelterUpgrade { margin-bottom: 0; }
 
 #inventory { border-radius: 16px; background: #151c15; border-color: #2d3d2b; padding: 13px 14px; }
 
@@ -759,6 +763,7 @@ body {
   </div>
 
   <div class="screen" id="screenCamp">
+    <div class="charBox" id="shelterBox"></div>
     <div class="charBox">
       <h2 class="sectionTitle">
   <img src="images/icons/sleep.png" alt="">
@@ -965,7 +970,7 @@ const TIME_ICONS = {
 };
 
 let state = {
-  health: 100, hunger: 100, energy: 100, xp: 0, level: 1, day: 1,
+  health: 100, hunger: 100, energy: 100, xp: 0, level: 1, day: 1, shelterLevel: 1,
   inventory: [], deck: [...DEFAULT_DECK],
   attributes: { staerke:0, vitalitaet:0, geschicklichkeit:0, ueberleben:0, wahrnehmung:0 },
   pendingLevelUps: 0,
@@ -990,7 +995,7 @@ function loadGame() {
     }
     if (!loaded || typeof loaded !== "object") return;
     state = Object.assign({
-      health: 100, hunger: 100, energy: 100, xp: 0, level: 1, day: 1,
+      health: 100, hunger: 100, energy: 100, xp: 0, level: 1, day: 1, shelterLevel: 1,
       inventory: [],
       deck: [...DEFAULT_DECK],
       attributes: { staerke:0, vitalitaet:0, geschicklichkeit:0, ueberleben:0, wahrnehmung:0 },
@@ -1006,6 +1011,7 @@ function loadGame() {
     if (!Number.isFinite(state.xp)) state.xp = 0;
     if (!Number.isFinite(state.level) || state.level < 1) state.level = 1;
     if (!Number.isFinite(state.day) || state.day < 1) state.day = 1;
+    if (!Number.isFinite(state.shelterLevel) || state.shelterLevel < 1) state.shelterLevel = 1;
     if (!state.attributes) state.attributes = { staerke:0, vitalitaet:0, geschicklichkeit:0, ueberleben:0, wahrnehmung:0 };
     if (!state.equipmentInventory) state.equipmentInventory = [];
     if (!state.equipped) state.equipped = { weapon: null, armor: null };
@@ -1020,6 +1026,7 @@ function loadGame() {
 function saveGame() { localStorage.setItem("lastShelterSave", JSON.stringify(state)); }
 
 function getMaxHealth() { return 100 + state.attributes.vitalitaet * 5; }
+function getMaxEnergy() { return 100 + (state.shelterLevel - 1) * 10; }
 function getWeaponBonus() { return state.equipped.weapon ? ITEM_DB[state.equipped.weapon].bonus : 0; }
 function getArmorBonus() { return state.equipped.armor ? ITEM_DB[state.equipped.armor].bonus : 0; }
 function countItem(name) { return state.inventory.filter(i => i === name).length; }
@@ -1185,7 +1192,7 @@ function render() {
         <img class="uiIcon" src="images/icons/energy.png" alt="">
         ENERGIE
       </span>
-      <span class="qVal qEnergy">${state.energy}</span>
+      <span class="qVal qEnergy">${state.energy}/${getMaxEnergy()}</span>
     </div>
   `;
 
@@ -1212,7 +1219,7 @@ function render() {
   if (mobileHealth) {
     mobileHealth.textContent = `${state.health}/${maxHp}`;
     document.getElementById("mobileHunger").textContent = state.hunger;
-    document.getElementById("mobileEnergy").textContent = state.energy;
+    document.getElementById("mobileEnergy").textContent = `${state.energy}/${getMaxEnergy()}`;
     document.getElementById("mobileLevel").textContent = state.level;
     document.getElementById("mobileDay").textContent = `TAG ${state.day}`;
     document.getElementById("mobileTime").textContent = formatTime();
@@ -1588,12 +1595,33 @@ function checkDeathConditions() {
   if (state.health <= 0) {
     state.health = getMaxHealth();
     state.hunger = 100;
-    state.energy = 100;
+    state.energy = getMaxEnergy();
     log("Du bist zusammengebrochen und wurdest gerettet. Werte zurückgesetzt.");
   }
 }
 
 function renderCamp() {
+  const shelterBox = document.getElementById("shelterBox");
+  if (shelterBox) {
+    const upgradeCost = state.shelterLevel * 8;
+    const canUpgrade = countItem("Holz") >= upgradeCost;
+    shelterBox.innerHTML = `
+      <h2 class="sectionTitle">
+        <img src="images/icons/shelter.png" alt="">
+        Lager · Stufe ${state.shelterLevel}
+      </h2>
+      <div class="shelterProgress"><span style="width:${Math.min(100, state.shelterLevel * 20)}%"></span></div>
+      <p class="shelterDescription">Jede Ausbaustufe erhöht deine maximale Energie und macht das Lager sicherer.</p>
+      <button class="campActionBtn shelterUpgrade${canUpgrade ? "" : " disabled"}" onclick="upgradeShelter()">
+        <span class="cIcon2"><img src="images/icons/chop-wood.png" alt=""></span>
+        <span class="btnText">
+          Lager ausbauen
+          <span class="btnSub">${upgradeCost} Holz benötigt · vorhanden: ${countItem("Holz")} · +10 maximale Energie</span>
+        </span>
+      </button>
+    `;
+  }
+
   document.getElementById("sleepBtnWrap").innerHTML = `
   <button class="campActionBtn" onclick="sleepAtCamp()">
     <span class="cIcon2">
@@ -1767,7 +1795,7 @@ function upgradeDeckCard(fromId, toId, cost) {
 }
 
 function sleepAtCamp() {
-  state.energy = 100;
+  state.energy = getMaxEnergy();
   state.health = Math.min(getMaxHealth(), state.health + 15);
   state.hunger = Math.max(0, state.hunger - 15);
   state.timeHour = 7;
@@ -1807,6 +1835,21 @@ function craftItem(recipe) {
   for (let i = 0; i < recipe.cost.Holz; i++) removeOneItem("Holz");
   if (recipe.result === "consumable") state.consumables.push(recipe.id);
   else state.equipmentInventory.push(recipe.id);
+  saveGame();
+  render();
+  renderCamp();
+}
+
+function upgradeShelter() {
+  const cost = state.shelterLevel * 8;
+  if (countItem("Holz") < cost) {
+    log(`Für den Ausbau benötigst du ${cost} Holz.`);
+    return;
+  }
+  for (let i = 0; i < cost; i++) removeOneItem("Holz");
+  state.shelterLevel += 1;
+  state.energy = Math.min(getMaxEnergy(), state.energy + 10);
+  log(`Dein Lager wurde auf Stufe ${state.shelterLevel} ausgebaut. Maximale Energie erhöht.`);
   saveGame();
   render();
   renderCamp();
