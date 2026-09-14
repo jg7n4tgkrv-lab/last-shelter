@@ -205,6 +205,68 @@
     to { opacity: 1; transform: translateY(0) scale(1); }
   }
 
+  #eventOverlay.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+  }
+  .eventPrompt {
+    width: min(100%, 430px);
+    background: linear-gradient(160deg, #283323, #151d16);
+    border: 1px solid #68764b;
+    border-radius: 20px;
+    padding: 20px 16px 16px;
+    box-shadow: 0 16px 40px rgba(0,0,0,0.45), inset 0 1px rgba(255,255,255,0.1);
+  }
+  .eventPromptIcon {
+    display: block;
+    width: 42px;
+    height: 42px;
+    margin: 0 auto 8px;
+    object-fit: contain;
+  }
+  .eventPromptTag {
+    display: block;
+    color: #d8c878;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.8px;
+    text-align: center;
+  }
+  .eventPrompt h2 {
+    margin: 7px 0 5px;
+    color: #f0ead2;
+    font-size: 22px;
+    text-align: center;
+  }
+  .eventPromptText {
+    margin: 0 0 14px;
+    color: #b9c0ad;
+    font-size: 13px;
+    line-height: 1.4;
+    text-align: center;
+  }
+  .eventChoice {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+    padding: 12px;
+    border: 1px solid #4f6547;
+    border-radius: 13px;
+    background: #1d2a1d;
+    color: #ece9d6;
+    text-align: left;
+    transition: transform 0.12s ease, filter 0.12s ease;
+  }
+  .eventChoice:active { transform: scale(0.98); filter: brightness(1.18); }
+  .eventChoiceIcon { width: 28px; height: 28px; object-fit: contain; flex: 0 0 auto; }
+  .eventChoiceBody { min-width: 0; }
+  .eventChoiceName { display: block; font-size: 14px; font-weight: 700; }
+  .eventChoiceDesc { display: block; margin-top: 2px; color: #aab29e; font-size: 11px; line-height: 1.3; }
+
   #enemyBox {
     position: relative;
     background: linear-gradient(180deg, #201414, #150e0e);
@@ -978,6 +1040,16 @@ body {
   <div id="perkList"></div>
 </div>
 
+<div class="overlay" id="eventOverlay">
+  <div class="eventPrompt">
+    <img class="eventPromptIcon" src="images/icons/hourglass.png" alt="">
+    <span class="eventPromptTag">UNERWARTETE BEGEGNUNG</span>
+    <h2 id="eventPromptTitle"></h2>
+    <p class="eventPromptText" id="eventPromptText"></p>
+    <div id="eventChoiceList"></div>
+  </div>
+</div>
+
 <script>
 const CARD_DB = {
   attack:      { name: "Angriff", cost: 1, desc: "Schaden am Gegner", icon: "⚔️" },
@@ -1014,6 +1086,33 @@ const LOCATIONS = [
   { id:"berge",  name:"Berge",              minLevel:3, enemyPool:["bear"], icon:"⛰️", accent:"#7a7a8a" },
   { id:"sumpf",  name:"Sumpf",              minLevel:5, enemyPool:["swamp_thing"], icon:"🐊", accent:"#5a7a5a" }
 ];
+
+const EVENT_DB = {
+  tracks: {
+    title: "Frische Spuren",
+    text: "Im feuchten Boden erkennst du Spuren, die noch nicht alt sein können.",
+    choices: [
+      { id:"follow", name:"Den Spuren folgen", desc:"−6 Energie · +15 XP · 1 Holz finden", icon:"images/icons/compass.png" },
+      { id:"avoid", name:"Abstand halten", desc:"Sicher zurückkehren · keine zusätzlichen Kosten", icon:"images/icons/flee.png" }
+    ]
+  },
+  cache: {
+    title: "Verlassene Tasche",
+    text: "Zwischen Wurzeln liegt eine alte Tasche. Etwas darin scheint noch brauchbar zu sein.",
+    choices: [
+      { id:"take", name:"Tasche öffnen", desc:"1 Verband und 1 Holz erhalten", icon:"images/icons/backpack.png" },
+      { id:"leave", name:"Sie liegen lassen", desc:"+5 XP · kein Risiko eingehen", icon:"images/icons/shelter.png" }
+    ]
+  },
+  rain: {
+    title: "Der Regen wird stärker",
+    text: "Dunkle Wolken ziehen auf. Du musst entscheiden, ob du Schutz suchst oder weitermachst.",
+    choices: [
+      { id:"shelter", name:"Schutz suchen", desc:"+4 Energie · sicher ins Lager zurückkehren", icon:"images/icons/shelter.png" },
+      { id:"continue", name:"Weitergehen", desc:"−3 Energie · −2 Hunger · +8 XP", icon:"images/icons/forest.png" }
+    ]
+  }
+};
 
 const PERKS = [
   { id:"str", type:"attr", attr:"staerke", name:"Kraftschub", desc:"+1 Stärke – mehr Schaden im Kampf", icon:"💪" },
@@ -1105,7 +1204,7 @@ let state = {
   pendingLevelUps: 0,
   equipmentInventory: [], equipped: { weapon: null, armor: null },
   consumables: [],
-  timeHour: 8, weather: "Klar"
+  timeHour: 8, weather: "Klar", pendingEvent: null
 };
 
 let combat = null;
@@ -1131,7 +1230,7 @@ function loadGame() {
       attributes: { staerke:0, vitalitaet:0, geschicklichkeit:0, ueberleben:0, wahrnehmung:0 },
       pendingLevelUps: 0,
       equipmentInventory: [], equipped: { weapon: null, armor: null },
-      consumables: [], timeHour: 8, weather: "Klar"
+      consumables: [], timeHour: 8, weather: "Klar", pendingEvent: null
     }, loaded);
     if (!state.deck || state.deck.length === 0) state.deck = [...DEFAULT_DECK];
     if (!Array.isArray(state.inventory)) state.inventory = [];
@@ -1148,6 +1247,7 @@ function loadGame() {
     if (!state.consumables) state.consumables = [];
     if (state.timeHour === undefined) state.timeHour = 8;
     if (!state.weather) state.weather = "Klar";
+    if (!state.pendingEvent || !EVENT_DB[state.pendingEvent.id]) state.pendingEvent = null;
     state.hunger = Math.max(0, state.hunger);
     state.energy = Math.max(0, state.energy);
   }
@@ -1221,6 +1321,68 @@ function showVitalDelta(elementId, delta) {
   setTimeout(() => deltaElement.remove(), 1200);
 }
 
+function maybeTriggerWorldEvent(location) {
+  if (state.pendingEvent || state.pendingLevelUps > 0 || Math.random() > 0.28) return;
+  const eventIds = Object.keys(EVENT_DB);
+  const eventId = eventIds[Math.floor(Math.random() * eventIds.length)];
+  state.pendingEvent = { id: eventId, locationId: location.id };
+  saveGame();
+  showWorldEvent();
+}
+
+function showWorldEvent() {
+  if (!state.pendingEvent || !EVENT_DB[state.pendingEvent.id]) return;
+  const event = EVENT_DB[state.pendingEvent.id];
+  document.getElementById("eventPromptTitle").textContent = event.title;
+  document.getElementById("eventPromptText").textContent = event.text;
+  document.getElementById("eventChoiceList").innerHTML = event.choices.map(choice => `
+    <button class="eventChoice" onclick="chooseWorldEvent('${event.id}', '${choice.id}')">
+      <img class="eventChoiceIcon" src="${choice.icon}" alt="">
+      <span class="eventChoiceBody">
+        <span class="eventChoiceName">${choice.name}</span>
+        <span class="eventChoiceDesc">${choice.desc}</span>
+      </span>
+    </button>
+  `).join("");
+  document.getElementById("eventOverlay").classList.add("active");
+}
+
+function chooseWorldEvent(eventId, choiceId) {
+  if (!state.pendingEvent || state.pendingEvent.id !== eventId) return;
+  state.pendingEvent = null;
+  document.getElementById("eventOverlay").classList.remove("active");
+
+  if (eventId === "tracks" && choiceId === "follow") {
+    state.energy = Math.max(0, state.energy - 6);
+    state.xp += 15;
+    state.inventory.push("Holz");
+    log("Du bist den Spuren gefolgt und hast Holz gefunden. +15 XP.");
+  } else if (eventId === "tracks" && choiceId === "avoid") {
+    log("Du hast Abstand gehalten und bist sicher zurückgekehrt.");
+  } else if (eventId === "cache" && choiceId === "take") {
+    state.inventory.push("Holz");
+    state.consumables.push("verband");
+    log("In der Tasche lagen Holz und ein brauchbarer Verband.");
+  } else if (eventId === "cache" && choiceId === "leave") {
+    state.xp += 5;
+    log("Du hast die Tasche liegen gelassen und dir den Fundort gemerkt. +5 XP.");
+  } else if (eventId === "rain" && choiceId === "shelter") {
+    state.energy = Math.min(getMaxEnergy(), state.energy + 4);
+    log("Du hast rechtzeitig Schutz gefunden und etwas Energie zurückgewonnen.");
+  } else if (eventId === "rain" && choiceId === "continue") {
+    state.energy = Math.max(0, state.energy - 3);
+    state.hunger = Math.max(0, state.hunger - 2);
+    state.xp += 8;
+    log("Du bist trotz des Regens weitergegangen. +8 XP.");
+  }
+
+  checkLevelUp();
+  checkDeathConditions();
+  saveGame();
+  render();
+  maybeShowPerkSelection();
+}
+
 function getSelectedLocation() {
   return LOCATIONS.find(loc => loc.id === selectedLocationId) || LOCATIONS[0];
 }
@@ -1290,6 +1452,7 @@ function gatherResources() {
   checkDeathConditions();
   saveGame();
   render();
+  maybeTriggerWorldEvent(location);
 }
 
 function trackLocation() {
@@ -1305,6 +1468,7 @@ function trackLocation() {
     checkLevelUp();
     saveGame();
     render();
+    maybeTriggerWorldEvent(location);
     maybeShowPerkSelection();
     return;
   }
@@ -1754,6 +1918,7 @@ function explore(loc) {
   checkDeathConditions();
   saveGame();
   render();
+  if (!state.pendingLevelUps) maybeTriggerWorldEvent(loc);
   maybeShowPerkSelection();
 }
 
@@ -2259,6 +2424,7 @@ function endCombatOverlay(message) {
 loadGame();
 render();
 maybeShowPerkSelection();
+if (state.pendingEvent) showWorldEvent();
 </script>
 
 </body>
