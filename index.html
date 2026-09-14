@@ -682,6 +682,88 @@ body {
   #main { padding-left: 22px; padding-right: 22px; }
   #cards { grid-template-columns: repeat(3, 1fr); }
 }
+
+/* FIXED MOBILE VIEWPORT – horizontal card movement instead of page scrolling */
+@media (max-width: 599px) {
+  html, body { overflow: hidden; }
+  #main { overflow: hidden; min-height: 0; }
+  .screen.active { height: 100%; overflow: hidden; }
+
+  #screenExplore { display: flex; flex-direction: column; min-height: 0; }
+  #screenExplore .mobileOverview { flex: 0 0 160px; margin-bottom: 9px; padding: 13px; }
+  #screenExplore .overviewTop h2 { font-size: 22px; }
+  #screenExplore .needGrid { margin-top: 13px; }
+  #screenExplore .sectionHeading { flex: 0 0 35px; margin: 0 2px 7px; }
+  #screenExplore .sectionHeading h2 { font-size: 18px; }
+  #screenExplore #log { flex: 0 0 43px; min-height: 43px; margin-bottom: 8px; overflow: hidden; display: flex; align-items: center; }
+
+  #screenExplore #cards {
+    flex: 0 0 120px;
+    display: flex;
+    gap: 9px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: 0 -2px 7px;
+    padding: 2px 2px 5px;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+  #screenExplore #cards::-webkit-scrollbar,
+  #screenExplore .inventoryGrid::-webkit-scrollbar { display: none; }
+  #screenExplore #cards .card {
+    flex: 0 0 145px;
+    min-height: 112px;
+    height: 112px;
+    padding: 70px 9px 9px;
+    scroll-snap-align: start;
+  }
+  #screenExplore #cards .card.locked { min-height: 112px; }
+
+  #screenExplore .actionSection { flex: 0 0 118px; margin: 0 0 7px; min-height: 0; }
+  #screenExplore .actionSectionHead { height: 26px; margin-bottom: 5px; }
+  #screenExplore .actionSectionHead h2 { font-size: 16px; }
+  #screenExplore .actionHint { font-size: 9px; }
+  #screenExplore .actionCards { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+  #screenExplore .actionCard { min-height: 88px; height: 88px; padding: 7px 6px; gap: 3px; flex-direction: column; align-items: flex-start; justify-content: flex-start; }
+  #screenExplore .actionCardIcon { width: 27px; height: 27px; padding: 5px; }
+  #screenExplore .actionCardName { font-size: 11px; line-height: 1.1; }
+  #screenExplore .actionCardDesc { display: none; }
+  #screenExplore .actionCardCost { margin-top: auto; font-size: 8px; line-height: 1.15; }
+
+  #screenExplore .eventCard { flex: 0 0 59px; min-height: 59px; max-height: 59px; margin-bottom: 7px; padding: 8px; overflow: hidden; }
+  #screenExplore .eventCardIcon { width: 27px; height: 27px; padding: 5px; }
+  #screenExplore .eventCardTag { font-size: 8px; }
+  #screenExplore .eventCardBody strong { font-size: 12px; margin-top: 2px; }
+  #screenExplore .eventCardBody p { font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  #screenExplore #inventory { flex: 1 1 auto; min-height: 58px; overflow: hidden; padding: 8px 10px; }
+  #screenExplore #inventory .hd { margin-bottom: 5px; }
+  #screenExplore .inventoryGrid { display: flex; gap: 7px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+  #screenExplore .itemCard { flex: 0 0 142px; padding: 7px; }
+  #screenExplore .itemCard img { width: 24px; height: 24px; }
+  #screenExplore .itemCardName { font-size: 11px; }
+  #screenExplore .itemCardCount, #screenExplore .itemAction { font-size: 9px; }
+
+  #screenCharacter.active, #screenCamp.active {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  #screenCharacter:not(.active), #screenCamp:not(.active) { display: none; }
+  #screenCharacter.active::-webkit-scrollbar, #screenCamp.active::-webkit-scrollbar { display: none; }
+  #screenCharacter.active > .charBox, #screenCamp.active > .charBox {
+    flex: 0 0 100%;
+    min-width: 0;
+    max-height: 100%;
+    overflow: hidden;
+    scroll-snap-align: start;
+    margin-bottom: 0;
+  }
+}
 </style>
 </head>
 <body>
