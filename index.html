@@ -686,26 +686,32 @@ body {
 /* FIXED MOBILE VIEWPORT – horizontal card movement instead of page scrolling */
 @media (max-width: 900px) {
   html, body { overflow: hidden; }
-  #main { overflow: hidden; min-height: 0; }
-  .screen.active { height: 100%; overflow: hidden; }
+  #main {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+    padding: 10px 14px 8px;
+  }
+  .screen.active { flex: 1 1 auto; min-height: 0; height: auto; overflow: hidden; }
 
   #screenExplore { display: flex; flex-direction: column; min-height: 0; }
   #screenExplore:not(.active), #screenCharacter:not(.active), #screenCamp:not(.active) { display: none !important; }
   #screenExplore.active, #screenCharacter.active, #screenCamp.active { display: flex !important; }
-  #screenExplore .mobileOverview { flex: 0 0 160px; margin-bottom: 9px; padding: 13px; }
+  #screenExplore .mobileOverview { flex: 0 0 145px; margin-bottom: 7px; padding: 11px; }
   #screenExplore .overviewTop h2 { font-size: 22px; }
-  #screenExplore .needGrid { margin-top: 13px; }
-  #screenExplore .sectionHeading { flex: 0 0 35px; margin: 0 2px 7px; }
+  #screenExplore .needGrid { margin-top: 10px; }
+  #screenExplore .sectionHeading { flex: 0 0 33px; margin: 0 2px 5px; }
   #screenExplore .sectionHeading h2 { font-size: 18px; }
   #screenExplore #log { display: none !important; }
 
   #screenExplore #cards {
-    flex: 0 0 105px;
+    flex: 0 0 96px;
     display: flex;
     gap: 9px;
     overflow-x: auto;
     overflow-y: hidden;
-    margin: 0 -2px 6px;
+    margin: 0 -2px 5px;
     padding: 2px 2px 5px;
     scroll-snap-type: x mandatory;
     scrollbar-width: none;
@@ -714,14 +720,14 @@ body {
   #screenExplore .inventoryGrid::-webkit-scrollbar { display: none; }
   #screenExplore #cards .card {
     flex: 0 0 145px;
-    min-height: 98px;
-    height: 98px;
-    padding: 60px 9px 8px;
+    min-height: 90px;
+    height: 90px;
+    padding: 54px 9px 7px;
     scroll-snap-align: start;
   }
-  #screenExplore #cards .card.locked { min-height: 98px; }
+  #screenExplore #cards .card.locked { min-height: 90px; }
 
-  #screenExplore .actionSection { flex: 0 0 108px; margin: 0 0 6px; min-height: 0; }
+  #screenExplore .actionSection { flex: 0 0 101px; margin: 0 0 5px; min-height: 0; }
   #screenExplore .actionSectionHead { height: 26px; margin-bottom: 5px; }
   #screenExplore .actionSectionHead h2 { font-size: 16px; }
   #screenExplore .actionHint { font-size: 9px; }
@@ -732,16 +738,24 @@ body {
   #screenExplore .actionCardDesc { display: none; }
   #screenExplore .actionCardCost { margin-top: auto; font-size: 8px; line-height: 1.15; }
 
-  #screenExplore .eventCard { flex: 0 0 52px; min-height: 52px; max-height: 52px; margin-bottom: 6px; padding: 7px; overflow: hidden; }
+  #screenExplore .eventCard { flex: 0 0 49px; min-height: 49px; max-height: 49px; margin-bottom: 5px; padding: 6px 7px; overflow: hidden; }
   #screenExplore .eventCardIcon { width: 27px; height: 27px; padding: 5px; }
   #screenExplore .eventCardTag { font-size: 8px; }
   #screenExplore .eventCardBody strong { font-size: 12px; margin-top: 2px; }
   #screenExplore .eventCardBody p { font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-  #screenExplore #inventory { flex: 1 1 auto; min-height: 48px; overflow: hidden; padding: 7px 10px; }
-  #screenExplore #inventory .hd { margin-bottom: 5px; }
-  #screenExplore .inventoryGrid { display: flex; gap: 7px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
-  #screenExplore .itemCard { flex: 0 0 142px; padding: 7px; }
+  #screenExplore #inventory {
+    flex: 1 1 46px;
+    min-height: 46px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    overflow: hidden;
+    padding: 5px 8px;
+  }
+  #screenExplore #inventory .hd { flex: 0 0 auto; margin: 0; font-size: 11px; }
+  #screenExplore .inventoryGrid { flex: 1 1 auto; min-width: 0; height: 36px; display: flex; gap: 7px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+  #screenExplore .itemCard { flex: 0 0 142px; min-height: 36px; height: 36px; padding: 5px 7px; }
   #screenExplore .itemCard img { width: 24px; height: 24px; }
   #screenExplore .itemCardName { font-size: 11px; }
   #screenExplore .itemCardCount, #screenExplore .itemAction { font-size: 9px; }
@@ -863,13 +877,6 @@ body {
 
   <div class="screen" id="screenCamp">
     <div class="charBox" id="shelterBox"></div>
-    <div class="charBox">
-      <h2 class="sectionTitle">
-  <img src="images/icons/sleep.png" alt="">
-  Schlafen
-</h2>
-      <div id="sleepBtnWrap"></div>
-    </div>
     <div class="charBox">
       <h2 class="sectionTitle">
   <img src="images/icons/berries.png" alt="">
@@ -1744,20 +1751,6 @@ function renderCamp() {
       </button>
     `;
   }
-
-  document.getElementById("sleepBtnWrap").innerHTML = `
-  <button class="campActionBtn" onclick="sleepAtCamp()">
-    <span class="cIcon2">
-      <img src="images/icons/sleep.png" alt="">
-    </span>
-    <span class="btnText">
-      Schlafen
-      <span class="btnSub">
-        Energie voll, +15 Leben, -15 Hunger, springt zum Morgen
-      </span>
-    </span>
-  </button>
-`;
 
 const beerenCount = countItem("Beeren");
 
