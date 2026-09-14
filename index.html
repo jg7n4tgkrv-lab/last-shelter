@@ -217,6 +217,90 @@
     justify-content: center;
     padding: 18px;
   }
+  #cardRewardOverlay.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+  }
+  .rewardPrompt {
+    width: min(100%, 430px);
+    max-height: calc(100dvh - 36px);
+    overflow-y: auto;
+    background: linear-gradient(160deg, #2a2416, #17130c);
+    border: 1px solid #8a7547;
+    border-radius: 20px;
+    padding: 20px 16px 16px;
+    box-shadow: 0 16px 40px rgba(0,0,0,0.45), inset 0 1px rgba(255,255,255,0.1);
+  }
+  .rewardPromptIcon {
+    display: block;
+    width: 42px;
+    height: 42px;
+    margin: 0 auto 8px;
+    object-fit: contain;
+  }
+  .rewardPromptTag {
+    display: block;
+    color: #d8c878;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.8px;
+    text-align: center;
+  }
+  .rewardPrompt h2 {
+    margin: 7px 0 5px;
+    color: #f0ead2;
+    font-size: 22px;
+    text-align: center;
+  }
+  .rewardPromptText {
+    margin: 0 0 14px;
+    color: #b9b09b;
+    font-size: 13px;
+    line-height: 1.4;
+    text-align: center;
+  }
+  .rewardChoice {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+    padding: 12px;
+    border: 1px solid #6a5937;
+    border-radius: 13px;
+    background: #282315;
+    color: #ece9d6;
+    text-align: left;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-appearance: none;
+    transition: transform 0.12s ease, filter 0.12s ease;
+  }
+  .rewardChoice:active { transform: scale(0.98); filter: brightness(1.18); }
+  .rewardChoiceIcon {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+    flex: 0 0 auto;
+  }
+  .rewardChoiceBody { min-width: 0; }
+  .rewardChoiceName { display: block; font-size: 14px; font-weight: 700; }
+  .rewardChoiceDesc { display: block; margin-top: 2px; color: #b8ae98; font-size: 11px; line-height: 1.3; }
+  .rewardSkip {
+    width: 100%;
+    margin-top: 12px;
+    padding: 10px 12px;
+    border: 1px solid #464033;
+    border-radius: 12px;
+    background: transparent;
+    color: #9a9689;
+    font-size: 12px;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .rewardSkip:active { transform: scale(0.98); filter: brightness(1.18); }
   .morningPrompt {
     width: min(100%, 430px);
     background: linear-gradient(160deg, #283323, #151d16);
@@ -1146,6 +1230,17 @@ body {
   <div id="perkList"></div>
 </div>
 
+<div class="overlay" id="cardRewardOverlay">
+  <div class="rewardPrompt">
+    <img class="rewardPromptIcon" src="images/icons/attack.png" alt="">
+    <span class="rewardPromptTag">KARTENBELOHNUNG</span>
+    <h2>Wähle eine Karte</h2>
+    <p class="rewardPromptText">Dein Sieg eröffnet dir eine neue Möglichkeit. Nimm eine Karte für dein Deck oder lehne die Belohnung ab.</p>
+    <div id="cardRewardList"></div>
+    <button class="rewardSkip" id="cardRewardSkip" type="button">Keine Karte nehmen</button>
+  </div>
+</div>
+
 <div class="overlay" id="eventOverlay">
   <div class="eventPrompt">
     <img class="eventPromptIcon" src="images/icons/hourglass.png" alt="">
@@ -1192,6 +1287,7 @@ const CARD_DB = {
 };
 
 const DEFAULT_DECK = ["attack","attack","attack","attack","attack","defend","defend","dodge","heavy","heal"];
+const CARD_REWARD_POOL = ["attack","defend","dodge","heavy","heal","precise_strike","emergency_bandage"];
 
 const ENEMY_DB = {
   wolf:   { name: "Wolf", maxHp: 35, dmgMin: 8, dmgMax: 14, intent: "Schneller Biss" },
@@ -1358,7 +1454,7 @@ let state = {
   equipmentInventory: [], equipped: { weapon: null, armor: null, tool: null },
   consumables: [],
   timeHour: 8, weather: "Klar", pendingEvent: null,
-  morale: 60, safety: 50, locationProgress: {}, bossesUnlocked: {}, bossesDefeated: {}, runStats: { expeditions:0, victories:0 }, dailyGoal: null
+  morale: 60, safety: 50, locationProgress: {}, bossesUnlocked: {}, bossesDefeated: {}, runStats: { expeditions:0, victories:0 }, pendingCardReward: [], dailyGoal: null
 };
 
 let combat = null;
@@ -1385,7 +1481,7 @@ function loadGame() {
       pendingLevelUps: 0,
       equipmentInventory: [], equipped: { weapon: null, armor: null, tool: null },
       consumables: [], timeHour: 8, weather: "Klar", pendingEvent: null,
-      morale: 60, safety: 50, locationProgress: {}, runStats: { expeditions:0, victories:0 }, dailyGoal: null
+      morale: 60, safety: 50, locationProgress: {}, runStats: { expeditions:0, victories:0 }, pendingCardReward: [], dailyGoal: null
     }, loaded);
     if (!state.deck || state.deck.length === 0) state.deck = [...DEFAULT_DECK];
     if (!Array.isArray(state.inventory)) state.inventory = [];
@@ -1414,6 +1510,8 @@ function loadGame() {
     if (!state.runStats || typeof state.runStats !== "object") state.runStats = { expeditions:0, victories:0 };
     if (!Number.isFinite(state.runStats.expeditions)) state.runStats.expeditions = 0;
     if (!Number.isFinite(state.runStats.victories)) state.runStats.victories = 0;
+    if (!Array.isArray(state.pendingCardReward)) state.pendingCardReward = [];
+    state.pendingCardReward = state.pendingCardReward.filter(cardId => CARD_DB[cardId]);
     state.hunger = Math.max(0, state.hunger);
     state.energy = Math.max(0, state.energy);
   }
@@ -2729,6 +2827,54 @@ function maybeShowPerkSelection() {
   if (state.pendingLevelUps > 0) showPerkOverlay();
 }
 
+function maybeShowCardReward() {
+  if (state.pendingLevelUps === 0 && Array.isArray(state.pendingCardReward) && state.pendingCardReward.length > 0) {
+    showCardRewardOverlay();
+  }
+}
+
+function showCardRewardOverlay() {
+  const overlay = document.getElementById("cardRewardOverlay");
+  const list = document.getElementById("cardRewardList");
+  const skip = document.getElementById("cardRewardSkip");
+  if (!overlay || !list || !skip || !state.pendingCardReward.length) return;
+
+  list.innerHTML = "";
+  state.pendingCardReward.forEach(cardId => {
+    const info = CARD_DB[cardId];
+    const button = document.createElement("button");
+    button.className = "rewardChoice";
+    button.type = "button";
+    button.innerHTML = "<img class=\"rewardChoiceIcon\" src=\"" + CARD_ICON_FILES[cardId] + "\" alt=\"\">" +
+      "<span class=\"rewardChoiceBody\"><span class=\"rewardChoiceName\">" + info.name + "</span>" +
+      "<span class=\"rewardChoiceDesc\">" + info.cost + " AP · " + info.desc + "</span></span>";
+    button.onclick = () => chooseCardReward(cardId);
+    list.appendChild(button);
+  });
+
+  const closeWithoutCard = () => chooseCardReward(null);
+  skip.onclick = closeWithoutCard;
+  skip.ontouchend = (event) => {
+    event.preventDefault();
+    closeWithoutCard();
+  };
+  overlay.classList.add("active");
+}
+
+function chooseCardReward(cardId) {
+  if (!Array.isArray(state.pendingCardReward) || state.pendingCardReward.length === 0) return;
+  if (cardId && CARD_DB[cardId]) {
+    state.deck.push(cardId);
+    log(CARD_DB[cardId].name + " wurde deinem Deck hinzugefügt.");
+  } else {
+    log("Du hast die Kartenbelohnung übersprungen.");
+  }
+  state.pendingCardReward = [];
+  document.getElementById("cardRewardOverlay").classList.remove("active");
+  saveGame();
+  render();
+}
+
 function showPerkOverlay() {
   document.getElementById("perkOverlay").classList.add("active");
   const pool = getAvailablePerks();
@@ -2771,6 +2917,7 @@ function choosePerk(perk) {
   } else {
     document.getElementById("perkOverlay").classList.remove("active");
     render();
+    maybeShowCardReward();
   }
 }
 
@@ -3028,6 +3175,8 @@ function winCombat() {
     lootMsg += ` Beute gefunden: ${ITEM_DB[itemId].name} (${getRarityLabel(ITEM_DB[itemId])}).`;
   }
   const resultLabel = combat.boss ? "Gebietsjäger besiegt" : "Sieg";
+  state.pendingCardReward = shuffle(CARD_REWARD_POOL).slice(0, 3);
+  lootMsg += " Eine Kartenbelohnung wartet.";
   endCombatOverlay(`${resultLabel} gegen ${combat.enemyName}! +${xpReward} XP.${lootMsg}`);
 }
 
@@ -3047,11 +3196,13 @@ function endCombatOverlay(message) {
   saveGame();
   render();
   maybeShowPerkSelection();
+  maybeShowCardReward();
 }
 
 loadGame();
 render();
 maybeShowPerkSelection();
+maybeShowCardReward();
 if (state.pendingEvent) showWorldEvent();
 </script>
 
