@@ -774,7 +774,7 @@ body {
 .actionSection { margin: 4px 0 15px; }
 .actionSectionHead { display: flex; align-items: flex-end; justify-content: space-between; margin: 0 2px 9px; }
 .actionSectionHead h2 { margin: 3px 0 0; color: #eee9d5; font-size: 18px; }
-.actionHint { color: #788275; font-size: 10px; }
+.actionHint { color: #788275; font-size: 10px; white-space: nowrap; }
 .actionCards { display: grid; gap: 8px; }
 .actionCard {
   width: 100%;
@@ -1215,6 +1215,12 @@ const EVENT_DB = {
 
 const LOCATION_GOAL = 5;
 
+const DAILY_GOALS = [
+  { type: "gather", label: "Sammeln", target: 3 },
+  { type: "explore", label: "Erkunden", target: 2 },
+  { type: "track", label: "Spuren", target: 2 }
+];
+
 const PERKS = [
   { id:"str", type:"attr", attr:"staerke", name:"Kraftschub", desc:"+1 Stärke – mehr Schaden im Kampf", icon:"💪" },
   { id:"vit", type:"attr", attr:"vitalitaet", name:"Zähigkeit", desc:"+1 Vitalität – mehr maximales Leben", icon:"❤️" },
@@ -1306,7 +1312,7 @@ let state = {
   equipmentInventory: [], equipped: { weapon: null, armor: null },
   consumables: [],
   timeHour: 8, weather: "Klar", pendingEvent: null,
-  morale: 60, safety: 50, locationProgress: {}
+  morale: 60, safety: 50, locationProgress: {}, dailyGoal: null
 };
 
 let combat = null;
@@ -1333,7 +1339,7 @@ function loadGame() {
       pendingLevelUps: 0,
       equipmentInventory: [], equipped: { weapon: null, armor: null },
       consumables: [], timeHour: 8, weather: "Klar", pendingEvent: null,
-      morale: 60, safety: 50, locationProgress: {}
+      morale: 60, safety: 50, locationProgress: {}, dailyGoal: null
     }, loaded);
     if (!state.deck || state.deck.length === 0) state.deck = [...DEFAULT_DECK];
     if (!Array.isArray(state.inventory)) state.inventory = [];
@@ -1359,6 +1365,7 @@ function loadGame() {
     state.hunger = Math.max(0, state.hunger);
     state.energy = Math.max(0, state.energy);
   }
+  ensureDailyGoal();
 }
 
 function saveGame() { localStorage.setItem("lastShelterSave", JSON.stringify(state)); }
@@ -1452,6 +1459,39 @@ function recordLocationProgress(location) {
   }
   state.inventory.push("Holz", "Holz");
   return "Entdeckung: 2 Holz gefunden. +12 XP.";
+}
+
+function createDailyGoal(day) {
+  const template = DAILY_GOALS[(day - 1) % DAILY_GOALS.length];
+  return { ...template, day, progress: 0, completed: false };
+}
+
+function ensureDailyGoal() {
+  if (!state.dailyGoal || state.dailyGoal.day !== state.day) {
+    state.dailyGoal = createDailyGoal(state.day);
+  }
+  if (!Number.isFinite(state.dailyGoal.progress)) state.dailyGoal.progress = 0;
+  state.dailyGoal.progress = Math.max(0, Math.min(state.dailyGoal.target, state.dailyGoal.progress));
+  state.dailyGoal.completed = state.dailyGoal.progress >= state.dailyGoal.target;
+}
+
+function getDailyGoalHint() {
+  ensureDailyGoal();
+  const goal = state.dailyGoal;
+  return goal.completed ? `Ziel: ${goal.label} ✓` : `Ziel: ${goal.label} ${goal.progress}/${goal.target}`;
+}
+
+function progressDailyGoal(type) {
+  ensureDailyGoal();
+  const goal = state.dailyGoal;
+  if (goal.completed || goal.type !== type) return "";
+  goal.progress += 1;
+  if (goal.progress < goal.target) return "";
+
+  goal.completed = true;
+  state.xp += 12;
+  state.inventory.push("Holz");
+  return "Tagesziel erfüllt! +12 XP und 1 Holz.";
 }
 
 function appendLatestLog(extraMessage) {
@@ -1590,7 +1630,7 @@ function renderActionCards() {
 
   label.textContent = location.name;
   const actionHint = document.querySelector(".actionHint");
-  if (actionHint) actionHint.textContent = getDangerLabel(location);
+  if (actionHint) actionHint.textContent = `${getDangerLabel(location)} · ${getDailyGoalHint()}`;
   actionDiv.className = "actionCards";
   actionDiv.innerHTML = `
     <button class="actionCard" onclick="gatherResources()"${canGather ? "" : " disabled"}>
@@ -1636,7 +1676,9 @@ function gatherResources() {
     state.inventory.push("Beeren");
     resultMessage = `${location.name}: Du hast essbare Beeren gefunden.`;
   }
-  log(`${resultMessage} ${recordLocationProgress(location)}`.trim());
+  const goalMessage = progressDailyGoal("gather");
+  log(`${resultMessage} ${recordLocationProgress(location)} ${goalMessage}`.trim());
+  checkLevelUp();
   checkDeathConditions();
   saveGame();
   render();
@@ -1649,11 +1691,12 @@ function trackLocation() {
   state.energy = Math.max(0, state.energy - 4);
   state.hunger = Math.max(0, state.hunger - 1);
   advanceTime(1);
+  const goalMessage = progressDailyGoal("track");
   const perceptionChance = Math.min(0.9, 0.45 + state.attributes.wahrnehmung * 0.06);
   if (Math.random() < perceptionChance) {
     state.xp += 8;
     const milestone = recordLocationProgress(location);
-    log(`${location.name}: Du hast Spuren entdeckt und +8 XP erhalten. ${milestone}`.trim());
+    log(`${location.name}: Du hast Spuren entdeckt und +8 XP erhalten. ${milestone} ${goalMessage}`.trim());
     checkLevelUp();
     saveGame();
     render();
@@ -1662,7 +1705,7 @@ function trackLocation() {
     return;
   }
   const enemyId = location.enemyPool[Math.floor(Math.random() * location.enemyPool.length)];
-  log(`${location.name}: Die Spuren führen direkt zu einer Gefahr.`);
+  log(`${location.name}: Die Spuren führen direkt zu einer Gefahr. ${goalMessage}`.trim());
   saveGame();
   startCombat(ENEMY_DB[enemyId], location.name, "Du wurdest überrascht!");
 }
@@ -2072,6 +2115,7 @@ function explore(loc) {
   state.hunger = Math.max(0, state.hunger - hungerCost);
 
   advanceTime(2 + Math.floor(Math.random() * 3));
+  const goalMessage = progressDailyGoal("explore");
 
   let dangerThreshold = 0.65;
   if (isNight()) dangerThreshold -= 0.15;
@@ -2080,32 +2124,32 @@ function explore(loc) {
 
   if (roll < 0.25) {
     state.inventory.push("Holz");
-    log(`${loc.name}: Du hast Holz gefunden.`);
+    log(`${loc.name}: Du hast Holz gefunden. ${goalMessage}`.trim());
   } else if (roll < 0.45) {
     state.inventory.push("Beeren");
-    log(`${loc.name}: Du hast Beeren gefunden.`);
+    log(`${loc.name}: Du hast Beeren gefunden. ${goalMessage}`.trim());
   } else if (roll < dangerThreshold) {
     let avoidChance = state.attributes.wahrnehmung * 0.03;
     if (state.weather === "Nebel") avoidChance += 0.1;
     if (Math.random() < avoidChance) {
       state.inventory.push("Holz");
-      log(`${loc.name}: Deine Wahrnehmung hat dich vor einer Gefahr gewarnt – du hast stattdessen Holz gefunden.`);
+      log(`${loc.name}: Deine Wahrnehmung hat dich vor einer Gefahr gewarnt – du hast stattdessen Holz gefunden. ${goalMessage}`.trim());
     } else {
       const enemyId = loc.enemyPool[Math.floor(Math.random() * loc.enemyPool.length)];
       const nightNote = isNight() ? " In der Dunkelheit wirkt der Gegner gefährlicher." : "";
-      startCombat(ENEMY_DB[enemyId], loc.name, nightNote);
+      startCombat(ENEMY_DB[enemyId], loc.name, `${goalMessage}${nightNote}`.trim());
       return;
     }
   } else if (roll < 0.85) {
     state.health -= 5;
-    log(`${loc.name}: Du hast dich leicht verletzt.`);
+    log(`${loc.name}: Du hast dich leicht verletzt. ${goalMessage}`.trim());
   } else if (roll < 0.95) {
     state.xp += 10;
-    log(`${loc.name}: Nichts Besonderes, aber du hast Erfahrung gesammelt.`);
+    log(`${loc.name}: Nichts Besonderes, aber du hast Erfahrung gesammelt. ${goalMessage}`.trim());
     checkLevelUp();
   } else {
     state.xp += 25;
-    log(`${loc.name}: Seltenes Ereignis! Du fühlst dich gestärkt.`);
+    log(`${loc.name}: Seltenes Ereignis! Du fühlst dich gestärkt. ${goalMessage}`.trim());
     checkLevelUp();
   }
 
@@ -2346,6 +2390,7 @@ function sleepAtCamp() {
   changeCampStatus(5, 2);
   state.timeHour = 7;
   state.day += 1;
+  state.dailyGoal = createDailyGoal(state.day);
   state.weather = WEATHER_TYPES[Math.floor(Math.random() * WEATHER_TYPES.length)];
   log("Du hast im Lager geschlafen und dich erholt. Ein neuer Morgen beginnt.");
   checkDeathConditions();
