@@ -583,6 +583,7 @@ body {
 .overviewEyebrow, .sectionEyebrow { color: #d7d1a8; font-size: 10px; letter-spacing: 1.7px; font-weight: 700; }
 .overviewTop h2 { margin: 5px 0 2px; color: #fff9df; font-size: 25px; letter-spacing: -0.4px; }
 .overviewTop p { margin: 0; color: rgba(255,250,226,0.76); font-size: 12px; }
+.overviewTop p span { color: #f0d88b; font-weight: 700; }
 .weatherBadge { min-width: 62px; text-align: center; color: #f4edc9; font-size: 10px; }
 .weatherBadge img { display: block; width: 32px; height: 32px; object-fit: contain; margin: 0 auto 3px; }
 
@@ -686,9 +687,9 @@ body {
     <section class="mobileOverview">
       <div class="overviewTop">
         <div>
-          <div class="overviewEyebrow">TAG 1 · <span id="mobileTime">08:00</span></div>
+          <div class="overviewEyebrow"><span id="mobileDay">TAG 1</span> · <span id="mobileTime">08:00</span></div>
           <h2>Waldgrenze</h2>
-          <p id="mobileWeatherText">Klar · Morgen</p>
+          <p id="mobileWeatherText">Klar · Morgen · <span id="mobileCondition">Bereit</span></p>
         </div>
         <div class="weatherBadge">
           <img id="mobileWeatherIcon" src="images/icons/daylight.png" alt="">
@@ -964,7 +965,7 @@ const TIME_ICONS = {
 };
 
 let state = {
-  health: 100, hunger: 100, energy: 100, xp: 0, level: 1,
+  health: 100, hunger: 100, energy: 100, xp: 0, level: 1, day: 1,
   inventory: [], deck: [...DEFAULT_DECK],
   attributes: { staerke:0, vitalitaet:0, geschicklichkeit:0, ueberleben:0, wahrnehmung:0 },
   pendingLevelUps: 0,
@@ -989,7 +990,7 @@ function loadGame() {
     }
     if (!loaded || typeof loaded !== "object") return;
     state = Object.assign({
-      health: 100, hunger: 100, energy: 100, xp: 0, level: 1,
+      health: 100, hunger: 100, energy: 100, xp: 0, level: 1, day: 1,
       inventory: [],
       deck: [...DEFAULT_DECK],
       attributes: { staerke:0, vitalitaet:0, geschicklichkeit:0, ueberleben:0, wahrnehmung:0 },
@@ -1004,6 +1005,7 @@ function loadGame() {
     if (!Number.isFinite(state.energy)) state.energy = 100;
     if (!Number.isFinite(state.xp)) state.xp = 0;
     if (!Number.isFinite(state.level) || state.level < 1) state.level = 1;
+    if (!Number.isFinite(state.day) || state.day < 1) state.day = 1;
     if (!state.attributes) state.attributes = { staerke:0, vitalitaet:0, geschicklichkeit:0, ueberleben:0, wahrnehmung:0 };
     if (!state.equipmentInventory) state.equipmentInventory = [];
     if (!state.equipped) state.equipped = { weapon: null, armor: null };
@@ -1054,11 +1056,19 @@ function getTimeOfDay() {
 }
 function isNight() { return getTimeOfDay() === "Nacht"; }
 function advanceTime(hours) {
+  const previousHour = state.timeHour;
   state.timeHour = (state.timeHour + hours) % 24;
+  if (state.timeHour < previousHour) state.day += 1;
   if (Math.random() < 0.3) state.weather = WEATHER_TYPES[Math.floor(Math.random() * WEATHER_TYPES.length)];
 }
 function formatTime() { return `${String(state.timeHour).padStart(2, "0")}:00`; }
 function updateBodyClass() { document.body.classList.toggle("night", isNight()); }
+function getConditionLabel() {
+  if (state.health <= getMaxHealth() * 0.35) return "Verletzt";
+  if (state.energy <= 25) return "Erschöpft";
+  if (state.hunger <= 25) return "Hungrig";
+  return "Bereit";
+}
 
 function getSelectedLocation() {
   return LOCATIONS.find(loc => loc.id === selectedLocationId) || LOCATIONS[0];
@@ -1204,9 +1214,10 @@ function render() {
     document.getElementById("mobileHunger").textContent = state.hunger;
     document.getElementById("mobileEnergy").textContent = state.energy;
     document.getElementById("mobileLevel").textContent = state.level;
+    document.getElementById("mobileDay").textContent = `TAG ${state.day}`;
     document.getElementById("mobileTime").textContent = formatTime();
     document.getElementById("mobileWeather").textContent = state.weather;
-    document.getElementById("mobileWeatherText").textContent = `${state.weather} · ${timeOfDay}`;
+    document.getElementById("mobileWeatherText").innerHTML = `${state.weather} · ${timeOfDay} · <span id="mobileCondition">${getConditionLabel()}</span>`;
     document.getElementById("mobileWeatherIcon").src = WEATHER_ICONS[state.weather];
     document.getElementById("mobileInvCount").textContent = getTotalInventoryCount();
   }
@@ -1760,6 +1771,7 @@ function sleepAtCamp() {
   state.health = Math.min(getMaxHealth(), state.health + 15);
   state.hunger = Math.max(0, state.hunger - 15);
   state.timeHour = 7;
+  state.day += 1;
   state.weather = WEATHER_TYPES[Math.floor(Math.random() * WEATHER_TYPES.length)];
   log("Du hast im Lager geschlafen und dich erholt. Ein neuer Morgen beginnt.");
   checkDeathConditions();
