@@ -1329,6 +1329,14 @@ const TIME_ICONS = {
   "Nacht": "images/icons/night.png"
 };
 
+const SHELTER_STAGES = [
+  { name:"Notlager", description:"Ein provisorischer Unterschlupf. Er gibt dir einen ersten sicheren Rückzugsort.", next:"Einfaches Lager", cost:8 },
+  { name:"Einfaches Lager", description:"Ein fester Schlafplatz mit etwas Schutz vor der Wildnis.", next:"Geschütztes Lager", cost:16 },
+  { name:"Geschütztes Lager", description:"Stabile Wände und Ordnung machen deine Pausen sicherer.", next:"Verstärktes Lager", cost:24 },
+  { name:"Verstärktes Lager", description:"Dein Lager hält schlechtes Wetter besser aus und gibt dir Rückhalt.", next:"Fester Unterschlupf", cost:32 },
+  { name:"Fester Unterschlupf", description:"Ein verlässlicher Ort, an dem du dich von Expeditionen erholen kannst.", next:null, cost:null }
+];
+
 let state = {
   health: 100, hunger: 100, energy: 100, xp: 0, level: 1, day: 1, shelterLevel: 1,
   inventory: [], deck: [...DEFAULT_DECK],
@@ -1398,6 +1406,9 @@ function saveGame() { localStorage.setItem("lastShelterSave", JSON.stringify(sta
 
 function getMaxHealth() { return 100 + state.attributes.vitalitaet * 5; }
 function getMaxEnergy() { return 100 + (state.shelterLevel - 1) * 10; }
+function getShelterStage() {
+  return SHELTER_STAGES[Math.min(Math.max(state.shelterLevel, 1), SHELTER_STAGES.length) - 1];
+}
 function getWeaponBonus() { return state.equipped.weapon ? ITEM_DB[state.equipped.weapon].bonus : 0; }
 function getArmorBonus() { return state.equipped.armor ? ITEM_DB[state.equipped.armor].bonus : 0; }
 function getToolBonus() { return state.equipped.tool && ITEM_DB[state.equipped.tool] ? ITEM_DB[state.equipped.tool].bonus : 0; }
@@ -2292,15 +2303,17 @@ function checkDeathConditions() {
 function renderCamp() {
   const shelterBox = document.getElementById("shelterBox");
   if (shelterBox) {
-    const upgradeCost = state.shelterLevel * 8;
-    const canUpgrade = countItem("Holz") >= upgradeCost;
+    const shelterStage = getShelterStage();
+    const nextStage = SHELTER_STAGES[state.shelterLevel] || null;
+    const upgradeCost = nextStage ? nextStage.cost : null;
+    const canUpgrade = Boolean(nextStage) && countItem("Holz") >= upgradeCost;
     shelterBox.innerHTML = `
       <h2 class="sectionTitle">
         <img src="images/icons/shelter.png" alt="">
-        Lager · Stufe ${state.shelterLevel}
+        ${shelterStage.name} · Stufe ${state.shelterLevel}
       </h2>
-      <div class="shelterProgress"><span style="width:${Math.min(100, state.shelterLevel * 20)}%"></span></div>
-      <p class="shelterDescription">Jede Ausbaustufe erhöht deine maximale Energie und macht das Lager sicherer.</p>
+      <div class="shelterProgress"><span style="width:${Math.min(100, (state.shelterLevel / SHELTER_STAGES.length) * 100)}%"></span></div>
+      <p class="shelterDescription">${shelterStage.description} Jede Stufe erhöht maximale Energie und Sicherheit.</p>
       <div class="campStatusGrid">
         <div class="campStatus campMorale">
           <div class="campStatusHead"><span><img src="images/icons/star.png" alt=""> Moral</span><span class="campStatusValue">${state.morale}/100</span></div>
@@ -2314,8 +2327,8 @@ function renderCamp() {
       <button class="campActionBtn shelterUpgrade${canUpgrade ? "" : " disabled"}" onclick="upgradeShelter()">
         <span class="cIcon2"><img src="images/icons/chop-wood.png" alt=""></span>
         <span class="btnText">
-          Lager ausbauen
-          <span class="btnSub">${upgradeCost} Holz benötigt · vorhanden: ${countItem("Holz")} · +10 maximale Energie</span>
+          ${nextStage ? `Zu ${nextStage.name} ausbauen` : "Maximale Lagerstufe erreicht"}
+          <span class="btnSub">${nextStage ? `${upgradeCost} Holz benötigt · vorhanden: ${countItem("Holz")} · +10 Energie · +10 Sicherheit` : "Dein Unterschlupf ist vollständig ausgebaut."}</span>
         </span>
       </button>
       <button class="campActionBtn" onclick="sleepAtCamp()">
@@ -2619,7 +2632,12 @@ function craftItem(recipe) {
 }
 
 function upgradeShelter() {
-  const cost = state.shelterLevel * 8;
+  const nextStage = SHELTER_STAGES[state.shelterLevel] || null;
+  if (!nextStage) {
+    log("Dein Lager ist bereits vollständig ausgebaut.");
+    return;
+  }
+  const cost = nextStage.cost;
   if (countItem("Holz") < cost) {
     log(`Für den Ausbau benötigst du ${cost} Holz.`);
     return;
@@ -2628,7 +2646,7 @@ function upgradeShelter() {
   state.shelterLevel += 1;
   state.energy = Math.min(getMaxEnergy(), state.energy + 10);
   changeCampStatus(0, 10);
-  log(`Dein Lager wurde auf Stufe ${state.shelterLevel} ausgebaut. Maximale Energie erhöht.`);
+  log(`Dein Lager ist jetzt ein ${getShelterStage().name}. Maximale Energie und Sicherheit wurden erhöht.`);
   saveGame();
   render();
   renderCamp();
