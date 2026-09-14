@@ -1603,10 +1603,15 @@ function loadGame() {
     if (!Number.isFinite(state.runStats.victories)) state.runStats.victories = 0;
     if (!Array.isArray(state.pendingCardReward)) state.pendingCardReward = [];
     state.pendingCardReward = state.pendingCardReward.filter(cardId => CARD_DB[cardId]);
+    if (!Number.isFinite(state.timeHour)) state.timeHour = 8;
+    state.timeHour = ((Math.floor(state.timeHour) % 24) + 24) % 24;
+    if (!WEATHER_TYPES.includes(state.weather)) state.weather = "Klar";
+    state.shelterLevel = Math.min(state.shelterLevel, SHELTER_STAGES.length);
     state.hunger = Math.max(0, Math.min(100, state.hunger));
     state.energy = Math.max(0, Math.min(getMaxEnergy(), state.energy));
     state.health = Math.max(0, Math.min(getMaxHealth(), state.health));
     state.saveVersion = CURRENT_SAVE_VERSION;
+    saveGame();
   }
   ensureDailyGoal();
 }
@@ -1685,9 +1690,7 @@ function getTimeOfDay() {
 }
 function isNight() { return getTimeOfDay() === "Nacht"; }
 function advanceTime(hours) {
-  const previousHour = state.timeHour;
   state.timeHour = (state.timeHour + hours) % 24;
-  if (state.timeHour < previousHour) state.day += 1;
   if (Math.random() < 0.3) state.weather = WEATHER_TYPES[Math.floor(Math.random() * WEATHER_TYPES.length)];
 }
 function formatTime() { return `${String(state.timeHour).padStart(2, "0")}:00`; }
