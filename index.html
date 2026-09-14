@@ -1182,7 +1182,7 @@ const DEFAULT_DECK = ["attack","attack","attack","attack","attack","defend","def
 const ENEMY_DB = {
   wolf:   { name: "Wolf", maxHp: 35, dmgMin: 8, dmgMax: 14, intent: "Schneller Biss" },
   looter: { name: "Plünderer", maxHp: 45, dmgMin: 10, dmgMax: 18, intent: "Angriff" },
-  bear:   { name: "Bär", maxHp: 70, dmgMin: 14, dmgMax: 22, intent: "Wuchtiger Hieb" },
+  bear:   { name: "Bär", maxHp: 70, dmgMin: 14, dmgMax: 22, intent: "Hieb" },
   swamp_thing: { name: "Sumpfkriecher", maxHp: 60, dmgMin: 16, dmgMax: 24, intent: "Giftiger Biss" }
 };
 
@@ -2648,6 +2648,9 @@ function startCombat(enemyType, locName, extraNote) {
     enemyId,
     enemyName: enemyType.name,
     intentLabel: enemyType.intent || "Angriff",
+    intentType: "attack",
+    intentBlock: 0,
+    enemyBlock: 0,
     enemyHp: enemyType.maxHp,
     enemyMaxHp: enemyType.maxHp,
     dmgMin: Math.round(enemyType.dmgMin * nightBonus),
@@ -2676,7 +2679,20 @@ function drawCards(n) {
 
 function rollEnemyIntent() {
   if (!combat) return;
+  combat.intentType = "attack";
+  combat.intentLabel = ENEMY_DB[combat.enemyId]?.intent || "Angriff";
   combat.intentDamage = combat.dmgMin + Math.floor(Math.random() * (combat.dmgMax - combat.dmgMin + 1));
+  combat.intentBlock = 0;
+
+  if (combat.enemyId === "looter" && Math.random() < 0.28) {
+    combat.intentType = "block";
+    combat.intentLabel = "Deckung";
+    combat.intentDamage = 0;
+    combat.intentBlock = 8;
+  } else if (combat.enemyId === "bear" && Math.random() < 0.25) {
+    combat.intentLabel = "Wuchtiger Hieb";
+    combat.intentDamage += 6;
+  }
 }
 
 function spawnFloatNumber(containerEl, text, cssClass) {
@@ -2691,12 +2707,16 @@ function spawnFloatNumber(containerEl, text, cssClass) {
 function renderCombat() {
   updateBodyClass();
   const maxHp = getMaxHealth();
-  document.getElementById("enemyName").textContent = `${combat.enemyName}  (${combat.enemyHp}/${combat.enemyMaxHp})`;
+  const enemyBlockLabel = combat.enemyBlock > 0 ? ` · ${combat.enemyBlock} Block` : "";
+  document.getElementById("enemyName").textContent = `${combat.enemyName}  (${combat.enemyHp}/${combat.enemyMaxHp})${enemyBlockLabel}`;
   document.getElementById("enemyBar").style.width = Math.max(0, (combat.enemyHp / combat.enemyMaxHp) * 100) + "%";
+  const intentDetail = combat.intentType === "block"
+    ? `+${combat.intentBlock} Block`
+    : `· ${combat.intentDamage} Schaden`;
   document.getElementById("enemyIntent").innerHTML = `
     <span class="enemyIntentTag">NÄCHSTER ZUG</span>
     <strong>${combat.intentLabel}</strong>
-    <span>· ${combat.intentDamage} Schaden</span>
+    <span>${intentDetail}</span>
   `;
   document.getElementById("playerBar").style.width = Math.max(0, (state.health / maxHp) * 100) + "%";
   document.getElementById("combatStatus").innerHTML = `
@@ -2755,8 +2775,11 @@ function playCard(index) {
     if (cardId === "attack") dmg = 8 + Math.floor(Math.random() * 5) + str * 2 + weaponBonus;
     else if (cardId === "attack_plus") dmg = 14 + Math.floor(Math.random() * 5) + str * 2 + weaponBonus;
     else dmg = 18 + Math.floor(Math.random() * 5) + str * 3 + weaponBonus;
-    combat.enemyHp -= dmg;
-    spawnFloatNumber(enemyBox, "-" + dmg, "dmg");
+    const absorbed = Math.min(combat.enemyBlock, dmg);
+    const dealt = dmg - absorbed;
+    combat.enemyBlock -= absorbed;
+    combat.enemyHp -= dealt;
+    spawnFloatNumber(enemyBox, absorbed > 0 ? `-${dealt} (${absorbed} Block)` : "-" + dealt, dealt > 0 ? "dmg" : "block");
     document.getElementById("enemyName").classList.remove("hit");
     void document.getElementById("enemyName").offsetWidth;
     document.getElementById("enemyName").classList.add("hit");
@@ -2781,9 +2804,14 @@ function playCard(index) {
 }
 
 function endTurn() {
-  let dmg = combat.intentDamage;
-  dmg = Math.max(0, dmg - combat.block);
-  state.health -= dmg;
+  let dmg = 0;
+  if (combat.intentType === "block") {
+    combat.enemyBlock += combat.intentBlock;
+    log(`${combat.enemyName} geht in Deckung und erhält ${combat.intentBlock} Block.`);
+  } else {
+    dmg = Math.max(0, combat.intentDamage - combat.block);
+    state.health -= dmg;
+  }
   combat.block = 0;
 
   if (dmg > 0) {
