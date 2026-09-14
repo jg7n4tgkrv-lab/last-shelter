@@ -259,6 +259,9 @@
     background: #1d2a1d;
     color: #ece9d6;
     text-align: left;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-appearance: none;
     transition: transform 0.12s ease, filter 0.12s ease;
   }
   .eventChoice:active { transform: scale(0.98); filter: brightness(1.18); }
@@ -1357,15 +1360,30 @@ function showWorldEvent() {
   const event = EVENT_DB[state.pendingEvent.id];
   document.getElementById("eventPromptTitle").textContent = event.title;
   document.getElementById("eventPromptText").textContent = event.text;
-  document.getElementById("eventChoiceList").innerHTML = event.choices.map(choice => `
-    <button class="eventChoice" onclick="chooseWorldEvent('${event.id}', '${choice.id}')">
+  const choiceList = document.getElementById("eventChoiceList");
+  choiceList.innerHTML = "";
+  event.choices.forEach(choice => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "eventChoice";
+    button.innerHTML = `
       <img class="eventChoiceIcon" src="${choice.icon}" alt="">
       <span class="eventChoiceBody">
         <span class="eventChoiceName">${choice.name}</span>
         <span class="eventChoiceDesc">${choice.desc}</span>
       </span>
-    </button>
-  `).join("");
+    `;
+    let handled = false;
+    const choose = eventObject => {
+      if (handled) return;
+      handled = true;
+      eventObject.preventDefault();
+      chooseWorldEvent(event.id, choice.id);
+    };
+    button.addEventListener("click", choose);
+    button.addEventListener("touchend", choose, { passive: false });
+    choiceList.appendChild(button);
+  });
   document.getElementById("eventOverlay").classList.add("active");
 }
 
