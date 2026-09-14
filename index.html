@@ -354,6 +354,9 @@
   }
   #enemyName { font-size: 19px; color: #e6b8ab; margin-bottom: 8px; transition: transform 0.15s; }
   #enemyName.hit { animation: shake 0.3s ease; }
+  .enemyIntent { display: flex; align-items: center; justify-content: center; gap: 5px; margin: 9px auto 0; color: #e0c976; font-size: 12px; }
+  .enemyIntentTag { color: #9a9689; font-size: 9px; font-weight: 700; letter-spacing: 1px; }
+  .enemyIntent strong { color: #f0df9a; font-size: 12px; }
   @keyframes shake {
     0%, 100% { transform: translateX(0); }
     25% { transform: translateX(-4px); }
@@ -1113,6 +1116,7 @@ body {
   <div id="enemyBox">
     <div id="enemyName"></div>
     <div class="barOuter"><div id="enemyBar" class="barInner" style="width:100%"></div></div>
+    <div class="enemyIntent" id="enemyIntent"></div>
   </div>
   <div id="combatStatus"></div>
   <div id="playerBarWrap">
@@ -1176,10 +1180,10 @@ const CARD_DB = {
 const DEFAULT_DECK = ["attack","attack","attack","attack","attack","defend","defend","dodge","heavy","heal"];
 
 const ENEMY_DB = {
-  wolf:   { name: "Wolf", maxHp: 35, dmgMin: 8, dmgMax: 14 },
-  looter: { name: "Plünderer", maxHp: 45, dmgMin: 10, dmgMax: 18 },
-  bear:   { name: "Bär", maxHp: 70, dmgMin: 14, dmgMax: 22 },
-  swamp_thing: { name: "Sumpfkriecher", maxHp: 60, dmgMin: 16, dmgMax: 24 }
+  wolf:   { name: "Wolf", maxHp: 35, dmgMin: 8, dmgMax: 14, intent: "Schneller Biss" },
+  looter: { name: "Plünderer", maxHp: 45, dmgMin: 10, dmgMax: 18, intent: "Angriff" },
+  bear:   { name: "Bär", maxHp: 70, dmgMin: 14, dmgMax: 22, intent: "Wuchtiger Hieb" },
+  swamp_thing: { name: "Sumpfkriecher", maxHp: 60, dmgMin: 16, dmgMax: 24, intent: "Giftiger Biss" }
 };
 
 const LOCATIONS = [
@@ -2643,6 +2647,7 @@ function startCombat(enemyType, locName, extraNote) {
   combat = {
     enemyId,
     enemyName: enemyType.name,
+    intentLabel: enemyType.intent || "Angriff",
     enemyHp: enemyType.maxHp,
     enemyMaxHp: enemyType.maxHp,
     dmgMin: Math.round(enemyType.dmgMin * nightBonus),
@@ -2651,6 +2656,7 @@ function startCombat(enemyType, locName, extraNote) {
     hand: [], discardPile: [],
     ap: 3, maxAp: 3, block: 0, locName: locName
   };
+  rollEnemyIntent();
   drawCards(5);
   document.getElementById("combatOverlay").classList.add("active");
   renderCombat();
@@ -2668,6 +2674,11 @@ function drawCards(n) {
   }
 }
 
+function rollEnemyIntent() {
+  if (!combat) return;
+  combat.intentDamage = combat.dmgMin + Math.floor(Math.random() * (combat.dmgMax - combat.dmgMin + 1));
+}
+
 function spawnFloatNumber(containerEl, text, cssClass) {
   const num = document.createElement("div");
   num.className = "floatNum " + cssClass;
@@ -2682,6 +2693,11 @@ function renderCombat() {
   const maxHp = getMaxHealth();
   document.getElementById("enemyName").textContent = `${combat.enemyName}  (${combat.enemyHp}/${combat.enemyMaxHp})`;
   document.getElementById("enemyBar").style.width = Math.max(0, (combat.enemyHp / combat.enemyMaxHp) * 100) + "%";
+  document.getElementById("enemyIntent").innerHTML = `
+    <span class="enemyIntentTag">NÄCHSTER ZUG</span>
+    <strong>${combat.intentLabel}</strong>
+    <span>· ${combat.intentDamage} Schaden</span>
+  `;
   document.getElementById("playerBar").style.width = Math.max(0, (state.health / maxHp) * 100) + "%";
   document.getElementById("combatStatus").innerHTML = `
   <span class="combatStat">
@@ -2765,7 +2781,7 @@ function playCard(index) {
 }
 
 function endTurn() {
-  let dmg = combat.dmgMin + Math.floor(Math.random() * (combat.dmgMax - combat.dmgMin + 1));
+  let dmg = combat.intentDamage;
   dmg = Math.max(0, dmg - combat.block);
   state.health -= dmg;
   combat.block = 0;
@@ -2780,6 +2796,7 @@ function endTurn() {
   combat.hand = [];
   combat.ap = combat.maxAp;
   drawCards(5);
+  rollEnemyIntent();
   renderCombat();
 }
 
