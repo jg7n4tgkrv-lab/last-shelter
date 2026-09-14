@@ -1545,16 +1545,13 @@ function showWorldEvent() {
         <span class="eventChoiceDesc">${choice.desc}</span>
       </span>
     `;
-    let handled = false;
     const choose = eventObject => {
-      if (handled) return;
-      handled = true;
-      eventObject.preventDefault();
+      if (eventObject && eventObject.type !== "click") eventObject.preventDefault();
       chooseWorldEvent(event.id, choice.id);
     };
-    button.addEventListener("click", choose);
-    button.addEventListener("pointerup", choose);
-    button.addEventListener("touchend", choose, { passive: false });
+    button.onclick = choose;
+    button.onpointerup = choose;
+    button.ontouchend = choose;
     choiceList.appendChild(button);
   });
   document.getElementById("eventOverlay").classList.add("active");
