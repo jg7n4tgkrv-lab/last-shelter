@@ -1137,13 +1137,17 @@ button,
 /* PHASE 0 – compact no-page-scroll explore screen */
 @media (max-width: 900px) {
   #main.exploreFixed {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
     overflow: hidden;
   }
 
   #main.exploreFixed #screenExplore.active {
     display: flex;
+    flex: 1 1 auto;
     flex-direction: column;
-    height: 100%;
+    height: auto;
     min-height: 0;
     overflow: hidden;
   }
@@ -1212,6 +1216,23 @@ button,
     margin-bottom: 5px;
   }
 
+  #main.exploreFixed #screenExplore .actionSectionHead > div {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  #main.exploreFixed #screenExplore .actionSectionHead h2 {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  #main.exploreFixed #screenExplore .actionHint {
+    max-width: 52%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   #main.exploreFixed #screenExplore .actionSectionHead h2 {
     font-size: 16px;
   }
@@ -1259,6 +1280,10 @@ button,
     margin-bottom: 7px;
     padding: 6px 7px;
     overflow: hidden;
+  }
+
+  #main.exploreFixed #screenExplore .eventCardBody p {
+    display: none;
   }
 
   #main.exploreFixed #screenExplore #inventory {
