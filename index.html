@@ -369,6 +369,9 @@
   .barInnerPlayer { background: linear-gradient(90deg, #3a6a2f, #6fa84f); }
   #playerBarWrap { position: relative; margin-bottom: 14px; }
   #combatStatus { display: flex; justify-content: space-between; font-size: 14px; color: #b8b4a5; margin-bottom: 14px; }
+  #combatItemActions { margin: -4px 0 12px; text-align: center; }
+  .combatItemBtn { width: auto; max-width: 100%; padding: 8px 12px; background: #26351f; border: 1px solid #557043; border-radius: 10px; color: #d8e6c4; font-size: 12px; touch-action: manipulation; }
+  .combatItemBtn:active { transform: scale(0.97); filter: brightness(1.15); }
   #hand { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
   .handCard {
     background: linear-gradient(160deg, #1d2018, #131510);
@@ -1069,7 +1072,7 @@ body {
     <div class="charBox">
       <h2 class="sectionTitle">
   <img src="images/icons/heal.png" alt="">
-  Verbände
+  Heilmittel
 </h2>
       <div id="bandageBtnWrap"></div>
     </div>
@@ -1121,6 +1124,7 @@ body {
     <div class="enemyIntent" id="enemyIntent"></div>
   </div>
   <div id="combatStatus"></div>
+  <div id="combatItemActions"></div>
   <div id="playerBarWrap">
     <div class="barOuter">
       <div id="playerBar" class="barInner barInnerPlayer" style="width:100%"></div>
@@ -1299,11 +1303,13 @@ const RARITY_LABELS = { common:"Gewöhnlich", uncommon:"Ungewöhnlich", rare:"Se
 
 const RECIPES = [
   { id:"verband", name:"Verband", cost:{Holz:3}, result:"consumable", desc:"Heilt später 25 Leben", icon:"🩹" },
+  { id:"gegenmittel", name:"Gegengift", cost:{Heilkräuter:2}, result:"consumable", desc:"Entfernt Gift im Kampf", icon:"☠️" },
   { id:"crafted_spear", name:"Speer bauen", cost:{Holz:5}, result:"weapon", desc:"Waffe, +3 Schaden", icon:"🔱" },
   { id:"crafted_armor", name:"Grobe Rüstung bauen", cost:{Holz:5}, result:"armor", desc:"Rüstung, +3 Block", icon:"🛡️" }
 ];
  const RECIPE_ICON_FILES = {
   verband: "images/icons/heal.png",
+  gegenmittel: "images/icons/poison.png",
   crafted_spear: "images/icons/attack.png",
   crafted_armor: "images/icons/shield.png"
 };
@@ -1403,6 +1409,17 @@ function getLootTableForEnemy(enemyId) {
   return LOOT_TABLE_BY_ENEMY[enemyId] || LOOT_TABLE;
 }
 function countItem(name) { return state.inventory.filter(i => i === name).length; }
+function hasRecipeCost(recipe) {
+  return Object.entries(recipe.cost).every(([item, amount]) => countItem(item) >= amount);
+}
+function spendRecipeCost(recipe) {
+  Object.entries(recipe.cost).forEach(([item, amount]) => {
+    for (let i = 0; i < amount; i++) removeOneItem(item);
+  });
+}
+function formatRecipeCost(recipe) {
+  return Object.entries(recipe.cost).map(([item, amount]) => `${amount} ${item}`).join(" + ");
+}
 function getTotalInventoryCount() {
   return state.inventory.length + state.equipmentInventory.length + state.consumables.length;
 }
@@ -1706,7 +1723,10 @@ function gatherResources() {
   state.hunger = Math.max(0, state.hunger - 2);
   advanceTime(1);
   let resultMessage;
-  if (Math.random() < 0.58) {
+  if (location.id === "sumpf") {
+    state.inventory.push("Heilkräuter");
+    resultMessage = `${location.name}: Du hast Heilkräuter gefunden.`;
+  } else if (Math.random() < 0.58) {
     state.inventory.push("Holz");
     resultMessage = `${location.name}: Du hast vorsichtig Holz gesammelt.`;
     if (getToolBonus() > 0) {
@@ -1882,7 +1902,9 @@ function render() {
       ? "images/icons/forest.png"
       : item === "Fleisch"
         ? "images/icons/deer.png"
-        : "images/icons/berries.png";
+        : item === "Heilkräuter"
+          ? "images/icons/herbs.png"
+          : "images/icons/berries.png";
     const actionable = item === "Beeren" || item === "Fleisch";
     const action = item === "Fleisch" ? "eatMeat()" : "eatBerries()";
     const actionLabel = item === "Fleisch" ? "Antippen zum Essen · +25 Hunger" : "Antippen zum Essen";
@@ -1924,13 +1946,14 @@ function render() {
   Object.entries(consumableCounts).forEach(([itemId, count]) => {
     const recipe = RECIPES.find(r => r.id === itemId);
     const action = itemId === "verband" ? ' onclick="useBandage()"' : "";
+    const actionLabel = itemId === "gegenmittel" ? "Im Kampf zum Entfernen von Gift" : "Antippen zum Benutzen";
     inventoryCards.push(`
       <div class="itemCard consumable${action ? " actionable" : ""}"${action}>
         <img src="${RECIPE_ICON_FILES[itemId]}" alt="">
         <span class="itemCardText">
           <span class="itemCardName">${recipe ? recipe.name : itemId}</span>
           <span class="itemCardCount">×${count} · Verbrauch</span>
-          ${action ? '<span class="itemAction">Antippen zum Benutzen</span>' : ""}
+          ${action ? `<span class="itemAction">${actionLabel}</span>` : itemId === "gegenmittel" ? `<span class="itemAction">${actionLabel}</span>` : ""}
         </span>
       </div>
     `);
@@ -2347,22 +2370,37 @@ document.getElementById("eatBtnWrap").innerHTML =
       </button>
     `;
 
-const bandageCount =
-  state.consumables.filter(c => c === "verband").length;
+const bandageCount = state.consumables.filter(c => c === "verband").length;
+const antidoteCount = state.consumables.filter(c => c === "gegenmittel").length;
+const treatmentButtons = [];
+
+if (bandageCount > 0) {
+  treatmentButtons.push(`
+    <button class="campActionBtn" onclick="useBandage()">
+      <span class="cIcon2"><img src="images/icons/heal.png" alt=""></span>
+      <span class="btnText">
+        Verband benutzen (${bandageCount})
+        <span class="btnSub">+25 Leben</span>
+      </span>
+    </button>
+  `);
+}
+
+if (antidoteCount > 0) {
+  treatmentButtons.push(`
+    <button class="campActionBtn disabled">
+      <span class="cIcon2"><img src="images/icons/poison.png" alt=""></span>
+      <span class="btnText">
+        Gegengift (${antidoteCount})
+        <span class="btnSub">Im Kampf zum Entfernen von Gift</span>
+      </span>
+    </button>
+  `);
+}
 
 document.getElementById("bandageBtnWrap").innerHTML =
-  bandageCount > 0
-    ? `
-      <button class="campActionBtn" onclick="useBandage()">
-        <span class="cIcon2">
-          <img src="images/icons/heal.png" alt="">
-        </span>
-        <span class="btnText">
-          Verband benutzen (${bandageCount})
-          <span class="btnSub">+25 Leben</span>
-        </span>
-      </button>
-    `
+  treatmentButtons.length > 0
+    ? treatmentButtons.join("")
     : `
       <button class="campActionBtn disabled">
         <span class="cIcon2">
@@ -2377,8 +2415,9 @@ document.getElementById("bandageBtnWrap").innerHTML =
   const craftDiv = document.getElementById("craftList");
   craftDiv.innerHTML = "";
   RECIPES.forEach(recipe => {
-    const holzHave = countItem("Holz");
-    const canCraft = holzHave >= recipe.cost.Holz;
+    const canCraft = hasRecipeCost(recipe);
+    const costLabel = formatRecipeCost(recipe);
+    const haveLabel = Object.keys(recipe.cost).map(item => `${item}: ${countItem(item)}`).join(" · ");
     const btn = document.createElement("button");
     btn.className = "campActionBtn" + (canCraft ? "" : " disabled");
     btn.innerHTML = `
@@ -2387,9 +2426,9 @@ document.getElementById("bandageBtnWrap").innerHTML =
   </span>
 
   <span class="btnText">
-    ${recipe.name} (${recipe.cost.Holz} Holz)
+    ${recipe.name} (${costLabel})
     <span class="btnSub">
-      ${recipe.desc} – du hast ${holzHave} Holz
+      ${recipe.desc} · ${haveLabel}
     </span>
   </span>
 `;
@@ -2558,10 +2597,20 @@ function useBandage() {
   renderCamp();
 }
 
+function useAntidote() {
+  if (!combat || combat.poisonTurns <= 0) return;
+  const idx = state.consumables.indexOf("gegenmittel");
+  if (idx === -1) return;
+  state.consumables.splice(idx, 1);
+  combat.poisonTurns = 0;
+  log("Du hast das Gegengift benutzt. Das Gift wurde entfernt.");
+  saveGame();
+  renderCombat();
+}
+
 function craftItem(recipe) {
-  const holzHave = countItem("Holz");
-  if (holzHave < recipe.cost.Holz) return;
-  for (let i = 0; i < recipe.cost.Holz; i++) removeOneItem("Holz");
+  if (!hasRecipeCost(recipe)) return;
+  spendRecipeCost(recipe);
   if (recipe.result === "consumable") state.consumables.push(recipe.id);
   else state.equipmentInventory.push(recipe.id);
   saveGame();
@@ -2753,6 +2802,11 @@ function renderCombat() {
     </span>
   ` : ""}
 `;
+
+  const antidoteCount = state.consumables.filter(itemId => itemId === "gegenmittel").length;
+  document.getElementById("combatItemActions").innerHTML = combat.poisonTurns > 0 && antidoteCount > 0
+    ? `<button class="combatItemBtn" onclick="useAntidote()">Gegengift benutzen (${antidoteCount}) · Gift entfernen</button>`
+    : "";
 
   const handDiv = document.getElementById("hand");
   handDiv.innerHTML = "";
