@@ -588,7 +588,7 @@ body {
 .weatherBadge img { display: block; width: 32px; height: 32px; object-fit: contain; margin: 0 auto 3px; }
 
 .needGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin-top: 18px; }
-.needCard { background: rgba(5,10,7,0.42); border: 1px solid rgba(255,255,255,0.13); border-radius: 12px; padding: 8px 6px; min-width: 0; }
+.needCard { position: relative; background: rgba(5,10,7,0.42); border: 1px solid rgba(255,255,255,0.13); border-radius: 12px; padding: 8px 6px; min-width: 0; }
 .needCard span { display: flex; align-items: center; gap: 3px; color: rgba(255,255,255,0.72); font-size: 9px; white-space: nowrap; }
 .needCard img { width: 14px; height: 14px; object-fit: contain; }
 .needCard strong { display: block; margin-top: 4px; color: #fff7d5; font-size: 14px; }
@@ -596,6 +596,27 @@ body {
 .needHunger strong { color: #f0c879; }
 .needEnergy strong { color: #9fd3e8; }
 .needLevel strong { color: #e1d38d; }
+.vitalDelta {
+  position: absolute;
+  top: 4px;
+  right: 5px;
+  padding: 1px 4px;
+  border-radius: 99px;
+  background: rgba(0,0,0,0.42);
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1.2;
+  pointer-events: none;
+  animation: vitalDeltaIn 1.15s ease-out forwards;
+}
+.vitalDelta.positive { color: #bce08e; }
+.vitalDelta.negative { color: #e6a08b; }
+@keyframes vitalDeltaIn {
+  0% { opacity: 0; transform: translateY(4px) scale(0.86); }
+  18% { opacity: 1; transform: translateY(0) scale(1); }
+  76% { opacity: 1; transform: translateY(-2px) scale(1); }
+  100% { opacity: 0; transform: translateY(-8px) scale(0.96); }
+}
 
 .sectionHeading { display: flex; align-items: flex-end; justify-content: space-between; margin: 4px 2px 10px; }
 .sectionHeading h2 { margin: 3px 0 0; font-size: 20px; color: #eee9d5; }
@@ -1090,6 +1111,7 @@ let state = {
 let combat = null;
 let currentTab = "screenExplore";
 let selectedLocationId = "wald";
+let lastRenderedVitals = null;
 
 function loadGame() {
   const saved = localStorage.getItem("lastShelterSave");
@@ -1183,6 +1205,20 @@ function getConditionLabel() {
   if (state.energy <= 25) return "Erschöpft";
   if (state.hunger <= 25) return "Hungrig";
   return "Bereit";
+}
+
+function showVitalDelta(elementId, delta) {
+  if (!delta) return;
+  const valueElement = document.getElementById(elementId);
+  const card = valueElement ? valueElement.closest(".needCard") : null;
+  if (!card) return;
+  const oldDelta = card.querySelector(".vitalDelta");
+  if (oldDelta) oldDelta.remove();
+  const deltaElement = document.createElement("span");
+  deltaElement.className = "vitalDelta " + (delta > 0 ? "positive" : "negative");
+  deltaElement.textContent = `${delta > 0 ? "+" : ""}${delta}`;
+  card.appendChild(deltaElement);
+  setTimeout(() => deltaElement.remove(), 1200);
 }
 
 function getSelectedLocation() {
@@ -1329,6 +1365,18 @@ function render() {
 
   const mobileHealth = document.getElementById("mobileHealth");
   if (mobileHealth) {
+    const currentVitals = {
+      health: state.health,
+      hunger: state.hunger,
+      energy: state.energy
+    };
+    if (lastRenderedVitals) {
+      showVitalDelta("mobileHealth", currentVitals.health - lastRenderedVitals.health);
+      showVitalDelta("mobileHunger", currentVitals.hunger - lastRenderedVitals.hunger);
+      showVitalDelta("mobileEnergy", currentVitals.energy - lastRenderedVitals.energy);
+    }
+    lastRenderedVitals = currentVitals;
+
     mobileHealth.textContent = `${state.health}/${maxHp}`;
     document.getElementById("mobileHunger").textContent = state.hunger;
     document.getElementById("mobileEnergy").textContent = `${state.energy}/${getMaxEnergy()}`;
