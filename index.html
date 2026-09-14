@@ -630,6 +630,8 @@ body {
 }
 .actionCard:active { transform: scale(0.98); filter: brightness(1.18); }
 .actionCard.primary { border-color: #887643; background: linear-gradient(145deg, #3b3922, #252519); }
+.actionCard:disabled { opacity: 0.45; filter: saturate(0.55); cursor: not-allowed; }
+.actionCard:disabled:active { transform: none; filter: saturate(0.55); }
 .actionCardIcon { width: 34px; height: 34px; padding: 6px; border-radius: 10px; background: rgba(0,0,0,0.25); flex: 0 0 auto; }
 .actionCardIcon img { width: 100%; height: 100%; object-fit: contain; }
 .actionCardText { min-width: 0; flex: 1; }
@@ -1200,34 +1202,38 @@ function renderActionCards() {
   const actionDiv = document.getElementById("actionCards");
   if (!label || !actionDiv) return;
 
+  const canGather = state.energy >= 5;
+  const canExplore = state.energy >= 10;
+  const canTrack = state.energy >= 4;
+
   label.textContent = location.name;
   actionDiv.className = "actionCards";
   actionDiv.innerHTML = `
-    <button class="actionCard" onclick="gatherResources()">
+    <button class="actionCard" onclick="gatherResources()"${canGather ? "" : " disabled"}>
       <span class="actionCardIcon"><img src="images/icons/forest.png" alt=""></span>
       <span class="actionCardText">
         <span class="actionCardName">Sorgfältig sammeln</span>
         <span class="actionCardDesc">Suche nach Holz oder Beeren und bleibe möglichst unauffällig.</span>
       </span>
-      <span class="actionCardCost">−5 Energie<br>−2 Hunger</span>
+      <span class="actionCardCost">${canGather ? "−5 Energie<br>−2 Hunger" : "Nicht genug Energie"}</span>
     </button>
 
-    <button class="actionCard primary" onclick="explore(getSelectedLocation())">
+    <button class="actionCard primary" onclick="explore(getSelectedLocation())"${canExplore ? "" : " disabled"}>
       <span class="actionCardIcon"><img src="images/icons/compass.png" alt=""></span>
       <span class="actionCardText">
         <span class="actionCardName">Gebiet erkunden</span>
         <span class="actionCardDesc">Eine unvorhersehbare Expedition mit Beute, Gefahren und Kämpfen.</span>
       </span>
-      <span class="actionCardCost">−4–15 Energie</span>
+      <span class="actionCardCost">${canExplore ? "−4–15 Energie" : "Nicht genug Energie"}</span>
     </button>
 
-    <button class="actionCard" onclick="trackLocation()">
+    <button class="actionCard" onclick="trackLocation()"${canTrack ? "" : " disabled"}>
       <span class="actionCardIcon"><img src="images/icons/flee.png" alt=""></span>
       <span class="actionCardText">
         <span class="actionCardName">Spuren lesen</span>
         <span class="actionCardDesc">Deine Wahrnehmung hilft dir, Gefahren früh zu erkennen.</span>
       </span>
-      <span class="actionCardCost">−4 Energie<br>−1 Hunger</span>
+      <span class="actionCardCost">${canTrack ? "−4 Energie<br>−1 Hunger" : "Nicht genug Energie"}</span>
     </button>
   `;
 }
