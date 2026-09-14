@@ -1175,7 +1175,9 @@ const CARD_DB = {
   defend_plus: { name: "Verteidigen+", cost: 1, desc: "Mehr Block als normales Verteidigen", icon: "🛡️" },
   dodge:       { name: "Ausweichen", cost: 1, desc: "Blockt den nächsten Angriff komplett", icon: "💨" },
   heavy:       { name: "Schwerer Schlag", cost: 2, desc: "Hoher Schaden am Gegner", icon: "🔨" },
-  heal:        { name: "Erste Hilfe", cost: 1, desc: "+15 Leben", icon: "❤️‍🩹" }
+  heal:        { name: "Erste Hilfe", cost: 1, desc: "+15 Leben", icon: "❤️‍🩹" },
+  precise_strike: { name: "Gezielter Hieb", cost: 1, desc: "10–14 Schaden", icon: "⚔️" },
+  emergency_bandage: { name: "Notverband", cost: 2, desc: "+25 Leben", icon: "❤️‍🩹" }
 };
  const CARD_ICON_FILES = {
   attack: "images/icons/attack.png",
@@ -1184,7 +1186,9 @@ const CARD_DB = {
   defend_plus: "images/icons/shield.png",
   dodge: "images/icons/flee.png",
   heavy: "images/icons/attack.png",
-  heal: "images/icons/heal.png"
+  heal: "images/icons/heal.png",
+  precise_strike: "images/icons/attack.png",
+  emergency_bandage: "images/icons/heal.png"
 };
 
 const DEFAULT_DECK = ["attack","attack","attack","attack","attack","defend","defend","dodge","heavy","heal"];
@@ -2536,6 +2540,20 @@ function renderForge() {
     action: () => upgradeDeckCard("defend", "defend_plus", 6),
     can: holz >= 6 && defCount > 0,
     note: defCount === 0 ? "Keine Verteidigen-Karte im Deck" : null
+  },
+  {
+    label: "Karte: Gezielter Hieb",
+    cost: 7,
+    icon: "images/icons/attack.png",
+    action: () => forgeCard("precise_strike", 7),
+    can: holz >= 7
+  },
+  {
+    label: "Karte: Notverband",
+    cost: 6,
+    icon: "images/icons/heal.png",
+    action: () => forgeCard("emergency_bandage", 6),
+    can: holz >= 6
   }
 ];
 
@@ -2907,10 +2925,11 @@ function playCard(index) {
   const enemyBox = document.getElementById("enemyBox");
   const playerBarWrap = document.getElementById("playerBarWrap");
 
-  if (cardId === "attack" || cardId === "attack_plus" || cardId === "heavy") {
+  if (cardId === "attack" || cardId === "attack_plus" || cardId === "heavy" || cardId === "precise_strike") {
     let dmg;
     if (cardId === "attack") dmg = 8 + Math.floor(Math.random() * 5) + str * 2 + weaponBonus;
     else if (cardId === "attack_plus") dmg = 14 + Math.floor(Math.random() * 5) + str * 2 + weaponBonus;
+    else if (cardId === "precise_strike") dmg = 10 + Math.floor(Math.random() * 5) + str * 2 + weaponBonus;
     else dmg = 18 + Math.floor(Math.random() * 5) + str * 3 + weaponBonus;
     const absorbed = Math.min(combat.enemyBlock, dmg);
     const dealt = dmg - absorbed;
@@ -2930,6 +2949,10 @@ function playCard(index) {
   } else if (cardId === "heal") {
     const before = state.health;
     state.health = Math.min(getMaxHealth(), state.health + 15);
+    spawnFloatNumber(playerBarWrap, "+" + (state.health - before), "heal");
+  } else if (cardId === "emergency_bandage") {
+    const before = state.health;
+    state.health = Math.min(getMaxHealth(), state.health + 25);
     spawnFloatNumber(playerBarWrap, "+" + (state.health - before), "heal");
   }
 
