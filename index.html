@@ -690,6 +690,8 @@ body {
   .screen.active { height: 100%; overflow: hidden; }
 
   #screenExplore { display: flex; flex-direction: column; min-height: 0; }
+  #screenExplore:not(.active) { display: none; }
+  #screenExplore.active { display: flex; }
   #screenExplore .mobileOverview { flex: 0 0 160px; margin-bottom: 9px; padding: 13px; }
   #screenExplore .overviewTop h2 { font-size: 22px; }
   #screenExplore .needGrid { margin-top: 13px; }
