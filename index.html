@@ -211,6 +211,78 @@
     justify-content: center;
     padding: 18px;
   }
+  #morningOverlay.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+  }
+  .morningPrompt {
+    width: min(100%, 430px);
+    background: linear-gradient(160deg, #283323, #151d16);
+    border: 1px solid #68764b;
+    border-radius: 20px;
+    padding: 20px 16px 16px;
+    box-shadow: 0 16px 40px rgba(0,0,0,0.45), inset 0 1px rgba(255,255,255,0.1);
+  }
+  .morningPromptIcon {
+    display: block;
+    width: 42px;
+    height: 42px;
+    margin: 0 auto 8px;
+    object-fit: contain;
+  }
+  .morningPromptTag {
+    display: block;
+    color: #d8c878;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.8px;
+    text-align: center;
+  }
+  .morningPrompt h2 {
+    margin: 7px 0 5px;
+    color: #f0ead2;
+    font-size: 22px;
+    text-align: center;
+  }
+  .morningPromptText {
+    margin: 0 0 14px;
+    color: #b9c0ad;
+    font-size: 13px;
+    line-height: 1.4;
+    text-align: center;
+  }
+  .morningFacts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .morningFact {
+    padding: 10px;
+    border: 1px solid rgba(143,167,112,0.35);
+    border-radius: 12px;
+    background: rgba(10,18,11,0.42);
+    color: #d9d8c2;
+    font-size: 12px;
+    text-align: center;
+  }
+  .morningFact strong { display: block; margin-top: 3px; color: #d8c878; font-size: 14px; }
+  .morningContinue {
+    width: 100%;
+    padding: 13px 14px;
+    border: 1px solid #6d784d;
+    border-radius: 13px;
+    background: #31442c;
+    color: #f2edcf;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-appearance: none;
+  }
+  .morningContinue:active { transform: scale(0.98); filter: brightness(1.16); }
   .eventPrompt {
     width: min(100%, 430px);
     background: linear-gradient(160deg, #283323, #151d16);
@@ -1063,6 +1135,17 @@ body {
     <h2 id="eventPromptTitle"></h2>
     <p class="eventPromptText" id="eventPromptText"></p>
     <div id="eventChoiceList"></div>
+  </div>
+</div>
+
+<div class="overlay" id="morningOverlay">
+  <div class="morningPrompt">
+    <img class="morningPromptIcon" src="images/icons/daylight.png" alt="">
+    <span class="morningPromptTag">NEUER TAG</span>
+    <h2 id="morningPromptTitle">Ein neuer Morgen</h2>
+    <p class="morningPromptText" id="morningPromptText"></p>
+    <div class="morningFacts" id="morningFacts"></div>
+    <button class="morningContinue" id="morningContinue" type="button">Weiter</button>
   </div>
 </div>
 
@@ -2255,6 +2338,8 @@ function upgradeDeckCard(fromId, toId, cost) {
 }
 
 function sleepAtCamp() {
+  const oldHealth = state.health;
+  const oldHunger = state.hunger;
   state.energy = getMaxEnergy();
   state.health = Math.min(getMaxHealth(), state.health + 15);
   state.hunger = Math.max(0, state.hunger - 15);
@@ -2267,6 +2352,36 @@ function sleepAtCamp() {
   saveGame();
   render();
   renderCamp();
+  showMorningSummary({
+    healthGain: state.health - oldHealth,
+    hungerCost: oldHunger - state.hunger
+  });
+}
+
+function showMorningSummary(summary) {
+  const overlay = document.getElementById("morningOverlay");
+  const title = document.getElementById("morningPromptTitle");
+  const text = document.getElementById("morningPromptText");
+  const facts = document.getElementById("morningFacts");
+  const continueButton = document.getElementById("morningContinue");
+  if (!overlay || !title || !text || !facts || !continueButton) return;
+
+  title.textContent = `Tag ${state.day}`;
+  text.textContent = `${state.weather} · ${formatTime()} · Dein Lager gibt dir Zeit zum Durchatmen.`;
+  facts.innerHTML = `
+    <div class="morningFact">Energie<strong>${state.energy}/${getMaxEnergy()}</strong></div>
+    <div class="morningFact">Leben<strong>+${summary.healthGain}</strong></div>
+    <div class="morningFact">Hunger<strong>−${summary.hungerCost}</strong></div>
+    <div class="morningFact">Lagerstatus<strong>+5 Moral · +2 Sicherheit</strong></div>
+  `;
+  overlay.classList.add("active");
+
+  const closeSummary = (event) => {
+    if (event && event.type === "touchend") event.preventDefault();
+    overlay.classList.remove("active");
+  };
+  continueButton.onclick = closeSummary;
+  continueButton.ontouchend = closeSummary;
 }
 
 function eatBerries() {
