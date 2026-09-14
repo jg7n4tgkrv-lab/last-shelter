@@ -961,105 +961,172 @@ body {
   #cards { grid-template-columns: repeat(3, 1fr); }
 }
 
-/* FIXED MOBILE VIEWPORT – horizontal card movement instead of page scrolling */
+/* PHASE 0 – STABLE MOBILE LAYOUT
+   Keep the app shell fixed, but let the active screen grow and scroll naturally.
+   This prevents Character, Camp and overlay content from being clipped on iPhone.
+*/
 @media (max-width: 900px) {
   html, body { overflow: hidden; }
-  #main {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    min-height: 0;
-    padding: 10px 14px 0;
-  }
-  .screen.active { flex: 1 1 auto; min-height: 0; height: auto; overflow: hidden; }
 
-  #screenExplore { display: flex; flex-direction: column; min-height: 0; }
-  #screenExplore:not(.active), #screenCharacter:not(.active), #screenCamp:not(.active) { display: none !important; }
-  #screenExplore.active, #screenCharacter.active, #screenCamp.active { display: flex !important; }
-  #screenExplore .mobileOverview { flex: 0 0 137px; margin-bottom: 7px; padding: 11px; }
-  #screenExplore .overviewTop h2 { font-size: 22px; }
-  #screenExplore .needGrid { margin-top: 10px; }
-  #screenExplore .sectionHeading { flex: 0 0 33px; margin: 0 2px 5px; }
-  #screenExplore .sectionHeading h2 { font-size: 18px; }
-  #screenExplore #log { display: none !important; }
+  #main {
+    display: block;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-height: 0;
+    height: auto;
+    padding: 10px 14px calc(20px + env(safe-area-inset-bottom));
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .screen.active {
+    display: block;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .screen:not(.active) {
+    display: none !important;
+  }
+
+  #screenExplore .mobileOverview {
+    margin-bottom: 14px;
+    padding: 14px;
+  }
 
   #screenExplore #cards {
-    flex: 0 0 100px;
-    display: flex;
-    gap: 9px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    margin: 0 -2px 5px;
-    padding: 2px 2px 5px;
-    scroll-snap-type: x mandatory;
-    scrollbar-width: none;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    overflow: visible;
+    margin: 0 0 14px;
+    padding: 0;
+    scroll-snap-type: none;
   }
-  #screenExplore #cards::-webkit-scrollbar,
-  #screenExplore .inventoryGrid::-webkit-scrollbar { display: none; }
-  #screenExplore #cards .card {
-    flex: 0 0 145px;
-    min-height: 90px;
-    height: 90px;
-    padding: 54px 9px 7px;
-    scroll-snap-align: start;
+
+  #screenExplore #cards .card,
+  #screenExplore #cards .card.locked {
+    min-width: 0;
+    min-height: 138px;
+    height: auto;
+    padding: 92px 9px 12px;
+    flex: initial;
+    scroll-snap-align: none;
   }
-  #screenExplore #cards .locationProgress { margin-top: 1px; font-size: 8px; }
-  #screenExplore #cards .card.locked { min-height: 90px; }
 
-  #screenExplore .actionSection { flex: 0 0 113px; margin: 0 0 5px; min-height: 0; }
-  #screenExplore .actionSectionHead { height: 26px; margin-bottom: 5px; }
-  #screenExplore .actionSectionHead h2 { font-size: 16px; }
-  #screenExplore .actionHint { font-size: 9px; }
-  #screenExplore .actionCards { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
-  #screenExplore .actionCard { min-height: 80px; height: 80px; padding: 6px 6px; gap: 3px; flex-direction: column; align-items: flex-start; justify-content: flex-start; }
-  #screenExplore .actionCardIcon { width: 27px; height: 27px; padding: 5px; }
-  #screenExplore .actionCardName { font-size: 11px; line-height: 1.1; }
-  #screenExplore .actionCardDesc { display: none; }
-  #screenExplore .actionCardCost { margin-top: auto; font-size: 8px; line-height: 1.15; }
+  #screenExplore .actionSection {
+    margin: 0 0 14px;
+    min-height: 0;
+  }
 
-  #screenExplore .eventCard { flex: 0 0 49px; min-height: 49px; max-height: 49px; margin-bottom: 5px; padding: 6px 7px; overflow: hidden; }
-  #screenExplore .eventCardIcon { width: 27px; height: 27px; padding: 5px; }
-  #screenExplore .eventCardTag { font-size: 8px; }
-  #screenExplore .eventCardBody strong { font-size: 12px; margin-top: 2px; }
-  #screenExplore .eventCardBody p { font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #screenExplore .actionSectionHead {
+    height: auto;
+    min-height: 26px;
+    margin-bottom: 7px;
+  }
+
+  #screenExplore .actionCards {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  #screenExplore .actionCard {
+    min-height: 72px;
+    height: auto;
+    padding: 11px;
+    gap: 10px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  #screenExplore .actionCardIcon {
+    width: 32px;
+    height: 32px;
+    padding: 6px;
+  }
+
+  #screenExplore .actionCardName {
+    font-size: 13px;
+    line-height: 1.2;
+  }
+
+  #screenExplore .actionCardDesc {
+    display: block;
+    font-size: 11px;
+  }
+
+  #screenExplore .actionCardCost {
+    margin-top: 0;
+    font-size: 9px;
+    text-align: right;
+  }
+
+  #screenExplore .eventCard {
+    min-height: 0;
+    max-height: none;
+    margin-bottom: 14px;
+    padding: 11px;
+    overflow: visible;
+  }
 
   #screenExplore #inventory {
-    flex: 1 1 46px;
-    min-height: 46px;
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    overflow: hidden;
-    padding: 5px 8px;
+    display: block;
+    min-height: 0;
+    height: auto;
+    overflow: visible;
+    padding: 12px 14px;
   }
-  #screenExplore #inventory .hd { flex: 0 0 auto; margin: 0; font-size: 11px; }
-#screenExplore .inventoryGrid { flex: 1 1 auto; min-width: 0; height: 36px; display: flex; gap: 7px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
-  #screenExplore #inventory .inventoryMeta { max-width: 96px; margin-left: 4px; font-size: 8px; }
-  #screenExplore .itemCard { flex: 0 0 142px; min-height: 36px; height: 36px; padding: 5px 7px; }
-  #screenExplore .itemCard img { width: 24px; height: 24px; }
-  #screenExplore .itemCardName { font-size: 11px; }
-  #screenExplore .itemCardCount, #screenExplore .itemAction { font-size: 9px; }
 
-  #screenCharacter.active, #screenCamp.active {
+  #screenExplore #inventory .hd {
     display: flex;
-    gap: 10px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scroll-snap-type: x mandatory;
-    scrollbar-width: none;
+    margin-bottom: 8px;
+  }
+
+  #screenExplore .inventoryGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  #screenExplore .itemCard {
+    min-width: 0;
+    min-height: 58px;
+    height: auto;
+    padding: 8px;
+  }
+
+  #screenCharacter.active,
+  #screenCamp.active {
+    display: block;
+    overflow: visible;
     padding-bottom: 2px;
   }
-  #screenCharacter:not(.active), #screenCamp:not(.active) { display: none; }
-  #screenCharacter.active::-webkit-scrollbar, #screenCamp.active::-webkit-scrollbar { display: none; }
-  #screenCharacter.active > .charBox, #screenCamp.active > .charBox {
-    flex: 0 0 100%;
-    min-width: 0;
-    max-height: 100%;
-    overflow: hidden;
-    scroll-snap-align: start;
-    margin-bottom: 0;
+
+  #screenCharacter.active > .charBox,
+  #screenCamp.active > .charBox {
+    max-height: none;
+    min-height: 0;
+    overflow: visible;
+    margin-bottom: 14px;
+    scroll-snap-align: none;
   }
 }
+/* PHASE 0 – overlay safe-area protection */
+.overlay {
+  padding-top: calc(20px + env(safe-area-inset-top));
+  padding-bottom: calc(20px + env(safe-area-inset-bottom));
+}
+#eventOverlay.active,
+#morningOverlay.active,
+#cardRewardOverlay.active {
+  padding-top: calc(18px + env(safe-area-inset-top));
+  padding-bottom: calc(18px + env(safe-area-inset-bottom));
+}
+
 </style>
 </head>
 <body>
@@ -1453,7 +1520,10 @@ const SHELTER_STAGES = [
   { name:"Fester Unterschlupf", description:"Ein verlässlicher Ort, an dem du dich von Expeditionen erholen kannst.", next:null, cost:null }
 ];
 
+const CURRENT_SAVE_VERSION = 2;
+
 let state = {
+  saveVersion: CURRENT_SAVE_VERSION,
   health: 100, hunger: 100, energy: 100, xp: 0, level: 1, day: 1, shelterLevel: 1,
   inventory: [], deck: [...DEFAULT_DECK],
   attributes: { staerke:0, vitalitaet:0, geschicklichkeit:0, ueberleben:0, wahrnehmung:0 },
@@ -1481,6 +1551,7 @@ function loadGame() {
     }
     if (!loaded || typeof loaded !== "object") return;
     state = Object.assign({
+      saveVersion: CURRENT_SAVE_VERSION,
       health: 100, hunger: 100, energy: 100, xp: 0, level: 1, day: 1, shelterLevel: 1,
       inventory: [],
       deck: [...DEFAULT_DECK],
@@ -1490,8 +1561,15 @@ function loadGame() {
       consumables: [], timeHour: 8, weather: "Klar", pendingEvent: null,
       morale: 60, safety: 50, locationProgress: {}, runStats: { expeditions:0, victories:0 }, pendingCardReward: [], dailyGoal: null
     }, loaded);
-    if (!state.deck || state.deck.length === 0) state.deck = [...DEFAULT_DECK];
+    if (!Number.isFinite(state.saveVersion)) state.saveVersion = 1;
+    if (!Array.isArray(state.deck)) state.deck = [...DEFAULT_DECK];
+    state.deck = state.deck.filter(cardId => CARD_DB[cardId]);
+    if (state.deck.length === 0) state.deck = [...DEFAULT_DECK];
     if (!Array.isArray(state.inventory)) state.inventory = [];
+    if (!Array.isArray(state.equipmentInventory)) state.equipmentInventory = [];
+    state.equipmentInventory = state.equipmentInventory.filter(itemId => ITEM_DB[itemId]);
+    if (!Array.isArray(state.consumables)) state.consumables = [];
+    state.consumables = state.consumables.filter(itemId => RECIPES.some(recipe => recipe.id === itemId));
     if (!Number.isFinite(state.health)) state.health = 100;
     if (!Number.isFinite(state.hunger)) state.hunger = 100;
     if (!Number.isFinite(state.energy)) state.energy = 100;
@@ -1499,11 +1577,17 @@ function loadGame() {
     if (!Number.isFinite(state.level) || state.level < 1) state.level = 1;
     if (!Number.isFinite(state.day) || state.day < 1) state.day = 1;
     if (!Number.isFinite(state.shelterLevel) || state.shelterLevel < 1) state.shelterLevel = 1;
-    if (!state.attributes) state.attributes = { staerke:0, vitalitaet:0, geschicklichkeit:0, ueberleben:0, wahrnehmung:0 };
-    if (!state.equipmentInventory) state.equipmentInventory = [];
-    if (!state.equipped) state.equipped = { weapon: null, armor: null, tool: null };
+    const defaultAttributes = { staerke:0, vitalitaet:0, geschicklichkeit:0, ueberleben:0, wahrnehmung:0 };
+    state.attributes = Object.assign(defaultAttributes, state.attributes && typeof state.attributes === "object" ? state.attributes : {});
+    Object.keys(defaultAttributes).forEach(attr => {
+      if (!Number.isFinite(state.attributes[attr]) || state.attributes[attr] < 0) state.attributes[attr] = 0;
+      state.attributes[attr] = Math.floor(state.attributes[attr]);
+    });
+    if (!state.equipped || typeof state.equipped !== "object") state.equipped = { weapon: null, armor: null, tool: null };
     if (!Object.prototype.hasOwnProperty.call(state.equipped, "tool")) state.equipped.tool = null;
-    if (!state.consumables) state.consumables = [];
+    ["weapon", "armor", "tool"].forEach(slot => {
+      if (state.equipped[slot] && !ITEM_DB[state.equipped[slot]]) state.equipped[slot] = null;
+    });
     if (state.timeHour === undefined) state.timeHour = 8;
     if (!state.weather) state.weather = "Klar";
     if (!state.pendingEvent || !EVENT_DB[state.pendingEvent.id]) state.pendingEvent = null;
@@ -1519,13 +1603,18 @@ function loadGame() {
     if (!Number.isFinite(state.runStats.victories)) state.runStats.victories = 0;
     if (!Array.isArray(state.pendingCardReward)) state.pendingCardReward = [];
     state.pendingCardReward = state.pendingCardReward.filter(cardId => CARD_DB[cardId]);
-    state.hunger = Math.max(0, state.hunger);
-    state.energy = Math.max(0, state.energy);
+    state.hunger = Math.max(0, Math.min(100, state.hunger));
+    state.energy = Math.max(0, Math.min(getMaxEnergy(), state.energy));
+    state.health = Math.max(0, Math.min(getMaxHealth(), state.health));
+    state.saveVersion = CURRENT_SAVE_VERSION;
   }
   ensureDailyGoal();
 }
 
-function saveGame() { localStorage.setItem("lastShelterSave", JSON.stringify(state)); }
+function saveGame() {
+  state.saveVersion = CURRENT_SAVE_VERSION;
+  localStorage.setItem("lastShelterSave", JSON.stringify(state));
+}
 
 function getMaxHealth() { return 100 + state.attributes.vitalitaet * 5; }
 function getMaxEnergy() { return 100 + (state.shelterLevel - 1) * 10; }
@@ -1741,12 +1830,6 @@ function showWorldEvent() {
     `;
     const choose = () => chooseWorldEvent(eventId, choice.id);
     button.onclick = choose;
-    button.onpointerup = choose;
-    button.ontouchend = eventObject => {
-      eventObject.preventDefault();
-      choose();
-    };
-    button.setAttribute("onclick", `chooseWorldEvent('${eventId}', '${choice.id}')`);
     choiceList.appendChild(button);
   });
   document.getElementById("eventOverlay").classList.add("active");
@@ -2760,7 +2843,6 @@ function showMorningSummary(summary) {
     overlay.classList.remove("active");
   };
   continueButton.onclick = closeSummary;
-  continueButton.ontouchend = closeSummary;
 }
 
 function eatBerries() {
@@ -2876,10 +2958,6 @@ function showCardRewardOverlay() {
 
   const closeWithoutCard = () => chooseCardReward(null);
   skip.onclick = closeWithoutCard;
-  skip.ontouchend = (event) => {
-    event.preventDefault();
-    closeWithoutCard();
-  };
   overlay.classList.add("active");
 }
 
