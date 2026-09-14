@@ -1189,15 +1189,20 @@ const ENEMY_DB = {
   wolf:   { name: "Wolf", maxHp: 35, dmgMin: 8, dmgMax: 14, intent: "Schneller Biss" },
   looter: { name: "Plünderer", maxHp: 45, dmgMin: 10, dmgMax: 18, intent: "Angriff" },
   bear:   { name: "Bär", maxHp: 70, dmgMin: 14, dmgMax: 22, intent: "Hieb" },
-  swamp_thing: { name: "Sumpfkriecher", maxHp: 60, dmgMin: 16, dmgMax: 24, intent: "Biss" }
+  swamp_thing: { name: "Sumpfkriecher", maxHp: 60, dmgMin: 16, dmgMax: 24, intent: "Biss" },
+  forest_guardian: { name: "Waldhüter", maxHp: 88, dmgMin: 12, dmgMax: 18, intent: "Wurzelhieb", boss:true, locationId:"wald", reward:"axe" },
+  ruin_sentinel: { name: "Ruinenwächter", maxHp: 102, dmgMin: 14, dmgMax: 22, intent: "Steinhieb", boss:true, locationId:"ruinen", reward:"iron_plate" },
+  river_hunter: { name: "Flussjäger", maxHp: 82, dmgMin: 12, dmgMax: 19, intent: "Schneller Schlag", boss:true, locationId:"fluss", reward:"spear" },
+  mountain_titan: { name: "Bergtitan", maxHp: 126, dmgMin: 18, dmgMax: 28, intent: "Wuchtiger Hieb", boss:true, locationId:"berge", reward:"iron_plate" },
+  swamp_queen: { name: "Sumpfkönigin", maxHp: 118, dmgMin: 18, dmgMax: 27, intent: "Giftiger Biss", boss:true, poison:true, locationId:"sumpf", reward:"leather" }
 };
 
 const LOCATIONS = [
-  { id:"wald",   name:"Dichter Wald",       minLevel:1, danger:0.55, enemyPool:["wolf","looter"], icon:"🌲", accent:"#5a7a3f", identity:"Brennholz und Beeren", gatherItem:"Holz", gatherText:"Du hast vorsichtig Holz gesammelt", altGatherItem:"Beeren", altGatherText:"Du hast essbare Beeren gefunden", exploreItem:"Holz", exploreFindText:"Du findest gutes Brennholz zwischen den Bäumen", gatherDesc:"Suche nach Brennholz oder Beeren und bleibe möglichst unauffällig.", exploreDesc:"Durchsuche den Wald nach Vorräten, Spuren und Gefahren." },
-  { id:"ruinen", name:"Verlassene Ruinen",  minLevel:1, danger:0.66, enemyPool:["wolf","looter"], icon:"🏚️", accent:"#8a7a5f", identity:"Bretter und alte Verstecke", gatherItem:"Holz", gatherText:"Du hast brauchbare Bretter aus den Trümmern gelöst", altGatherItem:"Beeren", altGatherText:"Du hast Beeren am überwucherten Ruinenrand gefunden", exploreItem:"Holz", exploreFindText:"Du findest brauchbare Bretter zwischen den Trümmern", gatherDesc:"Suche in den Trümmern nach Brettern oder vergessenen Vorräten.", exploreDesc:"Durchsuche die Ruinen nach Beute, Verstecken und Hinterhalten." },
-  { id:"fluss",  name:"Flussufer",          minLevel:1, danger:0.48, enemyPool:["wolf","looter"], icon:"🏞️", accent:"#4a7a8a", identity:"Beeren und ruhige Ufer", gatherItem:"Beeren", gatherText:"Du hast am Ufer Beeren gesammelt", altGatherItem:"Holz", altGatherText:"Du hast Treibholz am Ufer gefunden", exploreItem:"Beeren", exploreFindText:"Du findest frische Beeren nahe dem Wasser", gatherDesc:"Suche am Ufer nach Nahrung und nützlichem Treibholz.", exploreDesc:"Folge dem Fluss nach Nahrung, sicheren Wegen und Gefahren." },
-  { id:"berge",  name:"Berge",              minLevel:3, danger:0.76, enemyPool:["bear"], icon:"⛰️", accent:"#7a7a8a", identity:"Trockenes Holz und raue Wege", gatherItem:"Holz", gatherText:"Du hast trockenes Holz unter einem Felsvorsprung gesammelt", altGatherItem:"Beeren", altGatherText:"Du hast zähe Bergbeeren gefunden", exploreItem:"Holz", exploreFindText:"Du findest trockenes Holz unter einem Felsvorsprung", gatherDesc:"Suche zwischen Felsen nach trockenem Holz und essbaren Beeren.", exploreDesc:"Erklimme die Hänge nach seltenen Funden und starken Gegnern." },
-  { id:"sumpf",  name:"Sumpf",              minLevel:5, danger:0.84, enemyPool:["swamp_thing"], icon:"🐊", accent:"#5a7a5a", identity:"Heilkräuter und Gift", gatherItem:"Heilkräuter", gatherText:"Du hast Heilkräuter am feuchten Ufer gefunden", altGatherItem:"Heilkräuter", altGatherText:"Du hast weitere Heilkräuter zwischen den Wurzeln entdeckt", exploreItem:"Heilkräuter", exploreFindText:"Du findest Heilkräuter am Rand des schwarzen Wassers", gatherDesc:"Suche nach Heilkräutern, bevor dich der Sumpf bemerkt.", exploreDesc:"Durchquere den Sumpf nach Heilmitteln, Gift und dem Sumpfkriecher." }
+  { id:"wald",   name:"Dichter Wald",       minLevel:1, danger:0.55, enemyPool:["wolf","looter"], icon:"🌲", accent:"#5a7a3f", identity:"Brennholz und Beeren", bossId:"forest_guardian", bossName:"Waldhüter", gatherItem:"Holz", gatherText:"Du hast vorsichtig Holz gesammelt", altGatherItem:"Beeren", altGatherText:"Du hast essbare Beeren gefunden", exploreItem:"Holz", exploreFindText:"Du findest gutes Brennholz zwischen den Bäumen", gatherDesc:"Suche nach Brennholz oder Beeren und bleibe möglichst unauffällig.", exploreDesc:"Durchsuche den Wald nach Vorräten, Spuren und Gefahren." },
+  { id:"ruinen", name:"Verlassene Ruinen",  minLevel:1, danger:0.66, enemyPool:["wolf","looter"], icon:"🏚️", accent:"#8a7a5f", identity:"Bretter und alte Verstecke", bossId:"ruin_sentinel", bossName:"Ruinenwächter", gatherItem:"Holz", gatherText:"Du hast brauchbare Bretter aus den Trümmern gelöst", altGatherItem:"Beeren", altGatherText:"Du hast Beeren am überwucherten Ruinenrand gefunden", exploreItem:"Holz", exploreFindText:"Du findest brauchbare Bretter zwischen den Trümmern", gatherDesc:"Suche in den Trümmern nach Brettern oder vergessenen Vorräten.", exploreDesc:"Durchsuche die Ruinen nach Beute, Verstecken und Hinterhalten." },
+  { id:"fluss",  name:"Flussufer",          minLevel:1, danger:0.48, enemyPool:["wolf","looter"], icon:"🏞️", accent:"#4a7a8a", identity:"Beeren und ruhige Ufer", bossId:"river_hunter", bossName:"Flussjäger", gatherItem:"Beeren", gatherText:"Du hast am Ufer Beeren gesammelt", altGatherItem:"Holz", altGatherText:"Du hast Treibholz am Ufer gefunden", exploreItem:"Beeren", exploreFindText:"Du findest frische Beeren nahe dem Wasser", gatherDesc:"Suche am Ufer nach Nahrung und nützlichem Treibholz.", exploreDesc:"Folge dem Fluss nach Nahrung, sicheren Wegen und Gefahren." },
+  { id:"berge",  name:"Berge",              minLevel:3, danger:0.76, enemyPool:["bear"], icon:"⛰️", accent:"#7a7a8a", identity:"Trockenes Holz und raue Wege", bossId:"mountain_titan", bossName:"Bergtitan", gatherItem:"Holz", gatherText:"Du hast trockenes Holz unter einem Felsvorsprung gesammelt", altGatherItem:"Beeren", altGatherText:"Du hast zähe Bergbeeren gefunden", exploreItem:"Holz", exploreFindText:"Du findest trockenes Holz unter einem Felsvorsprung", gatherDesc:"Suche zwischen Felsen nach trockenem Holz und essbaren Beeren.", exploreDesc:"Erklimme die Hänge nach seltenen Funden und starken Gegnern." },
+  { id:"sumpf",  name:"Sumpf",              minLevel:5, danger:0.84, enemyPool:["swamp_thing"], icon:"🐊", accent:"#5a7a5a", identity:"Heilkräuter und Gift", bossId:"swamp_queen", bossName:"Sumpfkönigin", gatherItem:"Heilkräuter", gatherText:"Du hast Heilkräuter am feuchten Ufer gefunden", altGatherItem:"Heilkräuter", altGatherText:"Du hast weitere Heilkräuter zwischen den Wurzeln entdeckt", exploreItem:"Heilkräuter", exploreFindText:"Du findest Heilkräuter am Rand des schwarzen Wassers", gatherDesc:"Suche nach Heilkräutern, bevor dich der Sumpf bemerkt.", exploreDesc:"Durchquere den Sumpf nach Heilmitteln, Gift und dem Sumpfkriecher." }
 ];
 
 const EVENT_DB = {
@@ -1345,7 +1350,7 @@ let state = {
   equipmentInventory: [], equipped: { weapon: null, armor: null, tool: null },
   consumables: [],
   timeHour: 8, weather: "Klar", pendingEvent: null,
-  morale: 60, safety: 50, locationProgress: {}, dailyGoal: null
+  morale: 60, safety: 50, locationProgress: {}, bossesUnlocked: {}, bossesDefeated: {}, dailyGoal: null
 };
 
 let combat = null;
@@ -1396,6 +1401,8 @@ function loadGame() {
     state.morale = Math.max(0, Math.min(100, state.morale));
     state.safety = Math.max(0, Math.min(100, state.safety));
     if (!state.locationProgress || typeof state.locationProgress !== "object") state.locationProgress = {};
+    if (!state.bossesUnlocked || typeof state.bossesUnlocked !== "object") state.bossesUnlocked = {};
+    if (!state.bossesDefeated || typeof state.bossesDefeated !== "object") state.bossesDefeated = {};
     state.hunger = Math.max(0, state.hunger);
     state.energy = Math.max(0, state.energy);
   }
@@ -1503,27 +1510,32 @@ function recordLocationProgress(location) {
   if (!state.locationProgress) state.locationProgress = {};
   const next = getLocationProgress(location) + 1;
   state.locationProgress[location.id] = next;
+  if (!state.bossesUnlocked || typeof state.bossesUnlocked !== "object") state.bossesUnlocked = {};
+  if (!state.bossesDefeated || typeof state.bossesDefeated !== "object") state.bossesDefeated = {};
+  const bossUnlocked = next === LOCATION_GOAL * 2 && !state.bossesUnlocked[location.id] && !state.bossesDefeated[location.id];
+  if (bossUnlocked) state.bossesUnlocked[location.id] = true;
+  const bossMessage = bossUnlocked ? `Gebietswächter freigeschaltet: ${location.bossName}.` : "";
   if (next % LOCATION_GOAL !== 0) return "";
 
   state.xp += 12;
   if (location.id === "ruinen") {
     state.equipmentInventory.push("rusty_knife");
-    return "Entdeckung: Rostiges Messer gefunden. +12 XP.";
+    return `Entdeckung: Rostiges Messer gefunden. +12 XP. ${bossMessage}`.trim();
   }
   if (location.id === "fluss") {
     state.inventory.push("Beeren", "Beeren");
-    return "Entdeckung: 2 Beeren gefunden. +12 XP.";
+    return `Entdeckung: 2 Beeren gefunden. +12 XP. ${bossMessage}`.trim();
   }
   if (location.id === "berge") {
     state.equipmentInventory.push("spear");
-    return "Entdeckung: Speer gefunden. +12 XP.";
+    return `Entdeckung: Speer gefunden. +12 XP. ${bossMessage}`.trim();
   }
   if (location.id === "sumpf") {
     state.consumables.push("verband");
-    return "Entdeckung: Verband gefunden. +12 XP.";
+    return `Entdeckung: Verband gefunden. +12 XP. ${bossMessage}`.trim();
   }
   state.equipmentInventory.push("hand_axe");
-  return "Entdeckung: Handaxt gefunden. +12 XP.";
+  return `Entdeckung: Handaxt gefunden. +12 XP. ${bossMessage}`.trim();
 }
 
 function createDailyGoal(day) {
@@ -1725,6 +1737,17 @@ function renderActionCards() {
       <span class="actionCardCost">${canTrack ? "−4 Energie<br>−1 Hunger" : "Nicht genug Energie"}</span>
     </button>
   `;
+  if (state.bossesUnlocked?.[location.id] && !state.bossesDefeated?.[location.id]) {
+    actionDiv.innerHTML += `<button class="actionCard primary" onclick="challengeRegionBoss()"><span class="actionCardIcon"><img src="images/icons/star.png" alt=""></span><span class="actionCardText"><span class="actionCardName">${location.bossName} herausfordern</span><span class="actionCardDesc">Der Gebietswächter wartet. Besiege ihn für einzigartige Beute.</span></span><span class="actionCardCost">FREIWILLIG</span></button>`;
+  }
+}
+
+function challengeRegionBoss() {
+  const location = getSelectedLocation();
+  if (combat || !state.bossesUnlocked?.[location.id] || state.bossesDefeated?.[location.id]) return;
+  const boss = ENEMY_DB[location.bossId];
+  if (!boss) return;
+  startCombat(boss, location.name, `${location.name}: Der Gebietswächter stellt sich dir in den Weg.`);
 }
 
 function gatherResources() {
@@ -2728,7 +2751,8 @@ function startCombat(enemyType, locName, extraNote) {
     dmgMax: Math.round(enemyType.dmgMax * nightBonus),
     drawPile: shuffle(state.deck),
     hand: [], discardPile: [],
-    ap: 3, maxAp: 3, block: 0, locName: locName
+    ap: 3, maxAp: 3, block: 0, locName: locName,
+    boss: Boolean(enemyType.boss), bossLocationId: enemyType.locationId || null, bossReward: enemyType.reward || null
   };
   rollEnemyIntent();
   drawCards(5);
@@ -2764,7 +2788,7 @@ function rollEnemyIntent() {
   } else if (combat.enemyId === "bear" && Math.random() < 0.25) {
     combat.intentLabel = "Wuchtiger Hieb";
     combat.intentDamage += 6;
-  } else if (combat.enemyId === "swamp_thing" && Math.random() < 0.5) {
+  } else if ((combat.enemyId === "swamp_thing" || combat.enemyId === "swamp_queen") && Math.random() < 0.5) {
     combat.intentType = "poison";
     combat.intentLabel = "Giftiger Biss";
     combat.intentPoison = 3;
@@ -2931,10 +2955,20 @@ function endTurn() {
 }
 
 function winCombat() {
-  state.xp += 20;
-  changeCampStatus(6, 3);
+  const xpReward = combat.boss ? 60 : 20;
+  state.xp += xpReward;
+  changeCampStatus(combat.boss ? 10 : 6, combat.boss ? 10 : 3);
   checkLevelUp();
   let lootMsg = "";
+  if (combat.boss && combat.bossLocationId) {
+    if (!state.bossesDefeated || typeof state.bossesDefeated !== "object") state.bossesDefeated = {};
+    state.bossesDefeated[combat.bossLocationId] = true;
+    const bossReward = ITEM_DB[combat.bossReward];
+    if (bossReward) {
+      state.equipmentInventory.push(combat.bossReward);
+      lootMsg += ` Einzigartige Beute: ${bossReward.name} (${getRarityLabel(bossReward)}).`;
+    }
+  }
   if (Math.random() < 0.65) {
     state.inventory.push("Fleisch");
     lootMsg += " Fleisch gefunden.";
@@ -2945,7 +2979,8 @@ function winCombat() {
     state.equipmentInventory.push(itemId);
     lootMsg += ` Beute gefunden: ${ITEM_DB[itemId].name} (${getRarityLabel(ITEM_DB[itemId])}).`;
   }
-  endCombatOverlay(`Sieg gegen ${combat.enemyName}! +20 XP.${lootMsg}`);
+  const resultLabel = combat.boss ? "Gebietsjäger besiegt" : "Sieg";
+  endCombatOverlay(`${resultLabel} gegen ${combat.enemyName}! +${xpReward} XP.${lootMsg}`);
 }
 
 function loseCombat() {
