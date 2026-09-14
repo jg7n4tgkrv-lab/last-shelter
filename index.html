@@ -450,7 +450,10 @@
 #cards .card.locked .lockNote {
   color: rgba(255,255,255,0.75);
   text-shadow: 0 1px 4px #000;
-}/* =========================================
+}
+.locationName { display: block; }
+.locationProgress { display: block; margin-top: 3px; color: rgba(255,255,255,0.7); font-size: 9px; font-weight: 600; }
+/* =========================================
    PHASE 9.2 – UI ICONS
    ========================================= */
 
@@ -822,6 +825,7 @@ body {
     padding: 54px 9px 7px;
     scroll-snap-align: start;
   }
+  #screenExplore #cards .locationProgress { margin-top: 1px; font-size: 8px; }
   #screenExplore #cards .card.locked { min-height: 90px; }
 
   #screenExplore .actionSection { flex: 0 0 113px; margin: 0 0 5px; min-height: 0; }
@@ -1126,6 +1130,8 @@ const EVENT_DB = {
   }
 };
 
+const LOCATION_GOAL = 5;
+
 const PERKS = [
   { id:"str", type:"attr", attr:"staerke", name:"Kraftschub", desc:"+1 Stärke – mehr Schaden im Kampf", icon:"💪" },
   { id:"vit", type:"attr", attr:"vitalitaet", name:"Zähigkeit", desc:"+1 Vitalität – mehr maximales Leben", icon:"❤️" },
@@ -1217,7 +1223,7 @@ let state = {
   equipmentInventory: [], equipped: { weapon: null, armor: null },
   consumables: [],
   timeHour: 8, weather: "Klar", pendingEvent: null,
-  morale: 60, safety: 50
+  morale: 60, safety: 50, locationProgress: {}
 };
 
 let combat = null;
@@ -1244,7 +1250,7 @@ function loadGame() {
       pendingLevelUps: 0,
       equipmentInventory: [], equipped: { weapon: null, armor: null },
       consumables: [], timeHour: 8, weather: "Klar", pendingEvent: null,
-      morale: 60, safety: 50
+      morale: 60, safety: 50, locationProgress: {}
     }, loaded);
     if (!state.deck || state.deck.length === 0) state.deck = [...DEFAULT_DECK];
     if (!Array.isArray(state.inventory)) state.inventory = [];
@@ -1266,6 +1272,7 @@ function loadGame() {
     if (!Number.isFinite(state.safety)) state.safety = 50;
     state.morale = Math.max(0, Math.min(100, state.morale));
     state.safety = Math.max(0, Math.min(100, state.safety));
+    if (!state.locationProgress || typeof state.locationProgress !== "object") state.locationProgress = {};
     state.hunger = Math.max(0, state.hunger);
     state.energy = Math.max(0, state.energy);
   }
@@ -1330,6 +1337,45 @@ function getConditionLabel() {
 function changeCampStatus(moraleDelta = 0, safetyDelta = 0) {
   state.morale = Math.max(0, Math.min(100, state.morale + moraleDelta));
   state.safety = Math.max(0, Math.min(100, state.safety + safetyDelta));
+}
+
+function getLocationProgress(location) {
+  const value = state.locationProgress && state.locationProgress[location.id];
+  return Number.isFinite(value) && value >= 0 ? value : 0;
+}
+
+function recordLocationProgress(location) {
+  if (!state.locationProgress) state.locationProgress = {};
+  const next = getLocationProgress(location) + 1;
+  state.locationProgress[location.id] = next;
+  if (next % LOCATION_GOAL !== 0) return "";
+
+  state.xp += 12;
+  if (location.id === "ruinen") {
+    state.equipmentInventory.push("rusty_knife");
+    return "Entdeckung: Rostiges Messer gefunden. +12 XP.";
+  }
+  if (location.id === "fluss") {
+    state.inventory.push("Beeren", "Beeren");
+    return "Entdeckung: 2 Beeren gefunden. +12 XP.";
+  }
+  if (location.id === "berge") {
+    state.equipmentInventory.push("spear");
+    return "Entdeckung: Speer gefunden. +12 XP.";
+  }
+  if (location.id === "sumpf") {
+    state.consumables.push("verband");
+    return "Entdeckung: Verband gefunden. +12 XP.";
+  }
+  state.inventory.push("Holz", "Holz");
+  return "Entdeckung: 2 Holz gefunden. +12 XP.";
+}
+
+function appendLatestLog(extraMessage) {
+  if (!extraMessage) return;
+  const logElement = document.getElementById("log");
+  const currentMessage = logElement ? logElement.textContent : "";
+  log(`${currentMessage} ${extraMessage}`.trim());
 }
 
 function showVitalDelta(elementId, delta) {
@@ -1499,13 +1545,15 @@ function gatherResources() {
   state.energy = Math.max(0, state.energy - 5);
   state.hunger = Math.max(0, state.hunger - 2);
   advanceTime(1);
+  let resultMessage;
   if (Math.random() < 0.58) {
     state.inventory.push("Holz");
-    log(`${location.name}: Du hast vorsichtig Holz gesammelt.`);
+    resultMessage = `${location.name}: Du hast vorsichtig Holz gesammelt.`;
   } else {
     state.inventory.push("Beeren");
-    log(`${location.name}: Du hast essbare Beeren gefunden.`);
+    resultMessage = `${location.name}: Du hast essbare Beeren gefunden.`;
   }
+  log(`${resultMessage} ${recordLocationProgress(location)}`.trim());
   checkDeathConditions();
   saveGame();
   render();
@@ -1521,7 +1569,8 @@ function trackLocation() {
   const perceptionChance = Math.min(0.9, 0.45 + state.attributes.wahrnehmung * 0.06);
   if (Math.random() < perceptionChance) {
     state.xp += 8;
-    log(`${location.name}: Du hast Spuren entdeckt und +8 XP erhalten.`);
+    const milestone = recordLocationProgress(location);
+    log(`${location.name}: Du hast Spuren entdeckt und +8 XP erhalten. ${milestone}`.trim());
     checkLevelUp();
     saveGame();
     render();
@@ -1621,7 +1670,12 @@ function render() {
     card.style.setProperty("--accent", loc.accent);
 
     if (unlocked) {
-      card.innerHTML = `<span class="cIcon">${loc.icon}</span>${loc.name}`;
+      const progress = getLocationProgress(loc) % LOCATION_GOAL;
+      card.innerHTML = `
+        <span class="cIcon">${loc.icon}</span>
+        <span class="locationName">${loc.name}</span>
+        <span class="locationProgress">Spuren ${progress}/${LOCATION_GOAL}</span>
+      `;
       card.onclick = () => selectLocation(loc);
     } else {
       card.innerHTML = `
@@ -1972,6 +2026,9 @@ function explore(loc) {
     checkLevelUp();
   }
 
+  const milestone = recordLocationProgress(loc);
+  appendLatestLog(milestone);
+  checkLevelUp();
   checkDeathConditions();
   saveGame();
   render();
