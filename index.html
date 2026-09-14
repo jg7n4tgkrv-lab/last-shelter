@@ -2995,9 +2995,10 @@ function rollEnemyIntent() {
     combat.intentLabel = "Deckung";
     combat.intentDamage = 0;
     combat.intentBlock = 8;
-  } else if (combat.enemyId === "bear" && Math.random() < 0.25) {
+  } else if ((combat.enemyId === "bear" || combat.enemyId === "mountain_titan") && Math.random() < 0.35) {
+    combat.intentType = "heavy";
     combat.intentLabel = "Wuchtiger Hieb";
-    combat.intentDamage += 6;
+    combat.intentDamage += combat.enemyId === "mountain_titan" ? 8 : 6;
   } else if ((combat.enemyId === "swamp_thing" || combat.enemyId === "swamp_queen") && Math.random() < 0.5) {
     combat.intentType = "poison";
     combat.intentLabel = "Giftiger Biss";
@@ -3024,7 +3025,9 @@ function renderCombat() {
     ? `+${combat.intentBlock} Block`
     : combat.intentType === "poison"
       ? `· ${combat.intentDamage} Schaden + Gift`
-      : `· ${combat.intentDamage} Schaden`;
+      : combat.intentType === "heavy"
+        ? `· ${combat.intentDamage} Schaden · halber Block`
+        : `· ${combat.intentDamage} Schaden`;
   document.getElementById("enemyIntent").innerHTML = `
     <span class="enemyIntentTag">NÄCHSTER ZUG</span>
     <strong>${combat.intentLabel}</strong>
@@ -3146,8 +3149,12 @@ function endTurn() {
     combat.enemyBlock += combat.intentBlock;
     log(`${combat.enemyName} geht in Deckung und erhält ${combat.intentBlock} Block.`);
   } else {
-    dmg = Math.max(0, combat.intentDamage - combat.block);
+    const effectiveBlock = combat.intentType === "heavy" ? Math.floor(combat.block * 0.5) : combat.block;
+    dmg = Math.max(0, combat.intentDamage - effectiveBlock);
     state.health -= dmg;
+    if (combat.intentType === "heavy") {
+      log(`${combat.enemyName} setzt einen wuchtigen Hieb ein – nur die Hälfte deines Blocks zählt.`);
+    }
     if (combat.intentType === "poison") {
       combat.poisonTurns = Math.max(combat.poisonTurns, combat.intentPoison);
       log(`${combat.enemyName} vergiftet dich für ${combat.intentPoison} Züge.`);
