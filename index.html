@@ -1902,11 +1902,16 @@ function render() {
     card.style.setProperty("--accent", loc.accent);
 
     if (unlocked) {
-      const progress = getLocationProgress(loc) % LOCATION_GOAL;
+      const progress = Math.min(getLocationProgress(loc), LOCATION_GOAL * 2);
+      const bossStatus = state.bossesDefeated?.[loc.id]
+        ? "Wächter besiegt"
+        : state.bossesUnlocked?.[loc.id]
+          ? "Wächter wartet"
+          : `Spuren ${progress}/${LOCATION_GOAL * 2}`;
       card.innerHTML = `
         <span class="cIcon">${loc.icon}</span>
         <span class="locationName">${loc.name}</span>
-        <span class="locationProgress">Spuren ${progress}/${LOCATION_GOAL}</span>
+        <span class="locationProgress">${bossStatus}</span>
       `;
       card.onclick = () => selectLocation(loc);
     } else {
