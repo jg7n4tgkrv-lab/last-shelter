@@ -357,6 +357,8 @@
   .enemyIntent { display: flex; align-items: center; justify-content: center; gap: 5px; margin: 9px auto 0; color: #e0c976; font-size: 12px; }
   .enemyIntentTag { color: #9a9689; font-size: 9px; font-weight: 700; letter-spacing: 1px; }
   .enemyIntent strong { color: #f0df9a; font-size: 12px; }
+  .combatEffect { display: flex; align-items: center; gap: 4px; color: #b8d28e; font-size: 12px; }
+  .combatEffect img { width: 17px; height: 17px; object-fit: contain; }
   @keyframes shake {
     0%, 100% { transform: translateX(0); }
     25% { transform: translateX(-4px); }
@@ -1183,7 +1185,7 @@ const ENEMY_DB = {
   wolf:   { name: "Wolf", maxHp: 35, dmgMin: 8, dmgMax: 14, intent: "Schneller Biss" },
   looter: { name: "Plünderer", maxHp: 45, dmgMin: 10, dmgMax: 18, intent: "Angriff" },
   bear:   { name: "Bär", maxHp: 70, dmgMin: 14, dmgMax: 22, intent: "Hieb" },
-  swamp_thing: { name: "Sumpfkriecher", maxHp: 60, dmgMin: 16, dmgMax: 24, intent: "Giftiger Biss" }
+  swamp_thing: { name: "Sumpfkriecher", maxHp: 60, dmgMin: 16, dmgMax: 24, intent: "Biss" }
 };
 
 const LOCATIONS = [
@@ -2650,7 +2652,9 @@ function startCombat(enemyType, locName, extraNote) {
     intentLabel: enemyType.intent || "Angriff",
     intentType: "attack",
     intentBlock: 0,
+    intentPoison: 0,
     enemyBlock: 0,
+    poisonTurns: 0,
     enemyHp: enemyType.maxHp,
     enemyMaxHp: enemyType.maxHp,
     dmgMin: Math.round(enemyType.dmgMin * nightBonus),
@@ -2683,6 +2687,7 @@ function rollEnemyIntent() {
   combat.intentLabel = ENEMY_DB[combat.enemyId]?.intent || "Angriff";
   combat.intentDamage = combat.dmgMin + Math.floor(Math.random() * (combat.dmgMax - combat.dmgMin + 1));
   combat.intentBlock = 0;
+  combat.intentPoison = 0;
 
   if (combat.enemyId === "looter" && Math.random() < 0.28) {
     combat.intentType = "block";
@@ -2692,6 +2697,10 @@ function rollEnemyIntent() {
   } else if (combat.enemyId === "bear" && Math.random() < 0.25) {
     combat.intentLabel = "Wuchtiger Hieb";
     combat.intentDamage += 6;
+  } else if (combat.enemyId === "swamp_thing" && Math.random() < 0.5) {
+    combat.intentType = "poison";
+    combat.intentLabel = "Giftiger Biss";
+    combat.intentPoison = 3;
   }
 }
 
@@ -2712,7 +2721,9 @@ function renderCombat() {
   document.getElementById("enemyBar").style.width = Math.max(0, (combat.enemyHp / combat.enemyMaxHp) * 100) + "%";
   const intentDetail = combat.intentType === "block"
     ? `+${combat.intentBlock} Block`
-    : `· ${combat.intentDamage} Schaden`;
+    : combat.intentType === "poison"
+      ? `· ${combat.intentDamage} Schaden + Gift`
+      : `· ${combat.intentDamage} Schaden`;
   document.getElementById("enemyIntent").innerHTML = `
     <span class="enemyIntentTag">NÄCHSTER ZUG</span>
     <strong>${combat.intentLabel}</strong>
@@ -2734,6 +2745,13 @@ function renderCombat() {
     <img src="images/icons/energy.png" alt="">
     ${combat.ap}/${combat.maxAp}
   </span>
+
+  ${combat.poisonTurns > 0 ? `
+    <span class="combatEffect">
+      <img src="images/icons/poison.png" alt="">
+      Gift ${combat.poisonTurns}
+    </span>
+  ` : ""}
 `;
 
   const handDiv = document.getElementById("hand");
@@ -2804,6 +2822,14 @@ function playCard(index) {
 }
 
 function endTurn() {
+  if (combat.poisonTurns > 0) {
+    const poisonDamage = 3;
+    combat.poisonTurns -= 1;
+    state.health -= poisonDamage;
+    spawnFloatNumber(document.getElementById("playerBarWrap"), "-" + poisonDamage + " Gift", "dmg");
+    if (state.health <= 0) { loseCombat(); return; }
+  }
+
   let dmg = 0;
   if (combat.intentType === "block") {
     combat.enemyBlock += combat.intentBlock;
@@ -2811,6 +2837,10 @@ function endTurn() {
   } else {
     dmg = Math.max(0, combat.intentDamage - combat.block);
     state.health -= dmg;
+    if (combat.intentType === "poison") {
+      combat.poisonTurns = Math.max(combat.poisonTurns, combat.intentPoison);
+      log(`${combat.enemyName} vergiftet dich für ${combat.intentPoison} Züge.`);
+    }
   }
   combat.block = 0;
 
