@@ -842,8 +842,10 @@ body {
 .itemCard img { width: 28px; height: 28px; object-fit: contain; flex: 0 0 auto; }
 .itemCardText { min-width: 0; flex: 1; }
 .itemCardName { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
-.itemCardCount { display: block; margin-top: 2px; color: #9dac91; font-size: 10px; }
+.itemCardCount { display: block; max-width: 100%; margin-top: 2px; overflow: hidden; color: #9dac91; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
 .itemCard.equipment { background: linear-gradient(145deg, #332d1b, #241f14); border-color: #62502c; }
+.itemCard.rarity-uncommon { border-color: #668b63; box-shadow: inset 0 0 0 1px rgba(132,184,113,0.12); }
+.itemCard.rarity-rare { border-color: #a28b4f; box-shadow: inset 0 0 0 1px rgba(216,200,120,0.16); }
 .itemCard.consumable { background: linear-gradient(145deg, #26343a, #1b282d); border-color: #3e5c65; }
 
 #tabbar { padding-top: 5px; background: rgba(12,16,12,0.96); backdrop-filter: blur(16px); border-top-color: rgba(132,151,106,0.2); }
@@ -1269,18 +1271,25 @@ const ITEM_ICON_FILES = {
 };
 
 const ITEM_DB = {
-  rusty_knife: { name: "Rostiges Messer", type: "weapon", bonus: 2, icon:"🔪" },
-  spear:       { name: "Speer", type: "weapon", bonus: 5, icon:"🔱" },
-  axe:         { name: "Axt", type: "weapon", bonus: 8, icon:"🪓" },
-  cloth_wrap:  { name: "Stoffwicklung", type: "armor", bonus: 3, icon:"🧣" },
-  leather:     { name: "Lederrüstung", type: "armor", bonus: 6, icon:"🥾" },
-  iron_plate:  { name: "Eisenplatte", type: "armor", bonus: 10, icon:"🛡️" },
-  crafted_spear: { name: "Speer (selbst gebaut)", type: "weapon", bonus: 3, icon:"🔱" },
-  crafted_armor: { name: "Grobe Rüstung", type: "armor", bonus: 3, icon:"🛡️" },
-  hand_axe: { name: "Handaxt", type: "tool", bonus: 1, icon:"🪓" }
+  rusty_knife: { name: "Rostiges Messer", type: "weapon", bonus: 2, rarity:"common", icon:"🔪" },
+  spear:       { name: "Speer", type: "weapon", bonus: 5, rarity:"uncommon", icon:"🔱" },
+  axe:         { name: "Axt", type: "weapon", bonus: 8, rarity:"rare", icon:"🪓" },
+  cloth_wrap:  { name: "Stoffwicklung", type: "armor", bonus: 3, rarity:"common", icon:"🧣" },
+  leather:     { name: "Lederrüstung", type: "armor", bonus: 6, rarity:"uncommon", icon:"🥾" },
+  iron_plate:  { name: "Eisenplatte", type: "armor", bonus: 10, rarity:"rare", icon:"🛡️" },
+  crafted_spear: { name: "Speer (selbst gebaut)", type: "weapon", bonus: 3, rarity:"common", icon:"🔱" },
+  crafted_armor: { name: "Grobe Rüstung", type: "armor", bonus: 3, rarity:"common", icon:"🛡️" },
+  hand_axe: { name: "Handaxt", type: "tool", bonus: 1, rarity:"uncommon", icon:"🪓" }
 };
 
 const LOOT_TABLE = ["rusty_knife","spear","axe","cloth_wrap","leather","iron_plate"];
+const LOOT_TABLE_BY_ENEMY = {
+  wolf: ["rusty_knife", "cloth_wrap", "spear"],
+  looter: ["rusty_knife", "spear", "axe", "cloth_wrap", "leather"],
+  bear: ["spear", "axe", "leather", "iron_plate"],
+  swamp_thing: ["cloth_wrap", "leather", "iron_plate"]
+};
+const RARITY_LABELS = { common:"Gewöhnlich", uncommon:"Ungewöhnlich", rare:"Selten" };
 
 const RECIPES = [
   { id:"verband", name:"Verband", cost:{Holz:3}, result:"consumable", desc:"Heilt später 25 Leben", icon:"🩹" },
@@ -1380,6 +1389,13 @@ function getMaxEnergy() { return 100 + (state.shelterLevel - 1) * 10; }
 function getWeaponBonus() { return state.equipped.weapon ? ITEM_DB[state.equipped.weapon].bonus : 0; }
 function getArmorBonus() { return state.equipped.armor ? ITEM_DB[state.equipped.armor].bonus : 0; }
 function getToolBonus() { return state.equipped.tool && ITEM_DB[state.equipped.tool] ? ITEM_DB[state.equipped.tool].bonus : 0; }
+function getRarityLabel(itemOrRarity) {
+  const rarity = typeof itemOrRarity === "string" ? itemOrRarity : itemOrRarity?.rarity;
+  return RARITY_LABELS[rarity] || RARITY_LABELS.common;
+}
+function getLootTableForEnemy(enemyId) {
+  return LOOT_TABLE_BY_ENEMY[enemyId] || LOOT_TABLE;
+}
 function countItem(name) { return state.inventory.filter(i => i === name).length; }
 function getTotalInventoryCount() {
   return state.inventory.length + state.equipmentInventory.length + state.consumables.length;
@@ -1884,11 +1900,11 @@ function render() {
     const item = ITEM_DB[itemId];
     const equipmentIndex = state.equipmentInventory.indexOf(itemId);
     inventoryCards.push(`
-      <div class="itemCard equipment actionable" onclick="equipItem(${equipmentIndex})">
+      <div class="itemCard equipment rarity-${item.rarity || "common"} actionable" onclick="equipItem(${equipmentIndex})">
         <img src="${ITEM_ICON_FILES[itemId]}" alt="">
         <span class="itemCardText">
           <span class="itemCardName">${item.name}</span>
-          <span class="itemCardCount">×${count} · Ausrüstung</span>
+          <span class="itemCardCount">×${count} · ${getRarityLabel(item)} · Ausrüstung</span>
           <span class="itemAction">Antippen zum Ausrüsten</span>
         </span>
       </div>
@@ -2623,7 +2639,9 @@ function choosePerk(perk) {
 
 function startCombat(enemyType, locName, extraNote) {
   const nightBonus = isNight() ? 1.2 : 1.0;
+  const enemyId = Object.keys(ENEMY_DB).find(id => ENEMY_DB[id] === enemyType) || "wolf";
   combat = {
+    enemyId,
     enemyName: enemyType.name,
     enemyHp: enemyType.maxHp,
     enemyMaxHp: enemyType.maxHp,
@@ -2775,9 +2793,10 @@ function winCombat() {
     lootMsg += " Fleisch gefunden.";
   }
   if (Math.random() < 0.4) {
-    const itemId = LOOT_TABLE[Math.floor(Math.random() * LOOT_TABLE.length)];
+    const lootTable = getLootTableForEnemy(combat.enemyId);
+    const itemId = lootTable[Math.floor(Math.random() * lootTable.length)];
     state.equipmentInventory.push(itemId);
-    lootMsg = ` Beute gefunden: ${ITEM_DB[itemId].name}!`;
+    lootMsg += ` Beute gefunden: ${ITEM_DB[itemId].name} (${getRarityLabel(ITEM_DB[itemId])}).`;
   }
   endCombatOverlay(`Sieg gegen ${combat.enemyName}! +20 XP.${lootMsg}`);
 }
