@@ -762,6 +762,7 @@ body {
 .sectionHeading h2 { margin: 3px 0 0; font-size: 20px; color: #eee9d5; }
 .inventoryPill { display: flex; align-items: center; gap: 5px; background: #1d2a1d; color: #d9d09d; border: 1px solid #3e5839; border-radius: 99px; padding: 7px 10px; font-weight: 700; }
 .inventoryPill img { width: 17px; height: 17px; object-fit: contain; }
+.inventoryMeta { display: block; margin-top: 2px; color: #7f8c79; font-size: 9px; font-weight: 500; white-space: nowrap; }
 
 #log { margin-bottom: 13px; padding: 12px 14px; border-radius: 13px; background: rgba(25,34,24,0.88); border-color: rgba(113,139,91,0.28); color: #c6c8b6; font-size: 12px; }
 
@@ -927,7 +928,8 @@ body {
     padding: 5px 8px;
   }
   #screenExplore #inventory .hd { flex: 0 0 auto; margin: 0; font-size: 11px; }
-  #screenExplore .inventoryGrid { flex: 1 1 auto; min-width: 0; height: 36px; display: flex; gap: 7px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+#screenExplore .inventoryGrid { flex: 1 1 auto; min-width: 0; height: 36px; display: flex; gap: 7px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+  #screenExplore #inventory .inventoryMeta { margin-top: 1px; font-size: 8px; }
   #screenExplore .itemCard { flex: 0 0 142px; min-height: 36px; height: 36px; padding: 5px 7px; }
   #screenExplore .itemCard img { width: 24px; height: 24px; }
   #screenExplore .itemCardName { font-size: 11px; }
@@ -1014,10 +1016,10 @@ body {
         <p id="eventText">Wähle einen Ort und entscheide, wie du ihn erkunden möchtest.</p>
       </div>
     </section>
-    <div id="inventory">
+  <div id="inventory">
   <span class="hd sectionTitle">
     <img src="images/icons/backpack.png" alt="">
-    Inventar
+    <span>Inventar<span id="inventoryMeta" class="inventoryMeta"></span></span>
   </span>
   <div id="invList" class="inventoryGrid"></div>
 </div>
@@ -1381,6 +1383,15 @@ function getToolBonus() { return state.equipped.tool && ITEM_DB[state.equipped.t
 function countItem(name) { return state.inventory.filter(i => i === name).length; }
 function getTotalInventoryCount() {
   return state.inventory.length + state.equipmentInventory.length + state.consumables.length;
+}
+function getInventoryBreakdown() {
+  const food = state.inventory.filter(item => item === "Beeren" || item === "Fleisch").length;
+  return {
+    resources: state.inventory.length - food,
+    food,
+    equipment: state.equipmentInventory.length,
+    consumables: state.consumables.length
+  };
 }
 function removeOneItem(name) { const idx = state.inventory.indexOf(name); if (idx !== -1) state.inventory.splice(idx, 1); }
 function removeOneFromDeck(cardId) { const idx = state.deck.indexOf(cardId); if (idx !== -1) state.deck.splice(idx, 1); }
@@ -1793,6 +1804,17 @@ function render() {
     document.getElementById("mobileInvCount").textContent = getTotalInventoryCount();
   }
 
+  const inventoryMeta = document.getElementById("inventoryMeta");
+  if (inventoryMeta) {
+    const inventoryBreakdown = getInventoryBreakdown();
+    const parts = [];
+    if (inventoryBreakdown.resources > 0) parts.push(`Rohstoffe ${inventoryBreakdown.resources}`);
+    if (inventoryBreakdown.food > 0) parts.push(`Nahrung ${inventoryBreakdown.food}`);
+    if (inventoryBreakdown.equipment > 0) parts.push(`Ausrüstung ${inventoryBreakdown.equipment}`);
+    if (inventoryBreakdown.consumables > 0) parts.push(`Verbrauch ${inventoryBreakdown.consumables}`);
+    inventoryMeta.textContent = parts.length ? parts.join(" · ") : "leer";
+  }
+
   const cardsDiv = document.getElementById("cards");
   cardsDiv.innerHTML = "";
 
@@ -1847,7 +1869,7 @@ function render() {
         <img src="${icon}" alt="">
         <span class="itemCardText">
           <span class="itemCardName">${item}</span>
-          <span class="itemCardCount">×${count} gesammelt</span>
+          <span class="itemCardCount">×${count} · ${actionable ? "Nahrung" : "Rohstoff"}</span>
           ${actionable ? `<span class="itemAction">${actionLabel}</span>` : ""}
         </span>
       </div>
@@ -1866,7 +1888,7 @@ function render() {
         <img src="${ITEM_ICON_FILES[itemId]}" alt="">
         <span class="itemCardText">
           <span class="itemCardName">${item.name}</span>
-          <span class="itemCardCount">×${count} Ausrüstung</span>
+          <span class="itemCardCount">×${count} · Ausrüstung</span>
           <span class="itemAction">Antippen zum Ausrüsten</span>
         </span>
       </div>
@@ -1885,7 +1907,7 @@ function render() {
         <img src="${RECIPE_ICON_FILES[itemId]}" alt="">
         <span class="itemCardText">
           <span class="itemCardName">${recipe ? recipe.name : itemId}</span>
-          <span class="itemCardCount">×${count} Verbrauchsgegenstand</span>
+          <span class="itemCardCount">×${count} · Verbrauch</span>
           ${action ? '<span class="itemAction">Antippen zum Benutzen</span>' : ""}
         </span>
       </div>
