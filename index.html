@@ -457,6 +457,13 @@
   .runStat { min-width: 0; padding: 7px 4px; border-radius: 9px; background: #1c1f19; text-align: center; }
   .runStat span, .runStat small { display: block; color: #8f9587; font-size: 9px; }
   .runStat strong { display: block; margin: 2px 0; color: #d8c878; font-size: 17px; }
+  .deckHint { margin: -3px 0 8px; color: #8f9587; font-size: 11px; line-height: 1.35; }
+  .deckRow { display: flex; align-items: center; gap: 8px; margin: 6px 0; padding: 7px 6px; border-radius: 10px; background: #1c1f19; }
+  .deckRow .stat-label { flex: 1; min-width: 0; }
+  .deckCount { color: #c9c2a8; font-size: 12px; white-space: nowrap; }
+  .deckRemove { flex: 0 0 auto; padding: 5px 7px; border: 1px solid #554437; border-radius: 8px; background: #2a211c; color: #c79c83; font-size: 10px; cursor: pointer; touch-action: manipulation; }
+  .deckRemove:active { transform: scale(0.96); filter: brightness(1.15); }
+  .deckRemove:disabled { opacity: 0.35; cursor: default; }
   #combatItemActions { margin: -4px 0 12px; text-align: center; }
   .combatItemBtn { width: auto; max-width: 100%; padding: 8px 12px; background: #26351f; border: 1px solid #557043; border-radius: 10px; color: #d8e6c4; font-size: 12px; touch-action: manipulation; }
   .combatItemBtn:active { transform: scale(0.97); filter: brightness(1.15); }
@@ -2303,26 +2310,41 @@ function renderDeckOverview() {
       <img src="images/icons/attack.png" alt="">
       Deck (${state.deck.length} Karten)
     </h2>
+    <div class="deckHint">Entferne einzelne Karten, um dein Deck gezielt zu schärfen. Mindestens 8 Karten bleiben erhalten.</div>
   `;
 
   Object.keys(counts).forEach(cardId => {
     const info = CARD_DB[cardId];
 
     html += `
-      <div class="stat-row">
+      <div class="deckRow">
         <span class="stat-label">
           <span class="icn">
             <img src="${CARD_ICON_FILES[cardId]}" alt="">
           </span>
           ${info.name}
         </span>
-
-        <span>x${counts[cardId]}</span>
+        <span class="deckCount">x${counts[cardId]}</span>
+        <button class="deckRemove" type="button" onclick="removeDeckCard(&quot;${cardId}&quot;)" ${state.deck.length <= 8 ? "disabled" : ""}>Entfernen</button>
       </div>
     `;
   });
 
   document.getElementById("deckBox").innerHTML = html;
+}
+
+function removeDeckCard(cardId) {
+  if (state.deck.length <= 8) {
+    log("Dein Deck muss mindestens 8 Karten enthalten.");
+    return;
+  }
+  const idx = state.deck.indexOf(cardId);
+  if (idx === -1 || !CARD_DB[cardId]) return;
+  const cardName = CARD_DB[cardId].name;
+  state.deck.splice(idx, 1);
+  log(cardName + " wurde aus dem Deck entfernt.");
+  saveGame();
+  renderCharacter();
 }
 
 function equipItem(index) {
