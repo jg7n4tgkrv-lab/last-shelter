@@ -1193,11 +1193,11 @@ const ENEMY_DB = {
 };
 
 const LOCATIONS = [
-  { id:"wald",   name:"Dichter Wald",       minLevel:1, danger:0.55, enemyPool:["wolf","looter"], icon:"🌲", accent:"#5a7a3f" },
-  { id:"ruinen", name:"Verlassene Ruinen",  minLevel:1, danger:0.66, enemyPool:["wolf","looter"], icon:"🏚️", accent:"#8a7a5f" },
-  { id:"fluss",  name:"Flussufer",          minLevel:1, danger:0.48, enemyPool:["wolf","looter"], icon:"🏞️", accent:"#4a7a8a" },
-  { id:"berge",  name:"Berge",              minLevel:3, danger:0.76, enemyPool:["bear"], icon:"⛰️", accent:"#7a7a8a" },
-  { id:"sumpf",  name:"Sumpf",              minLevel:5, danger:0.84, enemyPool:["swamp_thing"], icon:"🐊", accent:"#5a7a5a" }
+  { id:"wald",   name:"Dichter Wald",       minLevel:1, danger:0.55, enemyPool:["wolf","looter"], icon:"🌲", accent:"#5a7a3f", identity:"Brennholz und Beeren", gatherItem:"Holz", gatherText:"Du hast vorsichtig Holz gesammelt", altGatherItem:"Beeren", altGatherText:"Du hast essbare Beeren gefunden", exploreItem:"Holz", exploreFindText:"Du findest gutes Brennholz zwischen den Bäumen", gatherDesc:"Suche nach Brennholz oder Beeren und bleibe möglichst unauffällig.", exploreDesc:"Durchsuche den Wald nach Vorräten, Spuren und Gefahren." },
+  { id:"ruinen", name:"Verlassene Ruinen",  minLevel:1, danger:0.66, enemyPool:["wolf","looter"], icon:"🏚️", accent:"#8a7a5f", identity:"Bretter und alte Verstecke", gatherItem:"Holz", gatherText:"Du hast brauchbare Bretter aus den Trümmern gelöst", altGatherItem:"Beeren", altGatherText:"Du hast Beeren am überwucherten Ruinenrand gefunden", exploreItem:"Holz", exploreFindText:"Du findest brauchbare Bretter zwischen den Trümmern", gatherDesc:"Suche in den Trümmern nach Brettern oder vergessenen Vorräten.", exploreDesc:"Durchsuche die Ruinen nach Beute, Verstecken und Hinterhalten." },
+  { id:"fluss",  name:"Flussufer",          minLevel:1, danger:0.48, enemyPool:["wolf","looter"], icon:"🏞️", accent:"#4a7a8a", identity:"Beeren und ruhige Ufer", gatherItem:"Beeren", gatherText:"Du hast am Ufer Beeren gesammelt", altGatherItem:"Holz", altGatherText:"Du hast Treibholz am Ufer gefunden", exploreItem:"Beeren", exploreFindText:"Du findest frische Beeren nahe dem Wasser", gatherDesc:"Suche am Ufer nach Nahrung und nützlichem Treibholz.", exploreDesc:"Folge dem Fluss nach Nahrung, sicheren Wegen und Gefahren." },
+  { id:"berge",  name:"Berge",              minLevel:3, danger:0.76, enemyPool:["bear"], icon:"⛰️", accent:"#7a7a8a", identity:"Trockenes Holz und raue Wege", gatherItem:"Holz", gatherText:"Du hast trockenes Holz unter einem Felsvorsprung gesammelt", altGatherItem:"Beeren", altGatherText:"Du hast zähe Bergbeeren gefunden", exploreItem:"Holz", exploreFindText:"Du findest trockenes Holz unter einem Felsvorsprung", gatherDesc:"Suche zwischen Felsen nach trockenem Holz und essbaren Beeren.", exploreDesc:"Erklimme die Hänge nach seltenen Funden und starken Gegnern." },
+  { id:"sumpf",  name:"Sumpf",              minLevel:5, danger:0.84, enemyPool:["swamp_thing"], icon:"🐊", accent:"#5a7a5a", identity:"Heilkräuter und Gift", gatherItem:"Heilkräuter", gatherText:"Du hast Heilkräuter am feuchten Ufer gefunden", altGatherItem:"Heilkräuter", altGatherText:"Du hast weitere Heilkräuter zwischen den Wurzeln entdeckt", exploreItem:"Heilkräuter", exploreFindText:"Du findest Heilkräuter am Rand des schwarzen Wassers", gatherDesc:"Suche nach Heilkräutern, bevor dich der Sumpf bemerkt.", exploreDesc:"Durchquere den Sumpf nach Heilmitteln, Gift und dem Sumpfkriecher." }
 ];
 
 const EVENT_DB = {
@@ -1695,14 +1695,14 @@ function renderActionCards() {
 
   label.textContent = location.name;
   const actionHint = document.querySelector(".actionHint");
-  if (actionHint) actionHint.textContent = `${getDangerLabel(location)} · ${getDailyGoalHint()}`;
+  if (actionHint) actionHint.textContent = `${location.identity} · ${getDangerLabel(location)} · ${getDailyGoalHint()}`;
   actionDiv.className = "actionCards";
   actionDiv.innerHTML = `
     <button class="actionCard" onclick="gatherResources()"${canGather ? "" : " disabled"}>
       <span class="actionCardIcon"><img src="images/icons/forest.png" alt=""></span>
       <span class="actionCardText">
         <span class="actionCardName">Sorgfältig sammeln</span>
-        <span class="actionCardDesc">Suche nach Holz oder Beeren und bleibe möglichst unauffällig.</span>
+        <span class="actionCardDesc">${location.gatherDesc}</span>
       </span>
       <span class="actionCardCost">${canGather ? "−5 Energie<br>−2 Hunger" : "Nicht genug Energie"}</span>
     </button>
@@ -1711,7 +1711,7 @@ function renderActionCards() {
       <span class="actionCardIcon"><img src="images/icons/compass.png" alt=""></span>
       <span class="actionCardText">
         <span class="actionCardName">Gebiet erkunden</span>
-        <span class="actionCardDesc">Eine unvorhersehbare Expedition mit Beute, Gefahren und Kämpfen.</span>
+        <span class="actionCardDesc">${location.exploreDesc}</span>
       </span>
       <span class="actionCardCost">${canExplore ? "−4–15 Energie" : "Nicht genug Energie"}</span>
     </button>
@@ -1735,18 +1735,18 @@ function gatherResources() {
   advanceTime(1);
   let resultMessage;
   if (location.id === "sumpf") {
-    state.inventory.push("Heilkräuter");
-    resultMessage = `${location.name}: Du hast Heilkräuter gefunden.`;
-  } else if (Math.random() < 0.58) {
-    state.inventory.push("Holz");
-    resultMessage = `${location.name}: Du hast vorsichtig Holz gesammelt.`;
-    if (getToolBonus() > 0) {
+    state.inventory.push(location.gatherItem);
+    resultMessage = `${location.name}: ${location.gatherText}.`;
+  } else if (Math.random() < (location.gatherChance || 0.58)) {
+    state.inventory.push(location.gatherItem || "Holz");
+    resultMessage = `${location.name}: ${location.gatherText}.`;
+    if (location.gatherItem === "Holz" && getToolBonus() > 0) {
       state.inventory.push("Holz");
       resultMessage += " Deine Handaxt bringt zusätzliches Holz.";
     }
   } else {
-    state.inventory.push("Beeren");
-    resultMessage = `${location.name}: Du hast essbare Beeren gefunden.`;
+    state.inventory.push(location.altGatherItem || "Beeren");
+    resultMessage = `${location.name}: ${location.altGatherText || "Du hast essbare Beeren gefunden"}.`;
   }
   const goalMessage = progressDailyGoal("gather");
   log(`${resultMessage} ${recordLocationProgress(location)} ${goalMessage}`.trim());
@@ -2239,17 +2239,17 @@ function explore(loc) {
   let roll = Math.random();
 
   if (roll < 0.25) {
-    state.inventory.push("Holz");
-    log(`${loc.name}: Du hast Holz gefunden. ${goalMessage}`.trim());
+    state.inventory.push(loc.exploreItem || "Holz");
+    log(`${loc.name}: ${loc.exploreFindText || "Du hast Holz gefunden"}. ${goalMessage}`.trim());
   } else if (roll < 0.45) {
-    state.inventory.push("Beeren");
-    log(`${loc.name}: Du hast Beeren gefunden. ${goalMessage}`.trim());
+    state.inventory.push(loc.altGatherItem || "Beeren");
+    log(`${loc.name}: ${loc.altGatherText || "Du hast Beeren gefunden"}. ${goalMessage}`.trim());
   } else if (roll < dangerThreshold) {
     let avoidChance = state.attributes.wahrnehmung * 0.03;
     if (state.weather === "Nebel") avoidChance += 0.1;
     if (Math.random() < avoidChance) {
-      state.inventory.push("Holz");
-      log(`${loc.name}: Deine Wahrnehmung hat dich vor einer Gefahr gewarnt – du hast stattdessen Holz gefunden. ${goalMessage}`.trim());
+      state.inventory.push(loc.exploreItem || "Holz");
+      log(`${loc.name}: Deine Wahrnehmung hat dich vor einer Gefahr gewarnt – du hast stattdessen einen sicheren Fund gemacht. ${goalMessage}`.trim());
     } else {
       const enemyId = loc.enemyPool[Math.floor(Math.random() * loc.enemyPool.length)];
       const nightNote = isNight() ? " In der Dunkelheit wirkt der Gegner gefährlicher." : "";
