@@ -1115,6 +1115,13 @@ body {
     scroll-snap-align: none;
   }
 }
+/* PHASE 0 – touch interaction safeguards */
+button,
+.card[onclick],
+.itemCard.actionable,
+.equipList-item {
+  touch-action: manipulation;
+}
 /* PHASE 0 – overlay safe-area protection */
 .overlay {
   padding-top: calc(20px + env(safe-area-inset-top));
@@ -1677,6 +1684,8 @@ function switchTab(tabId) {
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
   document.getElementById(tabId).classList.add("active");
   document.querySelectorAll(".tabBtn").forEach(b => b.classList.toggle("active", b.dataset.tab === tabId));
+  const main = document.getElementById("main");
+  if (main) main.scrollTop = 0;
   if (tabId === "screenCamp") renderCamp();
   if (tabId === "screenCharacter") renderCharacter();
 }
