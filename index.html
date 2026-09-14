@@ -1529,7 +1529,8 @@ function maybeTriggerWorldEvent(location) {
 
 function showWorldEvent() {
   if (!state.pendingEvent || !EVENT_DB[state.pendingEvent.id]) return;
-  const event = EVENT_DB[state.pendingEvent.id];
+  const eventId = state.pendingEvent.id;
+  const event = EVENT_DB[eventId];
   document.getElementById("eventPromptTitle").textContent = event.title;
   document.getElementById("eventPromptText").textContent = event.text;
   const choiceList = document.getElementById("eventChoiceList");
@@ -1545,14 +1546,14 @@ function showWorldEvent() {
         <span class="eventChoiceDesc">${choice.desc}</span>
       </span>
     `;
-    const choose = () => chooseWorldEvent(event.id, choice.id);
+    const choose = () => chooseWorldEvent(eventId, choice.id);
     button.onclick = choose;
     button.onpointerup = choose;
     button.ontouchend = eventObject => {
       eventObject.preventDefault();
       choose();
     };
-    button.setAttribute("onclick", `chooseWorldEvent('${event.id}', '${choice.id}')`);
+    button.setAttribute("onclick", `chooseWorldEvent('${eventId}', '${choice.id}')`);
     choiceList.appendChild(button);
   });
   document.getElementById("eventOverlay").classList.add("active");
