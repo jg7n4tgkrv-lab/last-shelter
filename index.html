@@ -1553,6 +1553,7 @@ function showWorldEvent() {
       chooseWorldEvent(event.id, choice.id);
     };
     button.addEventListener("click", choose);
+    button.addEventListener("pointerup", choose);
     button.addEventListener("touchend", choose, { passive: false });
     choiceList.appendChild(button);
   });
