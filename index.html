@@ -1134,6 +1134,189 @@ button,
   padding-bottom: calc(18px + env(safe-area-inset-bottom));
 }
 
+/* PHASE 0 – compact no-page-scroll explore screen */
+@media (max-width: 900px) {
+  #main.exploreFixed {
+    overflow: hidden;
+  }
+
+  #main.exploreFixed #screenExplore.active {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  #main.exploreFixed #screenExplore .mobileOverview {
+    flex: 0 0 clamp(104px, 18dvh, 132px);
+    min-height: 0;
+    margin-bottom: 9px;
+    padding: 10px;
+  }
+
+  #main.exploreFixed #screenExplore .overviewTop h2 {
+    font-size: clamp(19px, 5.5vw, 23px);
+  }
+
+  #main.exploreFixed #screenExplore .needGrid {
+    margin-top: 9px;
+  }
+
+  #main.exploreFixed #screenExplore .sectionHeading {
+    flex: 0 0 30px;
+    min-height: 0;
+    margin: 0 2px 5px;
+  }
+
+  #main.exploreFixed #screenExplore .sectionHeading h2 {
+    font-size: 17px;
+  }
+
+  #main.exploreFixed #screenExplore #cards {
+    flex: 0 0 clamp(96px, 15dvh, 112px);
+    min-height: 0;
+    display: flex;
+    gap: 9px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: 0 0 7px;
+    padding: 2px 2px 5px;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  #main.exploreFixed #screenExplore #cards::-webkit-scrollbar {
+    display: none;
+  }
+
+  #main.exploreFixed #screenExplore #cards .card,
+  #main.exploreFixed #screenExplore #cards .card.locked {
+    flex: 0 0 145px;
+    min-width: 145px;
+    min-height: 90px;
+    height: 90px;
+    padding: 54px 9px 7px;
+    scroll-snap-align: start;
+  }
+
+  #main.exploreFixed #screenExplore .actionSection {
+    flex: 0 0 clamp(105px, 17dvh, 126px);
+    min-height: 0;
+    margin: 0 0 7px;
+  }
+
+  #main.exploreFixed #screenExplore .actionSectionHead {
+    height: 24px;
+    min-height: 0;
+    margin-bottom: 5px;
+  }
+
+  #main.exploreFixed #screenExplore .actionSectionHead h2 {
+    font-size: 16px;
+  }
+
+  #main.exploreFixed #screenExplore .actionCards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  #main.exploreFixed #screenExplore .actionCard {
+    min-height: 76px;
+    height: 76px;
+    padding: 7px 6px;
+    gap: 3px;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+
+  #main.exploreFixed #screenExplore .actionCardIcon {
+    width: 27px;
+    height: 27px;
+    padding: 5px;
+  }
+
+  #main.exploreFixed #screenExplore .actionCardName {
+    font-size: 10px;
+    line-height: 1.1;
+  }
+
+  #main.exploreFixed #screenExplore .actionCardDesc {
+    display: none;
+  }
+
+  #main.exploreFixed #screenExplore .actionCardCost {
+    margin-top: auto;
+    font-size: 8px;
+    line-height: 1.1;
+  }
+
+  #main.exploreFixed #screenExplore .eventCard {
+    flex: 0 0 49px;
+    min-height: 49px;
+    max-height: 49px;
+    margin-bottom: 7px;
+    padding: 6px 7px;
+    overflow: hidden;
+  }
+
+  #main.exploreFixed #screenExplore #inventory {
+    flex: 1 1 auto;
+    min-height: 46px;
+    max-height: 58px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    overflow: hidden;
+    padding: 5px 8px;
+  }
+
+  #main.exploreFixed #screenExplore #inventory .hd {
+    flex: 0 0 auto;
+    margin: 0;
+    font-size: 11px;
+  }
+
+  #main.exploreFixed #screenExplore .inventoryGrid {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+    height: 36px;
+    display: flex;
+    gap: 7px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+  }
+
+  #main.exploreFixed #screenExplore .inventoryGrid::-webkit-scrollbar {
+    display: none;
+  }
+
+  #main.exploreFixed #screenExplore .itemCard {
+    flex: 0 0 142px;
+    min-width: 142px;
+    min-height: 36px;
+    height: 36px;
+    padding: 5px 7px;
+  }
+
+  #main.exploreFixed #screenExplore .itemCard img {
+    width: 24px;
+    height: 24px;
+  }
+
+  #main.exploreFixed #screenExplore .itemCardName {
+    font-size: 11px;
+  }
+
+  #main.exploreFixed #screenExplore .itemCardCount,
+  #main.exploreFixed #screenExplore .itemAction {
+    font-size: 9px;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -1685,7 +1868,10 @@ function switchTab(tabId) {
   document.getElementById(tabId).classList.add("active");
   document.querySelectorAll(".tabBtn").forEach(b => b.classList.toggle("active", b.dataset.tab === tabId));
   const main = document.getElementById("main");
-  if (main) main.scrollTop = 0;
+  if (main) {
+    main.scrollTop = 0;
+    main.classList.toggle("exploreFixed", tabId === "screenExplore");
+  }
   if (tabId === "screenCamp") renderCamp();
   if (tabId === "screenCharacter") renderCharacter();
 }
@@ -2018,6 +2204,8 @@ function trackLocation() {
 
 function render() {
   updateBodyClass();
+  const main = document.getElementById("main");
+  if (main) main.classList.toggle("exploreFixed", currentTab === "screenExplore");
   const maxHp = getMaxHealth();
 
   document.getElementById("quickStats").innerHTML = `
