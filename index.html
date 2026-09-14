@@ -1834,15 +1834,21 @@ function render() {
   });
 
   const inventoryCards = Object.entries(inventoryCounts).map(([item, count]) => {
-    const icon = item === "Holz" ? "images/icons/forest.png" : "images/icons/berries.png";
-    const actionable = item === "Beeren";
+    const icon = item === "Holz"
+      ? "images/icons/forest.png"
+      : item === "Fleisch"
+        ? "images/icons/deer.png"
+        : "images/icons/berries.png";
+    const actionable = item === "Beeren" || item === "Fleisch";
+    const action = item === "Fleisch" ? "eatMeat()" : "eatBerries()";
+    const actionLabel = item === "Fleisch" ? "Antippen zum Essen · +25 Hunger" : "Antippen zum Essen";
     return `
-      <div class="itemCard${actionable ? " actionable" : ""}"${actionable ? ' onclick="eatBerries()"' : ""}>
+      <div class="itemCard${actionable ? " actionable" : ""}"${actionable ? ` onclick="${action}"` : ""}>
         <img src="${icon}" alt="">
         <span class="itemCardText">
           <span class="itemCardName">${item}</span>
           <span class="itemCardCount">×${count} gesammelt</span>
-          ${actionable ? '<span class="itemAction">Antippen zum Essen</span>' : ""}
+          ${actionable ? `<span class="itemAction">${actionLabel}</span>` : ""}
         </span>
       </div>
     `;
@@ -2256,27 +2262,43 @@ function renderCamp() {
   }
 
 const beerenCount = countItem("Beeren");
+const fleischCount = countItem("Fleisch");
+const foodButtons = [];
+
+if (beerenCount > 0) {
+  foodButtons.push(`
+    <button class="campActionBtn" onclick="eatBerries()">
+      <span class="cIcon2"><img src="images/icons/berries.png" alt=""></span>
+      <span class="btnText">
+        Beeren essen (${beerenCount})
+        <span class="btnSub">+15 Hunger</span>
+      </span>
+    </button>
+  `);
+}
+
+if (fleischCount > 0) {
+  foodButtons.push(`
+    <button class="campActionBtn" onclick="eatMeat()">
+      <span class="cIcon2"><img src="images/icons/deer.png" alt=""></span>
+      <span class="btnText">
+        Fleisch essen (${fleischCount})
+        <span class="btnSub">+25 Hunger</span>
+      </span>
+    </button>
+  `);
+}
 
 document.getElementById("eatBtnWrap").innerHTML =
-  beerenCount > 0
-    ? `
-      <button class="campActionBtn" onclick="eatBerries()">
-        <span class="cIcon2">
-          <img src="images/icons/berries.png" alt="">
-        </span>
-        <span class="btnText">
-          Beeren essen (${beerenCount})
-          <span class="btnSub">+15 Hunger</span>
-        </span>
-      </button>
-    `
+  foodButtons.length > 0
+    ? foodButtons.join("")
     : `
       <button class="campActionBtn disabled">
         <span class="cIcon2">
           <img src="images/icons/berries.png" alt="">
         </span>
         <span class="btnText">
-          Keine Beeren im Inventar
+          Keine Nahrung im Inventar
         </span>
       </button>
     `;
@@ -2466,6 +2488,16 @@ function eatBerries() {
   removeOneItem("Beeren");
   state.hunger = Math.min(100, state.hunger + 15);
   log("Du hast Beeren gegessen. Der Hunger ist gesunken.");
+  saveGame();
+  render();
+  renderCamp();
+}
+
+function eatMeat() {
+  if (countItem("Fleisch") === 0) return;
+  removeOneItem("Fleisch");
+  state.hunger = Math.min(100, state.hunger + 25);
+  log("Du hast Fleisch gegessen. Der Hunger ist deutlich gesunken.");
   saveGame();
   render();
   renderCamp();
@@ -2716,6 +2748,10 @@ function winCombat() {
   changeCampStatus(6, 3);
   checkLevelUp();
   let lootMsg = "";
+  if (Math.random() < 0.65) {
+    state.inventory.push("Fleisch");
+    lootMsg += " Fleisch gefunden.";
+  }
   if (Math.random() < 0.4) {
     const itemId = LOOT_TABLE[Math.floor(Math.random() * LOOT_TABLE.length)];
     state.equipmentInventory.push(itemId);
