@@ -251,6 +251,9 @@ function endTurn() {
 function winCombat() {
   if (!state.runStats || typeof state.runStats !== "object") state.runStats = { expeditions:0, victories:0 };
   state.runStats.victories += 1;
+  const expeditionLootBonus = state.expedition
+    ? Math.min(0.2, state.expedition.risk / 100 * 0.2)
+    : 0;
   const xpReward = combat.boss ? 60 : 20;
   state.xp += xpReward;
   changeCampStatus(combat.boss ? 10 : 6, combat.boss ? 10 : 3);
@@ -265,11 +268,11 @@ function winCombat() {
       lootMsg += ` Einzigartige Beute: ${bossReward.name} (${getRarityLabel(bossReward)}).`;
     }
   }
-  if (Math.random() < 0.65) {
+  if (Math.random() < 0.65 + expeditionLootBonus) {
     addExpeditionLoot("Fleisch");
     lootMsg += " Fleisch gefunden.";
   }
-  if (Math.random() < 0.4) {
+  if (Math.random() < 0.4 + expeditionLootBonus) {
     const lootTable = getLootTableForEnemy(combat.enemyId);
     const itemId = lootTable[Math.floor(Math.random() * lootTable.length)];
     addExpeditionLoot(itemId, "equipment");
