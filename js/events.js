@@ -46,15 +46,15 @@ function chooseWorldEvent(eventId, choiceId) {
   if (eventId === "tracks" && choiceId === "follow") {
     state.energy = Math.max(0, state.energy - 6);
     state.xp += 15;
-    state.inventory.push("Holz");
+    addExpeditionLoot("Holz");
     changeCampStatus(4, -3);
     log("Du bist den Spuren gefolgt und hast Holz gefunden. +15 XP.");
   } else if (eventId === "tracks" && choiceId === "avoid") {
     changeCampStatus(-1, 2);
     log("Du hast Abstand gehalten und bist sicher zurückgekehrt.");
   } else if (eventId === "cache" && choiceId === "take") {
-    state.inventory.push("Holz");
-    state.consumables.push("verband");
+    addExpeditionLoot("Holz");
+    addExpeditionLoot("verband", "consumables");
     changeCampStatus(3, 0);
     log("In der Tasche lagen Holz und ein brauchbarer Verband.");
   } else if (eventId === "cache" && choiceId === "leave") {
