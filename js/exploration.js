@@ -292,10 +292,17 @@ function trackLocation() {
   recordExpeditionAction(location, 1);
   const goalMessage = progressDailyGoal("track");
   const perceptionChance = Math.min(0.9, 0.45 + state.attributes.wahrnehmung * 0.06);
+  const trackReward = location.trackReward || null;
   if (Math.random() < perceptionChance) {
-    const xpGained = grantExpeditionXp(8);
     const milestone = recordLocationProgress(location);
-    log(`${location.name}: Du hast Spuren entdeckt und +${xpGained} XP erhalten. ${milestone} ${goalMessage}`.trim());
+    if (trackReward && Math.random() < trackReward.chance) {
+      const xpGained = grantExpeditionXp(trackReward.xp || 4);
+      addExpeditionLoot(trackReward.item);
+      log(`${location.name}: ${trackReward.message}. +${xpGained} XP erhalten. ${milestone} ${goalMessage}`.trim());
+    } else {
+      const xpGained = grantExpeditionXp(8);
+      log(`${location.name}: Du hast Spuren entdeckt und +${xpGained} XP erhalten. ${milestone} ${goalMessage}`.trim());
+    }
     checkLevelUp();
     saveGame();
     render();
