@@ -152,11 +152,15 @@ function renderCharacter() {
     state.equipmentInventory.forEach((itemId, index) => {
       const item = ITEM_DB[itemId];
 
+      const protectionLabels = [];
+      if (item.coldProtection) protectionLabels.push("Kälte −" + item.coldProtection);
+      if (item.poisonResistance) protectionLabels.push("Gift −" + item.poisonResistance + " Zug");
+      const specialLabel = protectionLabels.length ? " · " + protectionLabels.join(" · ") : "";
       const bonusLabel = item.type === "weapon"
-        ? "+" + item.bonus + " Schaden"
+        ? "+" + item.bonus + " Schaden" + specialLabel
         : item.type === "armor"
-          ? "+" + item.bonus + " Block"
-          : "+" + item.bonus + " Holz beim Sammeln";
+          ? "+" + item.bonus + " Block" + specialLabel
+          : "+" + item.bonus + " Holz beim Sammeln" + specialLabel;
 
       html += `
         <div class="equipList-item" onclick="equipItem(${index})">
