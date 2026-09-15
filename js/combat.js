@@ -71,10 +71,10 @@ function rollEnemyIntent() {
     combat.intentType = "heavy";
     combat.intentLabel = "Wuchtiger Hieb";
     combat.intentDamage += combat.enemyId === "mountain_titan" ? 8 : 6;
-  } else if ((combat.enemyId === "swamp_thing" || combat.enemyId === "swamp_queen") && Math.random() < 0.5) {
+  } else if (ENEMY_DB[combat.enemyId]?.poison && Math.random() < (ENEMY_DB[combat.enemyId].poisonChance || 0.5)) {
     combat.intentType = "poison";
     combat.intentLabel = "Giftiger Biss";
-    combat.intentPoison = 3;
+    combat.intentPoison = ENEMY_DB[combat.enemyId].poisonTurns || 3;
   }
 }
 
