@@ -94,6 +94,16 @@ function returnToCamp() {
   switchTab("screenCamp");
 }
 
+function getMountainColdPenalty(location) {
+  if (!location || location.id !== "berge") return 0;
+  return Math.max(0, 3 - getColdProtection());
+}
+
+function getMountainColdNote(location) {
+  const penalty = getMountainColdPenalty(location);
+  return penalty > 0 ? ` Kälte: −${penalty} zusätzliche Energie.` : "";
+}
+
 function renderActionCards() {
   const location = getSelectedLocation();
   const label = document.getElementById("selectedLocationLabel");
@@ -101,13 +111,15 @@ function renderActionCards() {
   if (!label || !actionDiv) return;
 
   const escalation = getExpeditionEscalation();
-  const gatherEnergyCost = 5 + escalation;
+  const coldPenalty = getMountainColdPenalty(location);
+  const gatherEnergyCost = 5 + escalation + coldPenalty;
   const exploreEnergyCost = Math.max(4, 10 - state.attributes.ueberleben)
     + escalation
+    + coldPenalty
     + (state.weather === "Sturm" ? 5 : 0);
   const exploreHungerCost = Math.max(2, 5 - Math.floor(state.attributes.ueberleben / 2))
     + (state.weather === "Regen" ? 3 : 0);
-  const trackEnergyCost = 4 + escalation;
+  const trackEnergyCost = 4 + escalation + coldPenalty;
   const trackHungerCost = 1 + Math.floor(escalation / 2);
   const canGather = state.energy >= gatherEnergyCost;
   const canExplore = state.energy >= exploreEnergyCost;
@@ -236,9 +248,10 @@ function gatherResources() {
   const location = getSelectedLocation();
   if (state.expedition?.awaitingDecision) { log("Entscheide zuerst, ob du weitergehst oder zurückkehrst."); return; }
   const escalation = getExpeditionEscalation();
-  if (state.energy < 5 + escalation) { log("Zu wenig Energie zum Sammeln."); return; }
+  const energyCost = 5 + escalation + getMountainColdPenalty(location);
+  if (state.energy < energyCost) { log("Zu wenig Energie zum Sammeln."); return; }
   if (!beginExpedition(location)) return;
-  state.energy = Math.max(0, state.energy - (5 + escalation));
+  state.energy = Math.max(0, state.energy - energyCost);
   state.hunger = Math.max(0, state.hunger - 2);
   advanceTime(1);
   recordExpeditionAction(location, 1);
@@ -258,7 +271,7 @@ function gatherResources() {
     resultMessage = `${location.name}: ${location.altGatherText || "Du hast essbare Beeren gefunden"}.`;
   }
   const goalMessage = progressDailyGoal("gather");
-  log(`${resultMessage} ${recordLocationProgress(location)} ${goalMessage}`.trim());
+  log(`${resultMessage}${getMountainColdNote(location)} ${recordLocationProgress(location)} ${goalMessage}`.trim());
   checkLevelUp();
   checkDeathConditions();
   saveGame();
@@ -270,9 +283,10 @@ function trackLocation() {
   const location = getSelectedLocation();
   if (state.expedition?.awaitingDecision) { log("Entscheide zuerst, ob du weitergehst oder zurückkehrst."); return; }
   const escalation = getExpeditionEscalation();
-  if (state.energy < 4 + escalation) { log("Zu wenig Energie, um Spuren zu lesen."); return; }
+  const energyCost = 4 + escalation + getMountainColdPenalty(location);
+  if (state.energy < energyCost) { log("Zu wenig Energie, um Spuren zu lesen."); return; }
   if (!beginExpedition(location)) return;
-  state.energy = Math.max(0, state.energy - (4 + escalation));
+  state.energy = Math.max(0, state.energy - energyCost);
   state.hunger = Math.max(0, state.hunger - (1 + Math.floor(escalation / 2)));
   advanceTime(1);
   recordExpeditionAction(location, 1);
@@ -305,11 +319,12 @@ function getRuinsLootChance(location) {
 function explore(loc) {
   if (state.expedition?.awaitingDecision) { log("Entscheide zuerst, ob du weitergehst oder zurückkehrst."); return; }
   const escalation = getExpeditionEscalation();
-  if (state.energy < 10 + escalation) { log("Zu wenig Energie zum Erkunden! Geh ins Lager."); return; }
+  const coldPenalty = getMountainColdPenalty(loc);
+  if (state.energy < 10 + escalation + coldPenalty) { log("Zu wenig Energie zum Erkunden! Geh ins Lager."); return; }
   if (!beginExpedition(loc)) return;
 
   const ueb = state.attributes.ueberleben;
-  let energyCost = Math.max(4, 10 - ueb) + escalation;
+  let energyCost = Math.max(4, 10 - ueb) + escalation + coldPenalty;
   let hungerCost = Math.max(2, 5 - Math.floor(ueb / 2));
   if (state.weather === "Sturm") energyCost += 5;
   if (state.weather === "Regen") hungerCost += 3;
@@ -330,6 +345,7 @@ function explore(loc) {
     0.95 + (state.expedition ? state.expedition.risk / 100 * 0.15 : 0)
   );
   const ruinLootChance = getRuinsLootChance(loc);
+  const coldNote = getMountainColdNote(loc);
 
   let roll = Math.random();
 
@@ -354,7 +370,7 @@ function explore(loc) {
     } else {
       const enemyId = loc.enemyPool[Math.floor(Math.random() * loc.enemyPool.length)];
       const nightNote = isNight() ? " In der Dunkelheit wirkt der Gegner gefährlicher." : "";
-      startCombat(ENEMY_DB[enemyId], loc.name, `${goalMessage}${nightNote}`.trim());
+      startCombat(ENEMY_DB[enemyId], loc.name, `${goalMessage}${nightNote}${coldNote}`.trim());
       return;
     }
   } else if (roll < 0.85) {
@@ -371,7 +387,7 @@ function explore(loc) {
   }
 
   const milestone = recordLocationProgress(loc);
-  appendLatestLog(milestone);
+  appendLatestLog(`${milestone}${coldNote}`.trim());
   checkLevelUp();
   checkDeathConditions();
   saveGame();
