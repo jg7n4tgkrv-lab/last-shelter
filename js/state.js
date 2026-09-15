@@ -1,7 +1,7 @@
 /* Last Shelter – state and save services
    Phase 1 foundation: runtime state, persistence and pure state helpers.
 */
-const CURRENT_SAVE_VERSION = 3;
+const CURRENT_SAVE_VERSION = 4;
 
 let state = {
   saveVersion: CURRENT_SAVE_VERSION,
@@ -89,12 +89,30 @@ function loadGame() {
     } else {
       const expedition = state.expedition;
       if (!Number.isFinite(expedition.hours) || expedition.hours < 0) expedition.hours = 0;
-      if (!Number.isFinite(expedition.lootStart) || expedition.lootStart < 0) expedition.lootStart = state.inventory.length;
       if (!Number.isFinite(expedition.startingHealth)) expedition.startingHealth = state.health;
       if (!Number.isFinite(expedition.damage) || expedition.damage < 0) expedition.damage = 0;
       if (!Number.isFinite(expedition.encounters) || expedition.encounters < 0) expedition.encounters = 0;
       if (!Number.isFinite(expedition.risk) || expedition.risk < 0) expedition.risk = 0;
+      const legacyLootStart = Number.isFinite(expedition.lootStart)
+        ? Math.max(0, Math.min(state.inventory.length, Math.floor(expedition.lootStart)))
+        : null;
+      const legacyLoot = legacyLootStart === null ? [] : state.inventory.slice(legacyLootStart);
+      if (!expedition.loot || typeof expedition.loot !== "object" || Array.isArray(expedition.loot)) {
+        expedition.loot = {
+          inventory: legacyLoot,
+          equipment: [],
+          consumables: []
+        };
+        if (legacyLootStart !== null) state.inventory = state.inventory.slice(0, legacyLootStart);
+      } else {
+        if (!Array.isArray(expedition.loot.inventory)) expedition.loot.inventory = [];
+        if (!Array.isArray(expedition.loot.equipment)) expedition.loot.equipment = [];
+        if (!Array.isArray(expedition.loot.consumables)) expedition.loot.consumables = [];
+      }
+      expedition.loot.equipment = expedition.loot.equipment.filter(itemId => ITEM_DB[itemId]);
+      expedition.loot.consumables = expedition.loot.consumables.filter(itemId => RECIPES.some(recipe => recipe.id === itemId));
       expedition.awaitingDecision = Boolean(expedition.awaitingDecision);
+      delete expedition.lootStart;
     }
     if (!Number.isFinite(state.timeHour)) state.timeHour = 8;
     state.timeHour = ((Math.floor(state.timeHour) % 24) + 24) % 24;
@@ -112,6 +130,37 @@ function loadGame() {
 function saveGame() {
   state.saveVersion = CURRENT_SAVE_VERSION;
   localStorage.setItem("lastShelterSave", JSON.stringify(state));
+}
+
+function addExpeditionLoot(itemId, type = "inventory") {
+  if (!itemId) return;
+  const validTypes = ["inventory", "equipment", "consumables"];
+  const targetType = validTypes.includes(type) ? type : "inventory";
+  if (state.expedition?.loot && Array.isArray(state.expedition.loot[targetType])) {
+    state.expedition.loot[targetType].push(itemId);
+    return;
+  }
+  if (targetType === "equipment") state.equipmentInventory.push(itemId);
+  else if (targetType === "consumables") state.consumables.push(itemId);
+  else state.inventory.push(itemId);
+}
+
+function getExpeditionLootCount() {
+  if (!state.expedition?.loot) return 0;
+  return ["inventory", "equipment", "consumables"].reduce(
+    (total, type) => total + (Array.isArray(state.expedition.loot[type]) ? state.expedition.loot[type].length : 0),
+    0
+  );
+}
+
+function secureExpeditionLoot() {
+  if (!state.expedition?.loot) return 0;
+  const loot = state.expedition.loot;
+  const total = getExpeditionLootCount();
+  state.inventory.push(...(loot.inventory || []));
+  state.equipmentInventory.push(...(loot.equipment || []));
+  state.consumables.push(...(loot.consumables || []));
+  return total;
 }
 
 function getMaxHealth() { return 100 + state.attributes.vitalitaet * 5; }
