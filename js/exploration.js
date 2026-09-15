@@ -115,7 +115,11 @@ function renderActionCards() {
   const gatherItem = location.gatherItem || "Holz";
   const gatherItemInfo = RESOURCE_DB[gatherItem] || FOOD_DB[gatherItem];
   const specialAction = location.specialAction || null;
+  const exploreAction = location.exploreAction || null;
   const gatherActionName = specialAction?.name || "Sorgfältig sammeln";
+  const exploreActionName = exploreAction?.name || "Gebiet erkunden";
+  const exploreActionDesc = exploreAction?.desc || location.exploreDesc;
+  const exploreIcon = exploreAction?.icon || "images/icons/compass.png";
   const gatherActionDesc = specialAction?.desc || location.gatherDesc;
   const gatherActionHandler = specialAction?.id === "fish" ? "fishAtRiver()" : "gatherResources()";
   const gatherIcon = specialAction?.icon || gatherItemInfo?.icon || "images/icons/forest.png";
@@ -157,10 +161,10 @@ function renderActionCards() {
     </button>
 
     <button class="actionCard primary" onclick="explore(getSelectedLocation())"${canExplore ? "" : " disabled"}>
-      <span class="actionCardIcon"><img src="images/icons/compass.png" alt=""></span>
+      <span class="actionCardIcon"><img src="${exploreIcon}" alt=""></span>
       <span class="actionCardText">
-        <span class="actionCardName">Gebiet erkunden</span>
-        <span class="actionCardDesc">${location.exploreDesc}</span>
+        <span class="actionCardName">${exploreActionName}</span>
+        <span class="actionCardDesc">${exploreActionDesc}</span>
       </span>
       <span class="actionCardCost">${canExplore ? `−${exploreEnergyCost} Energie<br>−${exploreHungerCost} Hunger` : "Nicht genug Energie"}</span>
     </button>
