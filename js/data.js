@@ -164,8 +164,8 @@ const RARITY_LABELS = { common:"Gewöhnlich", uncommon:"Ungewöhnlich", rare:"Se
 const RECIPES = [
   { id:"verband", name:"Verband", cost:{Holz:3}, result:"consumable", desc:"Heilt später 25 Leben", icon:"🩹" },
   { id:"gegenmittel", name:"Gegengift", cost:{Heilkräuter:2}, result:"consumable", desc:"Entfernt Gift im Kampf", icon:"☠️" },
-  { id:"crafted_spear", name:"Speer bauen", cost:{Holz:5}, result:"weapon", desc:"Waffe, +3 Schaden", icon:"🔱" },
-  { id:"crafted_armor", name:"Grobe Rüstung bauen", cost:{Holz:5}, result:"armor", desc:"Rüstung, +3 Block", icon:"🛡️" }
+  { id:"crafted_spear", name:"Speer bauen", cost:{Holz:3, Metall:2}, result:"weapon", desc:"Waffe, +3 Schaden", icon:"🔱" },
+  { id:"crafted_armor", name:"Grobe Rüstung bauen", cost:{Leder:3, Metall:2}, result:"armor", desc:"Rüstung, +3 Block", icon:"🛡️" }
 ];
  const RECIPE_ICON_FILES = {
   verband: "images/icons/heal.png",
