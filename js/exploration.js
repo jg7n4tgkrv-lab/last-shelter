@@ -49,7 +49,7 @@ function beginExpedition(location) {
   state.expedition = {
     locationId: location.id,
     hours: 0,
-    lootStart: state.inventory.length,
+    loot: { inventory: [], equipment: [], consumables: [] },
     startingHealth: state.health,
     damage: 0,
     encounters: 0,
@@ -86,8 +86,9 @@ function returnToCamp() {
   const lootCount = Math.max(0, state.inventory.length - expedition.lootStart);
   const damage = Math.max(expedition.damage, expedition.startingHealth - state.health);
   const hours = expedition.hours;
+  const securedLoot = secureExpeditionLoot();
   state.expedition = null;
-  log(`Du kehrst ins Lager zurück. Beute: ${lootCount} · Zeit draußen: ${hours} h · Schaden: ${damage}.`);
+  log(`Du kehrst ins Lager zurück. Beute gesichert: ${securedLoot} · Zeit draußen: ${hours} h · Schaden: ${damage}.`);
   saveGame();
   render();
   switchTab("screenCamp");
@@ -105,7 +106,7 @@ function renderActionCards() {
   const canTrack = state.energy >= 4 + escalation;
 
   if (state.expedition?.awaitingDecision) {
-    const lootCount = Math.max(0, state.inventory.length - state.expedition.lootStart);
+    const lootCount = getExpeditionLootCount();
     actionDiv.className = "actionCards";
     actionDiv.innerHTML = `
       <div class="charBox expeditionPanel">
@@ -181,17 +182,17 @@ function gatherResources() {
   recordExpeditionAction(location, 1);
   let resultMessage;
   if (location.id === "sumpf") {
-    state.inventory.push(location.gatherItem);
+    addExpeditionLoot(location.gatherItem);
     resultMessage = `${location.name}: ${location.gatherText}.`;
   } else if (Math.random() < (location.gatherChance || 0.58)) {
-    state.inventory.push(location.gatherItem || "Holz");
+    addExpeditionLoot(location.gatherItem || "Holz");
     resultMessage = `${location.name}: ${location.gatherText}.`;
     if (location.gatherItem === "Holz" && getToolBonus() > 0) {
-      state.inventory.push("Holz");
+      addExpeditionLoot("Holz");
       resultMessage += " Deine Handaxt bringt zusätzliches Holz.";
     }
   } else {
-    state.inventory.push(location.altGatherItem || "Beeren");
+    addExpeditionLoot(location.altGatherItem || "Beeren");
     resultMessage = `${location.name}: ${location.altGatherText || "Du hast essbare Beeren gefunden"}.`;
   }
   const goalMessage = progressDailyGoal("gather");
@@ -263,16 +264,16 @@ function explore(loc) {
   let roll = Math.random();
 
   if (roll < 0.25) {
-    state.inventory.push(loc.exploreItem || "Holz");
+    addExpeditionLoot(loc.exploreItem || "Holz");
     log(`${loc.name}: ${loc.exploreFindText || "Du hast Holz gefunden"}. ${goalMessage}`.trim());
   } else if (roll < 0.45) {
-    state.inventory.push(loc.altGatherItem || "Beeren");
+    addExpeditionLoot(loc.altGatherItem || "Beeren");
     log(`${loc.name}: ${loc.altGatherText || "Du hast Beeren gefunden"}. ${goalMessage}`.trim());
   } else if (roll < dangerThreshold) {
     let avoidChance = state.attributes.wahrnehmung * 0.03;
     if (state.weather === "Nebel") avoidChance += 0.1;
     if (Math.random() < avoidChance) {
-      state.inventory.push(loc.exploreItem || "Holz");
+      addExpeditionLoot(loc.exploreItem || "Holz");
       log(`${loc.name}: Deine Wahrnehmung hat dich vor einer Gefahr gewarnt – du hast stattdessen einen sicheren Fund gemacht. ${goalMessage}`.trim());
     } else {
       const enemyId = loc.enemyPool[Math.floor(Math.random() * loc.enemyPool.length)];
