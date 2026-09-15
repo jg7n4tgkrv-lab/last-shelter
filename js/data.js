@@ -27,6 +27,11 @@ const CARD_DB = {
 const DEFAULT_DECK = ["attack","attack","attack","attack","attack","defend","defend","dodge","heavy","heal"];
 const CARD_REWARD_POOL = ["attack","defend","dodge","heavy","heal","precise_strike","emergency_bandage"];
 
+const FOOD_DB = {
+  Beeren: { hunger: 15, icon: "images/icons/berries.png", label: "Beeren" },
+  Fleisch: { hunger: 30, icon: "images/icons/deer.png", label: "Fleisch" }
+};
+
 const ENEMY_DB = {
   wolf:   { name: "Wolf", maxHp: 35, dmgMin: 8, dmgMax: 14, intent: "Schneller Biss" },
   looter: { name: "Plünderer", maxHp: 45, dmgMin: 10, dmgMax: 18, intent: "Angriff" },
