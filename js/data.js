@@ -32,6 +32,13 @@ const FOOD_DB = {
   Fleisch: { hunger: 30, icon: "images/icons/deer.png", label: "Fleisch" }
 };
 
+const RESOURCE_DB = {
+  Holz: { icon: "images/icons/forest.png", label: "Holz" },
+  Metall: { icon: "images/icons/metal-ingot.png", label: "Metall" },
+  Leder: { icon: "images/icons/leather.png", label: "Leder" },
+  Heilkräuter: { icon: "images/icons/herbs.png", label: "Heilkräuter" }
+};
+
 const ENEMY_DB = {
   wolf:   { name: "Wolf", maxHp: 35, dmgMin: 8, dmgMax: 14, intent: "Schneller Biss" },
   looter: { name: "Plünderer", maxHp: 45, dmgMin: 10, dmgMax: 18, intent: "Angriff" },
@@ -46,9 +53,9 @@ const ENEMY_DB = {
 
 const LOCATIONS = [
   { id:"wald",   name:"Dichter Wald",       minLevel:1, danger:0.55, enemyPool:["wolf","looter"], icon:"🌲", accent:"#5a7a3f", identity:"Brennholz und Beeren", bossId:"forest_guardian", bossName:"Waldhüter", gatherItem:"Holz", gatherText:"Du hast vorsichtig Holz gesammelt", altGatherItem:"Beeren", altGatherText:"Du hast essbare Beeren gefunden", exploreItem:"Holz", exploreFindText:"Du findest gutes Brennholz zwischen den Bäumen", gatherDesc:"Suche nach Brennholz oder Beeren und bleibe möglichst unauffällig.", exploreDesc:"Durchsuche den Wald nach Vorräten, Spuren und Gefahren." },
-  { id:"ruinen", name:"Verlassene Ruinen",  minLevel:1, danger:0.66, enemyPool:["wolf","looter"], icon:"🏚️", accent:"#8a7a5f", identity:"Bretter und alte Verstecke", bossId:"ruin_sentinel", bossName:"Ruinenwächter", gatherItem:"Holz", gatherText:"Du hast brauchbare Bretter aus den Trümmern gelöst", altGatherItem:"Beeren", altGatherText:"Du hast Beeren am überwucherten Ruinenrand gefunden", exploreItem:"Holz", exploreFindText:"Du findest brauchbare Bretter zwischen den Trümmern", gatherDesc:"Suche in den Trümmern nach Brettern oder vergessenen Vorräten.", exploreDesc:"Durchsuche die Ruinen nach Beute, Verstecken und Hinterhalten." },
+  { id:"ruinen", name:"Verlassene Ruinen",  minLevel:1, danger:0.66, enemyPool:["wolf","looter"], icon:"🏚️", accent:"#8a7a5f", identity:"Metall und alte Verstecke", bossId:"ruin_sentinel", bossName:"Ruinenwächter", gatherItem:"Metall", gatherText:"Du hast brauchbare Metallteile aus den Trümmern gelöst", altGatherItem:"Holz", altGatherText:"Du hast trockenes Holz am überwucherten Ruinenrand gefunden", exploreItem:"Metall", exploreFindText:"Du findest brauchbare Metallteile zwischen den Trümmern", gatherDesc:"Suche in den Trümmern nach Brettern oder vergessenen Vorräten.", exploreDesc:"Durchsuche die Ruinen nach Beute, Verstecken und Hinterhalten." },
   { id:"fluss",  name:"Flussufer",          minLevel:1, danger:0.48, enemyPool:["wolf","looter"], icon:"🏞️", accent:"#4a7a8a", identity:"Beeren und ruhige Ufer", bossId:"river_hunter", bossName:"Flussjäger", gatherItem:"Beeren", gatherText:"Du hast am Ufer Beeren gesammelt", altGatherItem:"Holz", altGatherText:"Du hast Treibholz am Ufer gefunden", exploreItem:"Beeren", exploreFindText:"Du findest frische Beeren nahe dem Wasser", gatherDesc:"Suche am Ufer nach Nahrung und nützlichem Treibholz.", exploreDesc:"Folge dem Fluss nach Nahrung, sicheren Wegen und Gefahren." },
-  { id:"berge",  name:"Berge",              minLevel:3, danger:0.76, enemyPool:["bear"], icon:"⛰️", accent:"#7a7a8a", identity:"Trockenes Holz und raue Wege", bossId:"mountain_titan", bossName:"Bergtitan", gatherItem:"Holz", gatherText:"Du hast trockenes Holz unter einem Felsvorsprung gesammelt", altGatherItem:"Beeren", altGatherText:"Du hast zähe Bergbeeren gefunden", exploreItem:"Holz", exploreFindText:"Du findest trockenes Holz unter einem Felsvorsprung", gatherDesc:"Suche zwischen Felsen nach trockenem Holz und essbaren Beeren.", exploreDesc:"Erklimme die Hänge nach seltenen Funden und starken Gegnern." },
+  { id:"berge",  name:"Berge",              minLevel:3, danger:0.76, enemyPool:["bear"], icon:"⛰️", accent:"#7a7a8a", identity:"Metall und raue Wege", bossId:"mountain_titan", bossName:"Bergtitan", gatherItem:"Metall", gatherText:"Du hast Metalladern unter einem Felsvorsprung gefunden", altGatherItem:"Leder", altGatherText:"Du hast eine alte Ledertasche am Bergpfad entdeckt", exploreItem:"Metall", exploreFindText:"Du findest Metalladern unter einem Felsvorsprung", gatherDesc:"Suche zwischen Felsen nach trockenem Holz und essbaren Beeren.", exploreDesc:"Erklimme die Hänge nach seltenen Funden und starken Gegnern." },
   { id:"sumpf",  name:"Sumpf",              minLevel:5, danger:0.84, enemyPool:["swamp_thing"], icon:"🐊", accent:"#5a7a5a", identity:"Heilkräuter und Gift", bossId:"swamp_queen", bossName:"Sumpfkönigin", gatherItem:"Heilkräuter", gatherText:"Du hast Heilkräuter am feuchten Ufer gefunden", altGatherItem:"Heilkräuter", altGatherText:"Du hast weitere Heilkräuter zwischen den Wurzeln entdeckt", exploreItem:"Heilkräuter", exploreFindText:"Du findest Heilkräuter am Rand des schwarzen Wassers", gatherDesc:"Suche nach Heilkräutern, bevor dich der Sumpf bemerkt.", exploreDesc:"Durchquere den Sumpf nach Heilmitteln, Gift und dem Sumpfkriecher." }
 ];
 

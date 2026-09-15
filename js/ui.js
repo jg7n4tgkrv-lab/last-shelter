@@ -277,13 +277,9 @@ function render() {
 
   const inventoryCards = Object.entries(inventoryCounts).map(([item, count]) => {
     const foodInfo = FOOD_DB[item];
-    const icon = foodInfo
-      ? foodInfo.icon
-      : item === "Holz"
-        ? "images/icons/forest.png"
-        : item === "Heilkräuter"
-          ? "images/icons/herbs.png"
-          : "images/icons/berries.png";
+    const resourceInfo = RESOURCE_DB[item];
+    const itemInfo = foodInfo || resourceInfo;
+    const icon = itemInfo ? itemInfo.icon : "images/icons/berries.png";
     const actionable = Boolean(foodInfo);
     const action = item === "Fleisch" ? "eatMeat()" : "eatBerries()";
     const actionLabel = foodInfo ? `Antippen zum Essen · +${foodInfo.hunger} Hunger` : "Antippen zum Essen";
