@@ -177,6 +177,10 @@ function getShelterStage() {
 }
 function getWeaponBonus() { return state.equipped.weapon ? ITEM_DB[state.equipped.weapon].bonus : 0; }
 function getArmorBonus() { return state.equipped.armor ? ITEM_DB[state.equipped.armor].bonus : 0; }
+function getColdProtection() {
+  const armor = state.equipped.armor ? ITEM_DB[state.equipped.armor] : null;
+  return armor && Number.isFinite(armor.coldProtection) ? armor.coldProtection : 0;
+}
 function getToolBonus() { return state.equipped.tool && ITEM_DB[state.equipped.tool] ? ITEM_DB[state.equipped.tool].bonus : 0; }
 function getRarityLabel(itemOrRarity) {
   const rarity = typeof itemOrRarity === "string" ? itemOrRarity : itemOrRarity?.rarity;
