@@ -22,6 +22,11 @@ function startCombat(enemyType, locName, extraNote) {
     ap: 3, maxAp: 3, block: 0, locName: locName,
     boss: Boolean(enemyType.boss), bossLocationId: enemyType.locationId || null, bossReward: enemyType.reward || null
   };
+  if (state.expedition) {
+    state.expedition.encounters += 1;
+    state.expedition.risk = Math.min(100, state.expedition.risk + 12);
+    saveGame();
+  }
   rollEnemyIntent();
   drawCards(5);
   document.getElementById("combatOverlay").classList.add("active");
