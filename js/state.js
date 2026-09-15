@@ -1,7 +1,7 @@
 /* Last Shelter – state and save services
    Phase 1 foundation: runtime state, persistence and pure state helpers.
 */
-const CURRENT_SAVE_VERSION = 2;
+const CURRENT_SAVE_VERSION = 3;
 
 let state = {
   saveVersion: CURRENT_SAVE_VERSION,
@@ -12,7 +12,7 @@ let state = {
   equipmentInventory: [], equipped: { weapon: null, armor: null, tool: null },
   consumables: [],
   timeHour: 8, weather: "Klar", pendingEvent: null,
-  morale: 60, safety: 50, locationProgress: {}, bossesUnlocked: {}, bossesDefeated: {}, runStats: { expeditions:0, victories:0 }, pendingCardReward: [], dailyGoal: null
+  morale: 60, safety: 50, locationProgress: {}, bossesUnlocked: {}, bossesDefeated: {}, runStats: { expeditions:0, victories:0 }, pendingCardReward: [], dailyGoal: null, expedition: null
 };
 
 let combat = null;
@@ -40,7 +40,7 @@ function loadGame() {
       pendingLevelUps: 0,
       equipmentInventory: [], equipped: { weapon: null, armor: null, tool: null },
       consumables: [], timeHour: 8, weather: "Klar", pendingEvent: null,
-      morale: 60, safety: 50, locationProgress: {}, runStats: { expeditions:0, victories:0 }, pendingCardReward: [], dailyGoal: null
+      morale: 60, safety: 50, locationProgress: {}, runStats: { expeditions:0, victories:0 }, pendingCardReward: [], dailyGoal: null, expedition: null
     }, loaded);
     if (!Number.isFinite(state.saveVersion)) state.saveVersion = 1;
     if (!Array.isArray(state.deck)) state.deck = [...DEFAULT_DECK];
@@ -84,6 +84,18 @@ function loadGame() {
     if (!Number.isFinite(state.runStats.victories)) state.runStats.victories = 0;
     if (!Array.isArray(state.pendingCardReward)) state.pendingCardReward = [];
     state.pendingCardReward = state.pendingCardReward.filter(cardId => CARD_DB[cardId]);
+    if (!state.expedition || typeof state.expedition !== "object" || !LOCATIONS.some(loc => loc.id === state.expedition.locationId)) {
+      state.expedition = null;
+    } else {
+      const expedition = state.expedition;
+      if (!Number.isFinite(expedition.hours) || expedition.hours < 0) expedition.hours = 0;
+      if (!Number.isFinite(expedition.lootStart) || expedition.lootStart < 0) expedition.lootStart = state.inventory.length;
+      if (!Number.isFinite(expedition.startingHealth)) expedition.startingHealth = state.health;
+      if (!Number.isFinite(expedition.damage) || expedition.damage < 0) expedition.damage = 0;
+      if (!Number.isFinite(expedition.encounters) || expedition.encounters < 0) expedition.encounters = 0;
+      if (!Number.isFinite(expedition.risk) || expedition.risk < 0) expedition.risk = 0;
+      expedition.awaitingDecision = Boolean(expedition.awaitingDecision);
+    }
     if (!Number.isFinite(state.timeHour)) state.timeHour = 8;
     state.timeHour = ((Math.floor(state.timeHour) % 24) + 24) % 24;
     if (!WEATHER_TYPES.includes(state.weather)) state.weather = "Klar";
