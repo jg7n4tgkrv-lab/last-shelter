@@ -247,6 +247,11 @@ function upgradeDeckCard(fromId, toId, cost) {
 }
 
 function sleepAtCamp() {
+  if (state.expedition) {
+    log("Du bist noch auf Expedition. Kehre zuerst zum Lager zurück.");
+    switchTab("screenExplore");
+    return;
+  }
   const oldHealth = state.health;
   const oldHunger = state.hunger;
   state.energy = getMaxEnergy();
