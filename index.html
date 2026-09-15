@@ -1342,6 +1342,69 @@ button,
   }
 }
 
+
+  .expeditionPanel {
+    width: 100%;
+    min-width: 0;
+    padding: 9px;
+    border: 1px solid #6a5937;
+    border-radius: 13px;
+    background: linear-gradient(160deg, #282315, #17130c);
+  }
+  .expeditionPanelHead {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 7px;
+    color: #d8c878;
+  }
+  .expeditionPanelHead span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+  .expeditionPanelHead img { width: 18px; height: 18px; object-fit: contain; }
+  .expeditionPanelHead small {
+    min-width: 0;
+    overflow: hidden;
+    color: #aaa18d;
+    font-size: 10px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .expeditionDecisionButtons { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+  .expeditionDecision {
+    min-height: 46px;
+    padding: 6px 8px;
+    border-radius: 10px;
+    color: #ece9d6;
+    text-align: center;
+    touch-action: manipulation;
+    -webkit-appearance: none;
+  }
+  .expeditionDecision.continue { border: 1px solid #657744; background: #2d3d24; }
+  .expeditionDecision.return { border: 1px solid #725347; background: #34231d; }
+  .expeditionDecision strong, .expeditionDecision small { display: block; }
+  .expeditionDecision strong { font-size: 12px; }
+  .expeditionDecision small { margin-top: 1px; color: #aaa18d; font-size: 9px; }
+  .expeditionDecision:active { transform: scale(0.97); filter: brightness(1.16); }
+
+  #main.exploreFixed #screenExplore .expeditionPanel {
+    height: 76px;
+    padding: 5px 7px;
+  }
+  #main.exploreFixed #screenExplore .expeditionPanelHead { height: 19px; margin-bottom: 4px; }
+  #main.exploreFixed #screenExplore .expeditionDecision { min-height: 43px; padding: 4px 6px; }
+
+  @media (max-height: 760px) {
+    #main.exploreFixed #screenExplore #inventory { display: none; }
+    #main.exploreFixed #screenExplore .eventCard { margin-bottom: 0; }
+  }
 </style>
 </head>
 <body>
