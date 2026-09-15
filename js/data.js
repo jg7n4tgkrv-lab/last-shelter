@@ -45,12 +45,12 @@ const ENEMY_DB = {
   wolf:   { name: "Wolf", maxHp: 35, dmgMin: 8, dmgMax: 14, intent: "Schneller Biss" },
   looter: { name: "Plünderer", maxHp: 45, dmgMin: 10, dmgMax: 18, intent: "Angriff" },
   bear:   { name: "Bär", maxHp: 70, dmgMin: 14, dmgMax: 22, intent: "Hieb" },
-  swamp_thing: { name: "Sumpfkriecher", maxHp: 60, dmgMin: 16, dmgMax: 24, intent: "Biss" },
+  swamp_thing: { name: "Sumpfkriecher", maxHp: 60, dmgMin: 16, dmgMax: 24, intent: "Biss", poison:true, poisonChance:0.62, poisonTurns:3 },
   forest_guardian: { name: "Waldhüter", maxHp: 88, dmgMin: 12, dmgMax: 18, intent: "Wurzelhieb", boss:true, locationId:"wald", reward:"axe" },
   ruin_sentinel: { name: "Ruinenwächter", maxHp: 102, dmgMin: 14, dmgMax: 22, intent: "Steinhieb", boss:true, locationId:"ruinen", reward:"iron_plate" },
   river_hunter: { name: "Flussjäger", maxHp: 82, dmgMin: 12, dmgMax: 19, intent: "Schneller Schlag", boss:true, locationId:"fluss", reward:"spear" },
   mountain_titan: { name: "Bergtitan", maxHp: 126, dmgMin: 18, dmgMax: 28, intent: "Wuchtiger Hieb", boss:true, locationId:"berge", reward:"iron_plate" },
-  swamp_queen: { name: "Sumpfkönigin", maxHp: 118, dmgMin: 18, dmgMax: 27, intent: "Giftiger Biss", boss:true, poison:true, locationId:"sumpf", reward:"leather" }
+  swamp_queen: { name: "Sumpfkönigin", maxHp: 118, dmgMin: 18, dmgMax: 27, intent: "Giftiger Biss", boss:true, poison:true, poisonChance:0.58, poisonTurns:4, locationId:"sumpf", reward:"leather" }
 };
 
 const LOCATIONS = [
