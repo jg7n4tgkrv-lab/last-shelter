@@ -295,6 +295,13 @@ function trackLocation() {
   startCombat(ENEMY_DB[enemyId], location.name, "Du wurdest überrascht!");
 }
 
+function getRuinsLootChance(location) {
+  if (location.id !== "ruinen" || !state.expedition) return 0;
+  const hours = Number.isFinite(state.expedition.hours) ? state.expedition.hours : 0;
+  const risk = Number.isFinite(state.expedition.risk) ? state.expedition.risk : 0;
+  return Math.min(0.62, 0.18 + hours * 0.035 + risk / 250);
+}
+
 function explore(loc) {
   if (state.expedition?.awaitingDecision) { log("Entscheide zuerst, ob du weitergehst oder zurückkehrst."); return; }
   const escalation = getExpeditionEscalation();
@@ -322,12 +329,19 @@ function explore(loc) {
     0.98,
     0.95 + (state.expedition ? state.expedition.risk / 100 * 0.15 : 0)
   );
+  const ruinLootChance = getRuinsLootChance(loc);
 
   let roll = Math.random();
 
   if (roll < 0.25) {
-    addExpeditionLoot(loc.exploreItem || "Holz");
-    log(`${loc.name}: ${loc.exploreFindText || "Du hast Holz gefunden"}. ${goalMessage}`.trim());
+    if (ruinLootChance > 0 && Math.random() < ruinLootChance && loc.rareLoot?.length) {
+      const lootId = loc.rareLoot[Math.floor(Math.random() * loc.rareLoot.length)];
+      addExpeditionLoot(lootId, "equipment");
+      log(`${loc.name}: Nach tiefer Suche findest du ${ITEM_DB[lootId]?.name || lootId}. ${goalMessage}`.trim());
+    } else {
+      addExpeditionLoot(loc.exploreItem || "Holz");
+      log(`${loc.name}: ${loc.exploreFindText || "Du hast Holz gefunden"}. ${goalMessage}`.trim());
+    }
   } else if (roll < 0.45) {
     addExpeditionLoot(loc.altGatherItem || "Beeren");
     log(`${loc.name}: ${loc.altGatherText || "Du hast Beeren gefunden"}. ${goalMessage}`.trim());
