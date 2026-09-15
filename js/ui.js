@@ -283,7 +283,7 @@ function render() {
     const icon = itemInfo ? itemInfo.icon : "images/icons/berries.png";
     const actionable = Boolean(foodInfo || waterInfo);
     const action = foodInfo
-      ? (item === "Fleisch" ? "eatMeat()" : "eatBerries()")
+      ? `eatFood("${item}")`
       : waterInfo
         ? "drinkWater()"
         : "";

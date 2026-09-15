@@ -114,7 +114,11 @@ function renderActionCards() {
   const canTrack = state.energy >= trackEnergyCost;
   const gatherItem = location.gatherItem || "Holz";
   const gatherItemInfo = RESOURCE_DB[gatherItem] || FOOD_DB[gatherItem];
-  const gatherIcon = gatherItemInfo?.icon || "images/icons/forest.png";
+  const specialAction = location.specialAction || null;
+  const gatherActionName = specialAction?.name || "Sorgfältig sammeln";
+  const gatherActionDesc = specialAction?.desc || location.gatherDesc;
+  const gatherActionHandler = specialAction?.id === "fish" ? "fishAtRiver()" : "gatherResources()";
+  const gatherIcon = specialAction?.icon || gatherItemInfo?.icon || "images/icons/forest.png";
 
   if (state.expedition?.awaitingDecision) {
     const lootCount = getExpeditionLootCount();
@@ -143,11 +147,11 @@ function renderActionCards() {
   if (actionHint) actionHint.textContent = `${location.identity} · ${getDangerLabel(location)} · ${getDailyGoalHint()}`;
   actionDiv.className = "actionCards";
   actionDiv.innerHTML = `
-    <button class="actionCard" onclick="gatherResources()"${canGather ? "" : " disabled"}>
+    <button class="actionCard" onclick="${gatherActionHandler}"${canGather ? "" : " disabled"}>
       <span class="actionCardIcon"><img src="${gatherIcon}" alt=""></span>
       <span class="actionCardText">
-        <span class="actionCardName">Sorgfältig sammeln</span>
-        <span class="actionCardDesc">${location.gatherDesc}</span>
+        <span class="actionCardName">${gatherActionName}</span>
+        <span class="actionCardDesc">${gatherActionDesc}</span>
       </span>
       <span class="actionCardCost">${canGather ? `−${gatherEnergyCost} Energie<br>−2 Hunger` : "Nicht genug Energie"}</span>
     </button>
@@ -181,6 +185,47 @@ function challengeRegionBoss() {
   const boss = ENEMY_DB[location.bossId];
   if (!boss) return;
   startCombat(boss, location.name, `${location.name}: Der Gebietswächter stellt sich dir in den Weg.`);
+}
+
+function fishAtRiver() {
+  const location = getSelectedLocation();
+  if (location.id !== "fluss") {
+    gatherResources();
+    return;
+  }
+  if (state.expedition?.awaitingDecision) {
+    log("Entscheide zuerst, ob du weitergehst oder zurückkehrst.");
+    return;
+  }
+  const escalation = getExpeditionEscalation();
+  const energyCost = 5 + escalation;
+  if (state.energy < energyCost) {
+    log("Zu wenig Energie zum Fischen.");
+    return;
+  }
+  if (!beginExpedition(location)) return;
+  state.energy = Math.max(0, state.energy - energyCost);
+  state.hunger = Math.max(0, state.hunger - 2);
+  advanceTime(1);
+  recordExpeditionAction(location, 1);
+
+  const fishChance = Math.min(0.82, 0.55 + state.attributes.ueberleben * 0.04 + state.attributes.wahrnehmung * 0.03);
+  let resultMessage;
+  if (Math.random() < fishChance) {
+    addExpeditionLoot("Fisch");
+    resultMessage = "Flussufer: Du hast einen Fisch gefangen.";
+  } else {
+    addExpeditionLoot("Wasser");
+    resultMessage = "Flussufer: Du hast klares Wasser geschöpft.";
+  }
+  const goalMessage = progressDailyGoal("gather");
+  const milestone = recordLocationProgress(location);
+  log(`${resultMessage} ${milestone} ${goalMessage}`.trim());
+  checkLevelUp();
+  checkDeathConditions();
+  saveGame();
+  render();
+  maybeTriggerWorldEvent(location);
 }
 
 function gatherResources() {
