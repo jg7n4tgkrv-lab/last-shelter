@@ -127,3 +127,65 @@ function trackLocation() {
   saveGame();
   startCombat(ENEMY_DB[enemyId], location.name, "Du wurdest überrascht!");
 }
+
+function explore(loc) {
+  if (state.energy < 10) { log("Zu wenig Energie zum Erkunden! Geh ins Lager."); return; }
+
+  const ueb = state.attributes.ueberleben;
+  let energyCost = Math.max(4, 10 - ueb);
+  let hungerCost = Math.max(2, 5 - Math.floor(ueb / 2));
+  if (state.weather === "Sturm") energyCost += 5;
+  if (state.weather === "Regen") hungerCost += 3;
+  state.energy = Math.max(0, state.energy - energyCost);
+  state.hunger = Math.max(0, state.hunger - hungerCost);
+  if (!state.runStats || typeof state.runStats !== "object") state.runStats = { expeditions:0, victories:0 };
+  state.runStats.expeditions += 1;
+
+  advanceTime(2 + Math.floor(Math.random() * 3));
+  const goalMessage = progressDailyGoal("explore");
+
+  let dangerThreshold = 0.65;
+  if (isNight()) dangerThreshold -= 0.15;
+
+  let roll = Math.random();
+
+  if (roll < 0.25) {
+    state.inventory.push(loc.exploreItem || "Holz");
+    log(`${loc.name}: ${loc.exploreFindText || "Du hast Holz gefunden"}. ${goalMessage}`.trim());
+  } else if (roll < 0.45) {
+    state.inventory.push(loc.altGatherItem || "Beeren");
+    log(`${loc.name}: ${loc.altGatherText || "Du hast Beeren gefunden"}. ${goalMessage}`.trim());
+  } else if (roll < dangerThreshold) {
+    let avoidChance = state.attributes.wahrnehmung * 0.03;
+    if (state.weather === "Nebel") avoidChance += 0.1;
+    if (Math.random() < avoidChance) {
+      state.inventory.push(loc.exploreItem || "Holz");
+      log(`${loc.name}: Deine Wahrnehmung hat dich vor einer Gefahr gewarnt – du hast stattdessen einen sicheren Fund gemacht. ${goalMessage}`.trim());
+    } else {
+      const enemyId = loc.enemyPool[Math.floor(Math.random() * loc.enemyPool.length)];
+      const nightNote = isNight() ? " In der Dunkelheit wirkt der Gegner gefährlicher." : "";
+      startCombat(ENEMY_DB[enemyId], loc.name, `${goalMessage}${nightNote}`.trim());
+      return;
+    }
+  } else if (roll < 0.85) {
+    state.health -= 5;
+    log(`${loc.name}: Du hast dich leicht verletzt. ${goalMessage}`.trim());
+  } else if (roll < 0.95) {
+    state.xp += 10;
+    log(`${loc.name}: Nichts Besonderes, aber du hast Erfahrung gesammelt. ${goalMessage}`.trim());
+    checkLevelUp();
+  } else {
+    state.xp += 25;
+    log(`${loc.name}: Seltenes Ereignis! Du fühlst dich gestärkt. ${goalMessage}`.trim());
+    checkLevelUp();
+  }
+
+  const milestone = recordLocationProgress(loc);
+  appendLatestLog(milestone);
+  checkLevelUp();
+  checkDeathConditions();
+  saveGame();
+  render();
+  if (!state.pendingLevelUps) maybeTriggerWorldEvent(loc);
+  maybeShowPerkSelection();
+}
