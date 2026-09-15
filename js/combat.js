@@ -207,6 +207,10 @@ function playCard(index) {
   renderCombat();
 }
 
+function getAppliedPoisonTurns(baseTurns) {
+  return Math.max(1, baseTurns - getPoisonResistance());
+}
+
 function endTurn() {
   if (combat.poisonTurns > 0) {
     const poisonDamage = 3;
@@ -228,8 +232,9 @@ function endTurn() {
       log(`${combat.enemyName} setzt einen wuchtigen Hieb ein – nur die Hälfte deines Blocks zählt.`);
     }
     if (combat.intentType === "poison") {
-      combat.poisonTurns = Math.max(combat.poisonTurns, combat.intentPoison);
-      log(`${combat.enemyName} vergiftet dich für ${combat.intentPoison} Züge.`);
+      const appliedPoison = getAppliedPoisonTurns(combat.intentPoison);
+      combat.poisonTurns = Math.max(combat.poisonTurns, appliedPoison);
+      log(`${combat.enemyName} vergiftet dich für ${appliedPoison} Züge.`);
     }
   }
   combat.block = 0;
