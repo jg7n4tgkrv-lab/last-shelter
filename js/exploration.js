@@ -115,9 +115,6 @@ function renderActionCards() {
     return;
   }
 
-  const canExplore = state.energy >= 10;
-  const canTrack = state.energy >= 4;
-
   label.textContent = location.name;
   const actionHint = document.querySelector(".actionHint");
   if (actionHint) actionHint.textContent = `${location.identity} · ${getDangerLabel(location)} · ${getDailyGoalHint()}`;
