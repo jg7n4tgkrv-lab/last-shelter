@@ -4,6 +4,11 @@
 function startCombat(enemyType, locName, extraNote) {
   const nightBonus = isNight() ? 1.2 : 1.0;
   const enemyId = Object.keys(ENEMY_DB).find(id => ENEMY_DB[id] === enemyType) || "wolf";
+  const expeditionThreat = state.expedition
+    ? Math.min(0.3, state.expedition.risk / 100 * 0.3)
+    : 0;
+  const threatMultiplier = 1 + expeditionThreat;
+  const scaledHp = Math.round(enemyType.maxHp * threatMultiplier);
   combat = {
     enemyId,
     enemyName: enemyType.name,
@@ -13,10 +18,11 @@ function startCombat(enemyType, locName, extraNote) {
     intentPoison: 0,
     enemyBlock: 0,
     poisonTurns: 0,
-    enemyHp: enemyType.maxHp,
-    enemyMaxHp: enemyType.maxHp,
-    dmgMin: Math.round(enemyType.dmgMin * nightBonus),
-    dmgMax: Math.round(enemyType.dmgMax * nightBonus),
+    enemyHp: scaledHp,
+    enemyMaxHp: scaledHp,
+    dmgMin: Math.round(enemyType.dmgMin * nightBonus * threatMultiplier),
+    dmgMax: Math.round(enemyType.dmgMax * nightBonus * threatMultiplier),
+    expeditionThreat,
     drawPile: shuffle(state.deck),
     hand: [], discardPile: [],
     ap: 3, maxAp: 3, block: 0, locName: locName,
@@ -31,7 +37,10 @@ function startCombat(enemyType, locName, extraNote) {
   drawCards(5);
   document.getElementById("combatOverlay").classList.add("active");
   renderCombat();
-  if (extraNote) log(extraNote);
+  const threatNote = expeditionThreat > 0
+    ? ` Die lange Expedition verstärkt den Gegner um ${Math.round(expeditionThreat * 100)} %.`
+    : "";
+  if (extraNote || threatNote) log(`${extraNote || ""}${threatNote}`.trim());
 }
 
 function drawCards(n) {
