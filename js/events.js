@@ -3,7 +3,10 @@
 function maybeTriggerWorldEvent(location) {
   location = location || getSelectedLocation();
   if (state.pendingEvent || state.pendingLevelUps > 0) return;
-  const eventChance = Math.min(0.38, 0.16 + (location.danger * 0.18));
+  const expeditionRiskBonus = state.expedition
+    ? Math.min(0.18, state.expedition.risk / 100 * 0.18)
+    : 0;
+  const eventChance = Math.min(0.56, 0.16 + (location.danger * 0.18) + expeditionRiskBonus);
   if (Math.random() > eventChance) return;
   const eventIds = Object.keys(EVENT_DB);
   const eventId = eventIds[Math.floor(Math.random() * eventIds.length)];
