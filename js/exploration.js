@@ -33,6 +33,15 @@ function getExpeditionEscalation() {
   return state.expedition ? Math.min(6, Math.floor(state.expedition.hours / 4)) : 0;
 }
 
+function grantExpeditionXp(baseAmount) {
+  const riskBonus = state.expedition
+    ? Math.min(0.5, state.expedition.risk / 200)
+    : 0;
+  const total = baseAmount + Math.floor(baseAmount * riskBonus);
+  state.xp += total;
+  return total;
+}
+
 function beginExpedition(location) {
   if (state.expedition) {
     return state.expedition.locationId === location.id;
@@ -207,9 +216,9 @@ function trackLocation() {
   const goalMessage = progressDailyGoal("track");
   const perceptionChance = Math.min(0.9, 0.45 + state.attributes.wahrnehmung * 0.06);
   if (Math.random() < perceptionChance) {
-    state.xp += 8;
+    const xpGained = grantExpeditionXp(8);
     const milestone = recordLocationProgress(location);
-    log(`${location.name}: Du hast Spuren entdeckt und +8 XP erhalten. ${milestone} ${goalMessage}`.trim());
+    log(`${location.name}: Du hast Spuren entdeckt und +${xpGained} XP erhalten. ${milestone} ${goalMessage}`.trim());
     checkLevelUp();
     saveGame();
     render();
@@ -243,6 +252,13 @@ function explore(loc) {
 
   let dangerThreshold = 0.65;
   if (isNight()) dangerThreshold -= 0.15;
+  if (state.expedition) {
+    dangerThreshold = Math.min(0.78, dangerThreshold + state.expedition.risk / 100 * 0.12);
+  }
+  const rareThreshold = Math.min(
+    0.98,
+    0.95 + (state.expedition ? state.expedition.risk / 100 * 0.15 : 0)
+  );
 
   let roll = Math.random();
 
@@ -267,13 +283,13 @@ function explore(loc) {
   } else if (roll < 0.85) {
     state.health -= 5;
     log(`${loc.name}: Du hast dich leicht verletzt. ${goalMessage}`.trim());
-  } else if (roll < 0.95) {
-    state.xp += 10;
-    log(`${loc.name}: Nichts Besonderes, aber du hast Erfahrung gesammelt. ${goalMessage}`.trim());
+  } else if (roll < rareThreshold) {
+    const xpGained = grantExpeditionXp(10);
+    log(`${loc.name}: Nichts Besonderes, aber du hast Erfahrung gesammelt. +${xpGained} XP. ${goalMessage}`.trim());
     checkLevelUp();
   } else {
-    state.xp += 25;
-    log(`${loc.name}: Seltenes Ereignis! Du fühlst dich gestärkt. ${goalMessage}`.trim());
+    const xpGained = grantExpeditionXp(25);
+    log(`${loc.name}: Seltenes Ereignis! Du fühlst dich gestärkt. +${xpGained} XP. ${goalMessage}`.trim());
     checkLevelUp();
   }
 
