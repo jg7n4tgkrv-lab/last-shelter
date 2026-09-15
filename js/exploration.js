@@ -13,8 +13,73 @@ function getDangerLabel(location) {
 
 function selectLocation(loc) {
   if (state.level < loc.minLevel) return;
+  if (state.expedition && state.expedition.locationId !== loc.id) {
+    log("Du bist noch auf Expedition. Kehre zuerst zum Lager zurück.");
+    return;
+  }
   selectedLocationId = loc.id;
   log(`${loc.name} ausgewählt. Welche Aktion möchtest du ausführen?`);
+  render();
+}
+
+function getExpeditionRiskLabel() {
+  const score = Math.min(100, state.expedition ? state.expedition.risk : 0);
+  if (score >= 60) return "hoch";
+  if (score >= 30) return "mittel";
+  return "niedrig";
+}
+
+function getExpeditionEscalation() {
+  return state.expedition ? Math.min(6, Math.floor(state.expedition.hours / 4)) : 0;
+}
+
+function beginExpedition(location) {
+  if (state.expedition) {
+    return state.expedition.locationId === location.id;
+  }
+  state.expedition = {
+    locationId: location.id,
+    hours: 0,
+    lootStart: state.inventory.length,
+    startingHealth: state.health,
+    damage: 0,
+    encounters: 0,
+    risk: 0,
+    awaitingDecision: false
+  };
+  if (!state.runStats || typeof state.runStats !== "object") state.runStats = { expeditions: 0, victories: 0 };
+  state.runStats.expeditions = (Number.isFinite(state.runStats.expeditions) ? state.runStats.expeditions : 0) + 1;
+  return true;
+}
+
+function recordExpeditionAction(location, hours) {
+  if (!state.expedition || state.expedition.locationId !== location.id) return;
+  state.expedition.hours += hours;
+  state.expedition.damage = Math.max(0, state.expedition.startingHealth - state.health);
+  state.expedition.risk = Math.min(
+    100,
+    state.expedition.risk + 8 + Math.round(location.danger * 18) + (isNight() ? 12 : 0)
+  );
+  state.expedition.awaitingDecision = true;
+}
+
+function continueExpedition() {
+  if (!state.expedition) return;
+  state.expedition.awaitingDecision = false;
+  log("Du setzt die Expedition fort. Die nächste Begegnung kann gefährlicher werden.");
+  saveGame();
+  render();
+}
+
+function returnToCamp() {
+  if (!state.expedition) return;
+  const expedition = state.expedition;
+  const lootCount = Math.max(0, state.inventory.length - expedition.lootStart);
+  const damage = Math.max(expedition.damage, expedition.startingHealth - state.health);
+  const hours = expedition.hours;
+  state.expedition = null;
+  log(`Du kehrst ins Lager zurück. Beute: ${lootCount} · Zeit draußen: ${hours} h · Schaden: ${damage}.`);
+  saveGame();
   render();
 }
 
@@ -24,7 +89,31 @@ function renderActionCards() {
   const actionDiv = document.getElementById("actionCards");
   if (!label || !actionDiv) return;
 
-  const canGather = state.energy >= 5;
+  const escalation = getExpeditionEscalation();
+  const canGather = state.energy >= 5 + escalation;
+  const canExplore = state.energy >= 10 + escalation;
+  const canTrack = state.energy >= 4 + escalation;
+
+  if (state.expedition?.awaitingDecision) {
+    const lootCount = Math.max(0, state.inventory.length - state.expedition.lootStart);
+    actionDiv.className = "actionCards";
+    actionDiv.innerHTML = `
+      <div class="charBox expeditionPanel">
+        <h2 class="sectionTitle"><img src="images/icons/compass.png" alt=""> Expedition läuft</h2>
+        <div class="deckHint">Du hast bereits ${state.expedition.hours} Stunden durchgehalten. Entscheide, ob du das Risiko erhöhst.</div>
+        <div class="runStats">
+          <div class="runStat"><span>Beute</span><strong>${lootCount}</strong><small>Gegenstände</small></div>
+          <div class="runStat"><span>Schaden</span><strong>${state.expedition.damage}</strong><small>erlitten</small></div>
+          <div class="runStat"><span>Begegnungen</span><strong>${state.expedition.encounters}</strong><small>gehabt</small></div>
+          <div class="runStat"><span>Risiko</span><strong>${getExpeditionRiskLabel()}</strong><small>aktuell</small></div>
+        </div>
+        <button class="campActionBtn" type="button" onclick="continueExpedition()"><span class="cIcon2">➜</span><span class="btnText"><strong>Weiter erkunden</strong><span class="btnSub">Mehr Beute, XP und Gefahr</span></span></button>
+        <button class="campActionBtn" type="button" onclick="returnToCamp()"><span class="cIcon2">⌂</span><span class="btnText"><strong>Zurück zum Lager</strong><span class="btnSub">Beute sichern und Expedition beenden</span></span></button>
+      </div>
+    `;
+    return;
+  }
+
   const canExplore = state.energy >= 10;
   const canTrack = state.energy >= 4;
 
@@ -75,10 +164,14 @@ function challengeRegionBoss() {
 
 function gatherResources() {
   const location = getSelectedLocation();
-  if (state.energy < 5) { log("Zu wenig Energie zum Sammeln."); return; }
-  state.energy = Math.max(0, state.energy - 5);
+  if (state.expedition?.awaitingDecision) { log("Entscheide zuerst, ob du weitergehst oder zurückkehrst."); return; }
+  const escalation = getExpeditionEscalation();
+  if (state.energy < 5 + escalation) { log("Zu wenig Energie zum Sammeln."); return; }
+  if (!beginExpedition(location)) return;
+  state.energy = Math.max(0, state.energy - (5 + escalation));
   state.hunger = Math.max(0, state.hunger - 2);
   advanceTime(1);
+  recordExpeditionAction(location, 1);
   let resultMessage;
   if (location.id === "sumpf") {
     state.inventory.push(location.gatherItem);
@@ -105,10 +198,14 @@ function gatherResources() {
 
 function trackLocation() {
   const location = getSelectedLocation();
-  if (state.energy < 4) { log("Zu wenig Energie, um Spuren zu lesen."); return; }
-  state.energy = Math.max(0, state.energy - 4);
-  state.hunger = Math.max(0, state.hunger - 1);
+  if (state.expedition?.awaitingDecision) { log("Entscheide zuerst, ob du weitergehst oder zurückkehrst."); return; }
+  const escalation = getExpeditionEscalation();
+  if (state.energy < 4 + escalation) { log("Zu wenig Energie, um Spuren zu lesen."); return; }
+  if (!beginExpedition(location)) return;
+  state.energy = Math.max(0, state.energy - (4 + escalation));
+  state.hunger = Math.max(0, state.hunger - (1 + Math.floor(escalation / 2)));
   advanceTime(1);
+  recordExpeditionAction(location, 1);
   const goalMessage = progressDailyGoal("track");
   const perceptionChance = Math.min(0.9, 0.45 + state.attributes.wahrnehmung * 0.06);
   if (Math.random() < perceptionChance) {
@@ -129,19 +226,21 @@ function trackLocation() {
 }
 
 function explore(loc) {
-  if (state.energy < 10) { log("Zu wenig Energie zum Erkunden! Geh ins Lager."); return; }
+  if (state.expedition?.awaitingDecision) { log("Entscheide zuerst, ob du weitergehst oder zurückkehrst."); return; }
+  const escalation = getExpeditionEscalation();
+  if (state.energy < 10 + escalation) { log("Zu wenig Energie zum Erkunden! Geh ins Lager."); return; }
+  if (!beginExpedition(loc)) return;
 
   const ueb = state.attributes.ueberleben;
-  let energyCost = Math.max(4, 10 - ueb);
+  let energyCost = Math.max(4, 10 - ueb) + escalation;
   let hungerCost = Math.max(2, 5 - Math.floor(ueb / 2));
   if (state.weather === "Sturm") energyCost += 5;
   if (state.weather === "Regen") hungerCost += 3;
   state.energy = Math.max(0, state.energy - energyCost);
   state.hunger = Math.max(0, state.hunger - hungerCost);
-  if (!state.runStats || typeof state.runStats !== "object") state.runStats = { expeditions:0, victories:0 };
-  state.runStats.expeditions += 1;
-
-  advanceTime(2 + Math.floor(Math.random() * 3));
+  const expeditionHours = 2 + Math.floor(Math.random() * 3);
+  advanceTime(expeditionHours);
+  recordExpeditionAction(loc, expeditionHours);
   const goalMessage = progressDailyGoal("explore");
 
   let dangerThreshold = 0.65;
