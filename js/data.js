@@ -37,7 +37,7 @@ const RESOURCE_DB = {
   Metall: { icon: "images/icons/metal-ingot.png", label: "Metall" },
   Leder: { icon: "images/icons/leather.png", label: "Leder" },
   Heilkräuter: { icon: "images/icons/herbs.png", label: "Heilkräuter" },
-  Wasser: { icon: "images/icons/river.png", label: "Wasser" }
+  Wasser: { icon: "images/icons/river.png", label: "Wasser", energy: 15 }
 };
 
 const ENEMY_DB = {
