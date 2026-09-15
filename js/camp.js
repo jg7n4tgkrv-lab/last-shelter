@@ -298,25 +298,19 @@ function showMorningSummary(summary) {
   continueButton.onclick = closeSummary;
 }
 
-function eatBerries() {
-  if (countItem("Beeren") === 0) return;
-  removeOneItem("Beeren");
-  state.hunger = Math.min(100, state.hunger + 15);
-  log("Du hast Beeren gegessen. Der Hunger ist gesunken.");
+function eatFood(itemId) {
+  const food = FOOD_DB[itemId];
+  if (!food || countItem(itemId) === 0) return;
+  removeOneItem(itemId);
+  state.hunger = Math.min(100, state.hunger + food.hunger);
+  log(`Du hast ${food.label} gegessen. +${food.hunger} Hunger.`);
   saveGame();
   render();
   renderCamp();
 }
 
-function eatMeat() {
-  if (countItem("Fleisch") === 0) return;
-  removeOneItem("Fleisch");
-  state.hunger = Math.min(100, state.hunger + 25);
-  log("Du hast Fleisch gegessen. Der Hunger ist deutlich gesunken.");
-  saveGame();
-  render();
-  renderCamp();
-}
+function eatBerries() { eatFood("Beeren"); }
+function eatMeat() { eatFood("Fleisch"); }
 
 function useBandage() {
   const idx = state.consumables.indexOf("verband");
