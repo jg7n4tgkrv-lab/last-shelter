@@ -69,7 +69,6 @@ function continueExpedition() {
   log("Du setzt die Expedition fort. Die nächste Begegnung kann gefährlicher werden.");
   saveGame();
   render();
-  switchTab("screenCamp");
 }
 
 function returnToCamp() {
@@ -82,6 +81,7 @@ function returnToCamp() {
   log(`Du kehrst ins Lager zurück. Beute: ${lootCount} · Zeit draußen: ${hours} h · Schaden: ${damage}.`);
   saveGame();
   render();
+  switchTab("screenCamp");
 }
 
 function renderActionCards() {
