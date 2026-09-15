@@ -69,6 +69,7 @@ function continueExpedition() {
   log("Du setzt die Expedition fort. Die nächste Begegnung kann gefährlicher werden.");
   saveGame();
   render();
+  switchTab("screenCamp");
 }
 
 function returnToCamp() {
