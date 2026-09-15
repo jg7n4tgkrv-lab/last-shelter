@@ -273,15 +273,18 @@ function winCombat() {
 }
 
 function loseCombat() {
+  const lostLoot = abandonExpeditionLoot();
   state.health = getMaxHealth();
   state.hunger = Math.max(0, state.hunger - 20);
   state.energy = Math.max(0, state.energy - 20);
   changeCampStatus(-8, -6);
-  endCombatOverlay(`Du wurdest besiegt und konntest fliehen. Leben wurde wiederhergestellt.`);
-
+  const lootNote = lostLoot > 0
+    ? ` ${lostLoot} unsichere Beute ging verloren.`
+    : "";
+  endCombatOverlay(`Du wurdest besiegt und konntest fliehen. Leben wurde wiederhergestellt.${lootNote}`, true);
 }
 
-function endCombatOverlay(message) {
+function endCombatOverlay(message, returnToCamp = false) {
   combat = null;
   document.getElementById("combatOverlay").classList.remove("active");
   log(message);
@@ -289,4 +292,5 @@ function endCombatOverlay(message) {
   render();
   maybeShowPerkSelection();
   maybeShowCardReward();
+  if (returnToCamp) switchTab("screenCamp");
 }
