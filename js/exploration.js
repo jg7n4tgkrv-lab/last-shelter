@@ -109,17 +109,19 @@ function renderActionCards() {
     const lootCount = getExpeditionLootCount();
     actionDiv.className = "actionCards";
     actionDiv.innerHTML = `
-      <div class="charBox expeditionPanel">
-        <h2 class="sectionTitle"><img src="images/icons/compass.png" alt=""> Expedition läuft</h2>
-        <div class="deckHint">Du hast bereits ${state.expedition.hours} Stunden durchgehalten. Entscheide, ob du das Risiko erhöhst.</div>
-        <div class="runStats">
-          <div class="runStat"><span>Beute</span><strong>${lootCount}</strong><small>Gegenstände</small></div>
-          <div class="runStat"><span>Schaden</span><strong>${state.expedition.damage}</strong><small>erlitten</small></div>
-          <div class="runStat"><span>Begegnungen</span><strong>${state.expedition.encounters}</strong><small>gehabt</small></div>
-          <div class="runStat"><span>Risiko</span><strong>${getExpeditionRiskLabel()}</strong><small>aktuell</small></div>
+      <div class="expeditionPanel">
+        <div class="expeditionPanelHead">
+          <span><img src="images/icons/compass.png" alt=""> Expedition</span>
+          <small>${state.expedition.hours} h · ${lootCount} Beute · Risiko ${getExpeditionRiskLabel()}</small>
         </div>
-        <button class="campActionBtn" type="button" onclick="continueExpedition()"><span class="cIcon2">➜</span><span class="btnText"><strong>Weiter erkunden</strong><span class="btnSub">Mehr Beute, XP und Gefahr</span></span></button>
-        <button class="campActionBtn" type="button" onclick="returnToCamp()"><span class="cIcon2">⌂</span><span class="btnText"><strong>Zurück zum Lager</strong><span class="btnSub">Beute sichern und Expedition beenden</span></span></button>
+        <div class="expeditionDecisionButtons">
+          <button class="expeditionDecision continue" type="button" onclick="continueExpedition()">
+            <strong>Weiter</strong><small>mehr Risiko</small>
+          </button>
+          <button class="expeditionDecision return" type="button" onclick="returnToCamp()">
+            <strong>Zum Lager</strong><small>Beute sichern</small>
+          </button>
+        </div>
       </div>
     `;
     return;
