@@ -112,6 +112,9 @@ function renderActionCards() {
   const canGather = state.energy >= gatherEnergyCost;
   const canExplore = state.energy >= exploreEnergyCost;
   const canTrack = state.energy >= trackEnergyCost;
+  const gatherItem = location.gatherItem || "Holz";
+  const gatherItemInfo = RESOURCE_DB[gatherItem] || FOOD_DB[gatherItem];
+  const gatherIcon = gatherItemInfo?.icon || "images/icons/forest.png";
 
   if (state.expedition?.awaitingDecision) {
     const lootCount = getExpeditionLootCount();
@@ -141,7 +144,7 @@ function renderActionCards() {
   actionDiv.className = "actionCards";
   actionDiv.innerHTML = `
     <button class="actionCard" onclick="gatherResources()"${canGather ? "" : " disabled"}>
-      <span class="actionCardIcon"><img src="images/icons/forest.png" alt=""></span>
+      <span class="actionCardIcon"><img src="${gatherIcon}" alt=""></span>
       <span class="actionCardText">
         <span class="actionCardName">Sorgfältig sammeln</span>
         <span class="actionCardDesc">${location.gatherDesc}</span>
