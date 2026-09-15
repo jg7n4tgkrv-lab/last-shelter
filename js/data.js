@@ -146,10 +146,10 @@ const ITEM_DB = {
   spear:       { name: "Speer", type: "weapon", bonus: 5, rarity:"uncommon", icon:"🔱" },
   axe:         { name: "Axt", type: "weapon", bonus: 8, rarity:"rare", icon:"🪓" },
   cloth_wrap:  { name: "Stoffwicklung", type: "armor", bonus: 3, coldProtection: 1, rarity:"common", icon:"🧣" },
-  leather:     { name: "Lederrüstung", type: "armor", bonus: 6, coldProtection: 2, rarity:"uncommon", icon:"🥾" },
+  leather:     { name: "Lederrüstung", type: "armor", bonus: 6, coldProtection: 2, poisonResistance: 1, rarity:"uncommon", icon:"🥾" },
   iron_plate:  { name: "Eisenplatte", type: "armor", bonus: 10, rarity:"rare", icon:"🛡️" },
   crafted_spear: { name: "Speer (selbst gebaut)", type: "weapon", bonus: 3, rarity:"common", icon:"🔱" },
-  crafted_armor: { name: "Grobe Rüstung", type: "armor", bonus: 3, coldProtection: 1, rarity:"common", icon:"🛡️" },
+  crafted_armor: { name: "Grobe Rüstung", type: "armor", bonus: 3, coldProtection: 1, poisonResistance: 1, rarity:"common", icon:"🛡️" },
   hand_axe: { name: "Handaxt", type: "tool", bonus: 1, rarity:"uncommon", icon:"🪓" }
 };
 
