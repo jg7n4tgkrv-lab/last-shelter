@@ -278,17 +278,26 @@ function render() {
   const inventoryCards = Object.entries(inventoryCounts).map(([item, count]) => {
     const foodInfo = FOOD_DB[item];
     const resourceInfo = RESOURCE_DB[item];
+    const waterInfo = resourceInfo && Number.isFinite(resourceInfo.energy) ? resourceInfo : null;
     const itemInfo = foodInfo || resourceInfo;
     const icon = itemInfo ? itemInfo.icon : "images/icons/berries.png";
-    const actionable = Boolean(foodInfo);
-    const action = item === "Fleisch" ? "eatMeat()" : "eatBerries()";
-    const actionLabel = foodInfo ? `Antippen zum Essen · +${foodInfo.hunger} Hunger` : "Antippen zum Essen";
+    const actionable = Boolean(foodInfo || waterInfo);
+    const action = foodInfo
+      ? (item === "Fleisch" ? "eatMeat()" : "eatBerries()")
+      : waterInfo
+        ? "drinkWater()"
+        : "";
+    const actionLabel = foodInfo
+      ? `Antippen zum Essen · +${foodInfo.hunger} Hunger`
+      : waterInfo
+        ? `Antippen zum Trinken · +${waterInfo.energy} Energie`
+        : "Antippen zum Essen";
     return `
       <div class="itemCard${actionable ? " actionable" : ""}"${actionable ? ` onclick="${action}"` : ""}>
         <img src="${icon}" alt="">
         <span class="itemCardText">
           <span class="itemCardName">${item}</span>
-          <span class="itemCardCount">×${count} · ${actionable ? "Nahrung" : "Rohstoff"}</span>
+          <span class="itemCardCount">×${count} · ${foodInfo ? "Nahrung" : "Rohstoff"}</span>
           ${actionable ? `<span class="itemAction">${actionLabel}</span>` : ""}
         </span>
       </div>
