@@ -181,6 +181,10 @@ function getColdProtection() {
   const armor = state.equipped.armor ? ITEM_DB[state.equipped.armor] : null;
   return armor && Number.isFinite(armor.coldProtection) ? armor.coldProtection : 0;
 }
+function getPoisonResistance() {
+  const armor = state.equipped.armor ? ITEM_DB[state.equipped.armor] : null;
+  return armor && Number.isFinite(armor.poisonResistance) ? armor.poisonResistance : 0;
+}
 function getToolBonus() { return state.equipped.tool && ITEM_DB[state.equipped.tool] ? ITEM_DB[state.equipped.tool].bonus : 0; }
 function getRarityLabel(itemOrRarity) {
   const rarity = typeof itemOrRarity === "string" ? itemOrRarity : itemOrRarity?.rarity;
