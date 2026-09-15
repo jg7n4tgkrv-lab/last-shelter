@@ -252,18 +252,18 @@ function winCombat() {
     state.bossesDefeated[combat.bossLocationId] = true;
     const bossReward = ITEM_DB[combat.bossReward];
     if (bossReward) {
-      state.equipmentInventory.push(combat.bossReward);
+      addExpeditionLoot(combat.bossReward, "equipment");
       lootMsg += ` Einzigartige Beute: ${bossReward.name} (${getRarityLabel(bossReward)}).`;
     }
   }
   if (Math.random() < 0.65) {
-    state.inventory.push("Fleisch");
+    addExpeditionLoot("Fleisch");
     lootMsg += " Fleisch gefunden.";
   }
   if (Math.random() < 0.4) {
     const lootTable = getLootTableForEnemy(combat.enemyId);
     const itemId = lootTable[Math.floor(Math.random() * lootTable.length)];
-    state.equipmentInventory.push(itemId);
+    addExpeditionLoot(itemId, "equipment");
     lootMsg += ` Beute gefunden: ${ITEM_DB[itemId].name} (${getRarityLabel(ITEM_DB[itemId])}).`;
   }
   const resultLabel = combat.boss ? "Gebietsjäger besiegt" : "Sieg";
