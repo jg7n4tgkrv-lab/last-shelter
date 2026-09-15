@@ -101,9 +101,17 @@ function renderActionCards() {
   if (!label || !actionDiv) return;
 
   const escalation = getExpeditionEscalation();
-  const canGather = state.energy >= 5 + escalation;
-  const canExplore = state.energy >= 10 + escalation;
-  const canTrack = state.energy >= 4 + escalation;
+  const gatherEnergyCost = 5 + escalation;
+  const exploreEnergyCost = Math.max(4, 10 - state.attributes.ueberleben)
+    + escalation
+    + (state.weather === "Sturm" ? 5 : 0);
+  const exploreHungerCost = Math.max(2, 5 - Math.floor(state.attributes.ueberleben / 2))
+    + (state.weather === "Regen" ? 3 : 0);
+  const trackEnergyCost = 4 + escalation;
+  const trackHungerCost = 1 + Math.floor(escalation / 2);
+  const canGather = state.energy >= gatherEnergyCost;
+  const canExplore = state.energy >= exploreEnergyCost;
+  const canTrack = state.energy >= trackEnergyCost;
 
   if (state.expedition?.awaitingDecision) {
     const lootCount = getExpeditionLootCount();
@@ -138,7 +146,7 @@ function renderActionCards() {
         <span class="actionCardName">Sorgfältig sammeln</span>
         <span class="actionCardDesc">${location.gatherDesc}</span>
       </span>
-      <span class="actionCardCost">${canGather ? "−5 Energie<br>−2 Hunger" : "Nicht genug Energie"}</span>
+      <span class="actionCardCost">${canGather ? `−${gatherEnergyCost} Energie<br>−2 Hunger` : "Nicht genug Energie"}</span>
     </button>
 
     <button class="actionCard primary" onclick="explore(getSelectedLocation())"${canExplore ? "" : " disabled"}>
@@ -147,7 +155,7 @@ function renderActionCards() {
         <span class="actionCardName">Gebiet erkunden</span>
         <span class="actionCardDesc">${location.exploreDesc}</span>
       </span>
-      <span class="actionCardCost">${canExplore ? "−4–15 Energie" : "Nicht genug Energie"}</span>
+      <span class="actionCardCost">${canExplore ? `−${exploreEnergyCost} Energie<br>−${exploreHungerCost} Hunger` : "Nicht genug Energie"}</span>
     </button>
 
     <button class="actionCard" onclick="trackLocation()"${canTrack ? "" : " disabled"}>
@@ -156,7 +164,7 @@ function renderActionCards() {
         <span class="actionCardName">Spuren lesen</span>
         <span class="actionCardDesc">Deine Wahrnehmung hilft dir, Gefahren früh zu erkennen.</span>
       </span>
-      <span class="actionCardCost">${canTrack ? "−4 Energie<br>−1 Hunger" : "Nicht genug Energie"}</span>
+      <span class="actionCardCost">${canTrack ? `−${trackEnergyCost} Energie<br>−${trackHungerCost} Hunger` : "Nicht genug Energie"}</span>
     </button>
   `;
   if (state.bossesUnlocked?.[location.id] && !state.bossesDefeated?.[location.id]) {
