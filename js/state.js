@@ -201,7 +201,7 @@ function getTotalInventoryCount() {
   return state.inventory.length + state.equipmentInventory.length + state.consumables.length;
 }
 function getInventoryBreakdown() {
-  const food = state.inventory.filter(item => item === "Beeren" || item === "Fleisch").length;
+  const food = state.inventory.filter(item => FOOD_DB[item]).length;
   return {
     resources: state.inventory.length - food,
     food,
