@@ -163,6 +163,13 @@ function secureExpeditionLoot() {
   return total;
 }
 
+function abandonExpeditionLoot() {
+  if (!state.expedition) return 0;
+  const lostLoot = getExpeditionLootCount();
+  state.expedition = null;
+  return lostLoot;
+}
+
 function getMaxHealth() { return 100 + state.attributes.vitalitaet * 5; }
 function getMaxEnergy() { return 100 + (state.shelterLevel - 1) * 10; }
 function getShelterStage() {
