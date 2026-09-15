@@ -312,6 +312,17 @@ function eatFood(itemId) {
 function eatBerries() { eatFood("Beeren"); }
 function eatMeat() { eatFood("Fleisch"); }
 
+function drinkWater() {
+  const water = RESOURCE_DB.Wasser;
+  if (!water || countItem("Wasser") === 0) return;
+  removeOneItem("Wasser");
+  state.energy = Math.min(getMaxEnergy(), state.energy + water.energy);
+  log(`Du hast Wasser getrunken. +${water.energy} Energie.`);
+  saveGame();
+  render();
+  renderCamp();
+}
+
 function useBandage() {
   const idx = state.consumables.indexOf("verband");
   if (idx === -1) return;
