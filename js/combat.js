@@ -218,7 +218,7 @@ function renderCombat() {
     ${info.name}
   </div>
 
-  <div class="cDesc">${info.category || "Karte"} · ${info.desc}</div>
+  <div class="cDesc"><span class="cardCategory">${info.category || "Karte"}</span> · <span class="cardRarity rarity-${info.rarity || "common"}">${getRarityLabel(info)}</span> · ${info.desc}</div>
 `;
     el.onclick = () => playCard(index);
     handDiv.appendChild(el);
