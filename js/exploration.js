@@ -158,6 +158,25 @@ function renderActionCards() {
     return;
   }
 
+  if (state.expedition && !canGather && !canExplore && !canTrack) {
+    const lootCount = getExpeditionLootCount();
+    actionDiv.className = "actionCards";
+    actionDiv.innerHTML = `
+      <div class="expeditionPanel">
+        <div class="expeditionPanelHead">
+          <span><img src="images/icons/compass.png" alt=""> Expedition erschöpft</span>
+          <small>${state.expedition.hours} h · ${lootCount} Beute · Risiko ${getExpeditionRiskLabel()}</small>
+        </div>
+        <div class="expeditionDecisionButtons">
+          <button class="expeditionDecision return" type="button" onclick="returnToCamp()">
+            <strong>Zum Lager</strong><small>Keine Energie für weitere Aktionen</small>
+          </button>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
   label.textContent = location.name;
   const actionHint = document.querySelector(".actionHint");
   if (actionHint) actionHint.textContent = `${location.identity} · ${getDangerLabel(location)} · ${getDailyGoalHint()}`;
