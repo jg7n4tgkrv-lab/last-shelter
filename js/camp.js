@@ -64,7 +64,20 @@ if (fleischCount > 0) {
       <span class="cIcon2"><img src="images/icons/deer.png" alt=""></span>
       <span class="btnText">
         Fleisch essen (${fleischCount})
-        <span class="btnSub">+25 Hunger</span>
+        <span class="btnSub">+${FOOD_DB.Fleisch.hunger} Hunger</span>
+      </span>
+    </button>
+  `);
+}
+
+const wasserCount = countItem("Wasser");
+if (wasserCount > 0) {
+  foodButtons.push(`
+    <button class="campActionBtn" onclick="drinkWater()">
+      <span class="cIcon2"><img src="images/icons/river.png" alt=""></span>
+      <span class="btnText">
+        Wasser trinken (${wasserCount})
+        <span class="btnSub">+${RESOURCE_DB.Wasser.energy} Energie</span>
       </span>
     </button>
   `);
