@@ -85,6 +85,16 @@ const EVENT_DB = {
       { id:"shelter", name:"Schutz suchen", desc:"+4 Energie · Sicherheit +3", icon:"images/icons/shelter.png" },
       { id:"continue", name:"Weitergehen", desc:"−3 Energie · −2 Hunger · Moral −2", icon:"images/icons/forest.png" }
     ]
+  },
+  ruin_door: {
+    title: "Verschlossene Metalltür",
+    text: "Zwischen den Trümmern liegt eine schwere Tür. Dahinter könnte noch etwas Brauchbares verborgen sein.",
+    locationIds: ["ruinen"],
+    choices: [
+      { id:"break", name:"Tür aufbrechen", desc:"Benötigt Stärke 3 · −3 Energie · +1 Metall · +20 XP", icon:"images/icons/metal-ingot.png", requirement:{ attr:"staerke", min:3 } },
+      { id:"bypass", name:"Schwachstelle nutzen", desc:"Benötigt Wahrnehmung 2 · +1 Metall · +12 XP", icon:"images/icons/compass.png", requirement:{ attr:"wahrnehmung", min:2 } },
+      { id:"leave", name:"Später zurückkehren", desc:"Sicherer Rückzug · +5 XP", icon:"images/icons/flee.png" }
+    ]
   }
 };
 
