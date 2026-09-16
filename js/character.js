@@ -280,9 +280,14 @@ function showCardRewardOverlay() {
     const button = document.createElement("button");
     button.className = "rewardChoice";
     button.type = "button";
-    button.innerHTML = "<img class=\"rewardChoiceIcon\" src=\"" + CARD_ICON_FILES[cardId] + "\" alt=\"\">" +
-      "<span class=\"rewardChoiceBody\"><span class=\"rewardChoiceName\">" + info.name + "</span>" +
-      "<span class=\"rewardChoiceDesc\">" + info.cost + " AP · " + (info.category || "Karte") + " · " + getRarityLabel(info) + " · " + info.desc + "</span></span>";
+    button.innerHTML = `
+      <img class='rewardChoiceIcon' src='${CARD_ICON_FILES[cardId]}' alt=''>
+      <span class='rewardChoiceBody'>
+        <span class='rewardChoiceName'>${info.name}</span>
+        <span class='cardRarity rewardChoiceRarity rarity-${info.rarity || 'common'}'>${getRarityLabel(info)}</span>
+        <span class='rewardChoiceDesc'>${info.cost} AP · ${info.category || 'Karte'} · ${info.desc}</span>
+      </span>
+    `
     button.onclick = () => chooseCardReward(cardId);
     list.appendChild(button);
   });
