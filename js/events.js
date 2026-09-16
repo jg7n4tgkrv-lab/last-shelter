@@ -3,6 +3,10 @@
 function canChooseWorldEvent(choice) {
   const requirement = choice?.requirement;
   if (!requirement) return true;
+  if (requirement.type === "consumable") {
+    const amount = requirement.amount || 1;
+    return (state.consumables || []).filter(item => item === requirement.item).length >= amount;
+  }
   const value = state.attributes?.[requirement.attr] || 0;
   return value >= requirement.min;
 }
@@ -86,6 +90,24 @@ function chooseWorldEvent(eventId, choiceId) {
     state.xp += 8;
     changeCampStatus(-2, -2);
     log("Du bist trotz des Regens weitergegangen. +8 XP.");
+  } else if (eventId === "sumpf_spores" && choiceId === "antidote") {
+    const antidoteIndex = state.consumables.indexOf("gegenmittel");
+    if (antidoteIndex !== -1) {
+      state.consumables.splice(antidoteIndex, 1);
+      addExpeditionLoot("Heilkräuter");
+      state.xp += 10;
+      changeCampStatus(3, 0);
+      log("Du hast das Gegengift eingesetzt. Die Sporen haben dir nichts angetan. +1 Heilkräuter und +10 XP.");
+    }
+  } else if (eventId === "sumpf_spores" && choiceId === "careful") {
+    state.energy = Math.max(0, state.energy - 5);
+    state.health = Math.max(0, state.health - 4);
+    state.xp += 5;
+    changeCampStatus(-1, 0);
+    log("Du hast die Sporen vorsichtig durchquert. −4 Leben und +5 XP.");
+  } else if (eventId === "sumpf_spores" && choiceId === "retreat") {
+    changeCampStatus(0, 1);
+    log("Du bist vor den Sporen zurückgewichen.");
   } else if (eventId === "ruin_door" && choiceId === "break") {
     state.energy = Math.max(0, state.energy - 3);
     state.xp += 20;
