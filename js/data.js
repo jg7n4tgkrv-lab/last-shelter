@@ -9,7 +9,7 @@ const CARD_DB = {
   dodge:       { name: "Ausweichen", category: "Verteidigung", cost: 1, desc: "Blockt den nächsten Angriff komplett", icon: "💨" },
   heavy:       { name: "Schwerer Schlag", category: "Angriff", cost: 2, desc: "Hoher Schaden am Gegner", icon: "🔨" },
   heal:        { name: "Erste Hilfe", category: "Survival", cost: 1, desc: "+15 Leben", icon: "❤️‍🩹" },
-  precise_strike: { name: "Gezielter Hieb", category: "Angriff", cost: 1, desc: "10–14 Schaden", icon: "⚔️" },
+  precise_strike: { name: "Gezielter Hieb", category: "Angriff", cost: 1, desc: "10–14 Schaden · markiert Ziel", marksFor:"heavy", markBonus:6, markLabel:"Ziel", icon: "⚔️" },
   emergency_bandage: { name: "Notverband", category: "Survival", cost: 2, desc: "+25 Leben", icon: "❤️‍🩹" }
 };
  const CARD_ICON_FILES = {
