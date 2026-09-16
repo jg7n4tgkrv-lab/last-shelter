@@ -23,6 +23,77 @@ function switchTab(tabId) {
   if (tabId === "screenCharacter") renderCharacter();
 }
 
+function getWorldMapIcon(location) {
+  return location.exploreAction?.icon
+    || location.specialAction?.icon
+    || RESOURCE_DB[location.gatherItem]?.icon
+    || "images/icons/compass.png";
+}
+
+function getWorldMapNodeState(location) {
+  if (state.level < location.minLevel) return `Ab Level ${location.minLevel}`;
+  if (state.bossesDefeated?.[location.id]) return "Wächter besiegt";
+  if (state.bossesUnlocked?.[location.id]) return "Wächter wartet";
+  const progress = Math.min(getLocationProgress(location), LOCATION_GOAL * 2);
+  return `Spuren ${progress}/${LOCATION_GOAL * 2}`;
+}
+
+function openWorldMap() {
+  const overlay = document.getElementById("worldMapOverlay");
+  if (!overlay) return;
+  renderWorldMap();
+  overlay.classList.add("active");
+  overlay.setAttribute("aria-hidden", "false");
+}
+
+function closeWorldMap() {
+  const overlay = document.getElementById("worldMapOverlay");
+  if (!overlay) return;
+  overlay.classList.remove("active");
+  overlay.setAttribute("aria-hidden", "true");
+}
+
+function selectWorldMapLocation(locationId) {
+  const location = LOCATIONS.find(item => item.id === locationId);
+  if (!location || state.level < location.minLevel) return;
+  selectLocation(location);
+  closeWorldMap();
+}
+
+function renderWorldMap() {
+  const nodes = document.getElementById("worldMapNodes");
+  if (!nodes) return;
+  const locationNodes = LOCATIONS.map(location => {
+    const unlocked = state.level >= location.minLevel;
+    const selected = location.id === selectedLocationId;
+    const defeated = Boolean(state.bossesDefeated?.[location.id]);
+    const classes = [
+      "worldMapNode",
+      `mapNode-${location.id}`,
+      unlocked ? "available" : "locked",
+      selected ? "current" : "",
+      defeated ? "defeated" : ""
+    ].filter(Boolean).join(" ");
+    const status = getWorldMapNodeState(location);
+    return `
+      <button class="${classes}" type="button" onclick="selectWorldMapLocation('${location.id}')" ${unlocked ? "" : " disabled"} aria-label="${location.name}: ${status}">
+        <img src="${getWorldMapIcon(location)}" alt="">
+        <span class="worldMapNodeName">${location.name}</span>
+        <span class="worldMapNodeState">${status}</span>
+      </button>
+    `;
+  }).join("");
+
+  nodes.innerHTML = `
+    <div class="worldMapShelter">
+      <img src="images/icons/shelter.png" alt="">
+      <span class="worldMapShelterName">Shelter</span>
+      <span class="worldMapShelterState">dein Rückzugsort</span>
+    </div>
+    ${locationNodes}
+  `;
+}
+
 function getTimeOfDay() {
   const h = state.timeHour;
   if (h >= 5 && h < 11) return "Morgen";
@@ -269,6 +340,7 @@ function render() {
   });
 
   renderActionCards();
+  renderWorldMap();
 
   const inventoryCounts = {};
   state.inventory.forEach(item => {
