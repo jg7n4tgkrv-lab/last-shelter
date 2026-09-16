@@ -42,47 +42,33 @@ function renderCamp() {
     `;
   }
 
-const beerenCount = countItem("Beeren");
-const fleischCount = countItem("Fleisch");
 const foodButtons = [];
-
-if (beerenCount > 0) {
+Object.entries(FOOD_DB).forEach(([foodId, food]) => {
+  const count = countItem(foodId);
+  if (count <= 0) return;
   foodButtons.push(`
-    <button class="campActionBtn" onclick="eatBerries()">
-      <span class="cIcon2"><img src="images/icons/berries.png" alt=""></span>
-      <span class="btnText">
-        Beeren essen (${beerenCount})
-        <span class="btnSub">+15 Hunger</span>
+    <button class='campActionBtn' onclick='eatFood("${foodId}")'>
+      <span class='cIcon2'><img src="${food.icon}" alt=""></span>
+      <span class='btnText'>
+        ${food.label} essen (${count})
+        <span class='btnSub'>+${food.hunger} Hunger</span>
       </span>
     </button>
   `);
-}
-
-if (fleischCount > 0) {
-  foodButtons.push(`
-    <button class="campActionBtn" onclick="eatMeat()">
-      <span class="cIcon2"><img src="images/icons/deer.png" alt=""></span>
-      <span class="btnText">
-        Fleisch essen (${fleischCount})
-        <span class="btnSub">+${FOOD_DB.Fleisch.hunger} Hunger</span>
-      </span>
-    </button>
-  `);
-}
+});
 
 const wasserCount = countItem("Wasser");
 if (wasserCount > 0) {
   foodButtons.push(`
-    <button class="campActionBtn" onclick="drinkWater()">
-      <span class="cIcon2"><img src="images/icons/river.png" alt=""></span>
-      <span class="btnText">
+    <button class='campActionBtn' onclick='drinkWater()'>
+      <span class='cIcon2'><img src="${RESOURCE_DB.Wasser.icon}" alt=""></span>
+      <span class='btnText'>
         Wasser trinken (${wasserCount})
-        <span class="btnSub">+${RESOURCE_DB.Wasser.energy} Energie</span>
+        <span class='btnSub'>+${RESOURCE_DB.Wasser.energy} Energie</span>
       </span>
     </button>
   `);
 }
-
 document.getElementById("eatBtnWrap").innerHTML =
   foodButtons.length > 0
     ? foodButtons.join("")
