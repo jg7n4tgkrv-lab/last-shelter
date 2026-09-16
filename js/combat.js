@@ -17,6 +17,7 @@ function startCombat(enemyType, locName, extraNote) {
     intentHits: 1,
     intentBlock: 0,
     intentPoison: 0,
+    intentSteal: 0,
     enemyBlock: 0,
     poisonTurns: 0,
     enemyHp: scaledHp,
@@ -64,8 +65,16 @@ function rollEnemyIntent() {
   combat.intentDamage = combat.dmgMin + Math.floor(Math.random() * (combat.dmgMax - combat.dmgMin + 1));
   combat.intentBlock = 0;
   combat.intentPoison = 0;
+  combat.intentSteal = 0;
 
-  if (combat.enemyId === "looter" && Math.random() < 0.28) {
+  const looterRoll = combat.enemyId === "looter" ? Math.random() : 1;
+  const stealChance = enemyData?.stealChance || 0;
+  const blockChance = enemyData?.blockChance || 0;
+  if (combat.enemyId === "looter" && looterRoll < stealChance) {
+    combat.intentType = "steal";
+    combat.intentLabel = "Beute greifen";
+    combat.intentSteal = enemyData?.stealAmount || 1;
+  } else if (combat.enemyId === "looter" && looterRoll < stealChance + blockChance) {
     combat.intentType = "block";
     combat.intentLabel = "Deckung";
     combat.intentDamage = 0;
@@ -103,6 +112,8 @@ function renderCombat() {
     ? `+${combat.intentBlock} Block`
     : combat.intentType === "poison"
       ? `· ${attackSummary} + Gift`
+      : combat.intentType === "steal"
+      ? `· ${attackSummary} · ${combat.intentSteal} Beute`
       : combat.intentType === "heavy"
         ? `· ${attackSummary} · halber Block`
         : `· ${attackSummary}`;
@@ -217,6 +228,18 @@ function getAppliedPoisonTurns(baseTurns) {
   return Math.max(1, baseTurns - getPoisonResistance());
 }
 
+function stealOneResource() {
+  const isResource = itemId => Boolean(RESOURCE_DB[itemId] || FOOD_DB[itemId]);
+  const expeditionItems = state.expedition?.loot?.inventory;
+  if (Array.isArray(expeditionItems)) {
+    const expeditionIndex = expeditionItems.findIndex(isResource);
+    if (expeditionIndex >= 0) return expeditionItems.splice(expeditionIndex, 1)[0];
+  }
+  const inventoryIndex = state.inventory.findIndex(isResource);
+  if (inventoryIndex >= 0) return state.inventory.splice(inventoryIndex, 1)[0];
+  return null;
+}
+
 function endTurn() {
   if (combat.poisonTurns > 0) {
     const poisonDamage = 3;
@@ -257,6 +280,20 @@ function endTurn() {
   }
 
   if (state.health <= 0) { loseCombat(); return; }
+
+  if (combat.intentType === "steal") {
+    const stolenItems = [];
+    for (let i = 0; i < (combat.intentSteal || 1); i += 1) {
+      const stolen = stealOneResource();
+      if (!stolen) break;
+      stolenItems.push(stolen);
+    }
+    if (stolenItems.length > 0) {
+      log(`${combat.enemyName} stiehlt: ${stolenItems.join(", ")}.`);
+    } else {
+      log(`${combat.enemyName} findet keine Beute zum Stehlen.`);
+    }
+  }
 
   combat.discardPile.push(...combat.hand);
   combat.hand = [];
