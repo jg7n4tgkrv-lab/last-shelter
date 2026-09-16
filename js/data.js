@@ -95,6 +95,16 @@ const EVENT_DB = {
       { id:"bypass", name:"Schwachstelle nutzen", desc:"Benötigt Wahrnehmung 2 · +1 Metall · +12 XP", icon:"images/icons/compass.png", requirement:{ attr:"wahrnehmung", min:2 } },
       { id:"leave", name:"Später zurückkehren", desc:"Sicherer Rückzug · +5 XP", icon:"images/icons/flee.png" }
     ]
+  },
+  sumpf_spores: {
+    title: "Giftige Sporen",
+    text: "Eine Wolke aus grünem Staub hängt zwischen den Wurzeln. Du musst schnell entscheiden.",
+    locationIds: ["sumpf"],
+    choices: [
+      { id:"antidote", name:"Gegengift einsetzen", desc:"Benötigt 1 Gegengift · +1 Heilkräuter · +10 XP", icon:"images/icons/poison.png", requirement:{ type:"consumable", item:"gegenmittel", amount:1 } },
+      { id:"careful", name:"Vorsichtig hindurch", desc:"−5 Energie · −4 Leben · +5 XP", icon:"images/icons/herbs.png" },
+      { id:"retreat", name:"Zurückweichen", desc:"Sicherer Weg zurück · Sicherheit +1", icon:"images/icons/flee.png" }
+    ]
   }
 };
 
