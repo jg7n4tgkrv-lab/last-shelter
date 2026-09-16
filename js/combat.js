@@ -18,6 +18,7 @@ function startCombat(enemyType, locName, extraNote) {
     intentBlock: 0,
     intentPoison: 0,
     intentSteal: 0,
+    intentApPenalty: 0,
     enemyBlock: 0,
     poisonTurns: 0,
     enemyHp: scaledHp,
@@ -66,6 +67,7 @@ function rollEnemyIntent() {
   combat.intentBlock = 0;
   combat.intentPoison = 0;
   combat.intentSteal = 0;
+  combat.intentApPenalty = 0;
 
   const looterRoll = combat.enemyId === "looter" ? Math.random() : 1;
   const stealChance = enemyData?.stealChance || 0;
@@ -84,6 +86,10 @@ function rollEnemyIntent() {
     combat.intentLabel = enemyData.abilityLabel || "Steinwall";
     combat.intentDamage = 0;
     combat.intentBlock = enemyData.abilityBlock || 12;
+  } else if (enemyData?.ability === "root_bind" && Math.random() < (enemyData.abilityChance || 0)) {
+    combat.intentType = "root";
+    combat.intentLabel = enemyData.abilityLabel || "Wurzelfessel";
+    combat.intentApPenalty = enemyData.abilityApPenalty || 1;
   } else if ((combat.enemyId === "bear" || combat.enemyId === "mountain_titan") && Math.random() < 0.35) {
     combat.intentType = "heavy";
     combat.intentLabel = "Wuchtiger Hieb";
@@ -119,7 +125,9 @@ function renderCombat() {
       ? `· ${attackSummary} + Gift`
       : combat.intentType === "steal"
       ? `· ${attackSummary} · ${combat.intentSteal} Beute`
-      : combat.intentType === "heavy"
+      : combat.intentType === "root"
+        ? `· ${attackSummary} · −${combat.intentApPenalty} AP`
+        : combat.intentType === "heavy"
         ? `· ${attackSummary} · halber Block`
         : `· ${attackSummary}`;
   document.getElementById("enemyIntent").innerHTML = `
@@ -286,6 +294,10 @@ function endTurn() {
 
   if (state.health <= 0) { loseCombat(); return; }
 
+  if (combat.intentType === "root") {
+    log(`${combat.enemyName} fesselt dich mit Wurzeln – dein nächster Zug hat 1 AP weniger.`);
+  }
+
   if (combat.intentType === "steal") {
     const stolenItems = [];
     for (let i = 0; i < (combat.intentSteal || 1); i += 1) {
@@ -302,7 +314,8 @@ function endTurn() {
 
   combat.discardPile.push(...combat.hand);
   combat.hand = [];
-  combat.ap = combat.maxAp;
+  const apPenalty = combat.intentType === "root" ? (combat.intentApPenalty || 1) : 0;
+  combat.ap = Math.max(1, combat.maxAp - apPenalty);
   drawCards(5);
   rollEnemyIntent();
   renderCombat();
