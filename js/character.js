@@ -278,7 +278,7 @@ function showCardRewardOverlay() {
   state.pendingCardReward.forEach(cardId => {
     const info = CARD_DB[cardId];
     const button = document.createElement("button");
-    button.className = "rewardChoice";
+    button.className = "rewardChoice rewardRarity-" + (info.rarity || "common");
     button.type = "button";
     button.innerHTML = `
       <img class='rewardChoiceIcon' src='${CARD_ICON_FILES[cardId]}' alt=''>
