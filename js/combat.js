@@ -14,6 +14,7 @@ function startCombat(enemyType, locName, extraNote) {
     enemyName: enemyType.name,
     intentLabel: enemyType.intent || "Angriff",
     intentType: "attack",
+    intentHits: 1,
     intentBlock: 0,
     intentPoison: 0,
     enemyBlock: 0,
@@ -56,8 +57,10 @@ function drawCards(n) {
 
 function rollEnemyIntent() {
   if (!combat) return;
+  const enemyData = ENEMY_DB[combat.enemyId];
   combat.intentType = "attack";
-  combat.intentLabel = ENEMY_DB[combat.enemyId]?.intent || "Angriff";
+  combat.intentHits = enemyData?.attackCount || 1;
+  combat.intentLabel = enemyData?.intent || "Angriff";
   combat.intentDamage = combat.dmgMin + Math.floor(Math.random() * (combat.dmgMax - combat.dmgMin + 1));
   combat.intentBlock = 0;
   combat.intentPoison = 0;
@@ -93,13 +96,16 @@ function renderCombat() {
   const enemyBlockLabel = combat.enemyBlock > 0 ? ` · ${combat.enemyBlock} Block` : "";
   document.getElementById("enemyName").textContent = `${combat.enemyName}  (${combat.enemyHp}/${combat.enemyMaxHp})${enemyBlockLabel}`;
   document.getElementById("enemyBar").style.width = Math.max(0, (combat.enemyHp / combat.enemyMaxHp) * 100) + "%";
+  const attackSummary = combat.intentHits > 1
+    ? `${combat.intentHits} × ${combat.intentDamage} Schaden`
+    : `${combat.intentDamage} Schaden`;
   const intentDetail = combat.intentType === "block"
     ? `+${combat.intentBlock} Block`
     : combat.intentType === "poison"
-      ? `· ${combat.intentDamage} Schaden + Gift`
+      ? `· ${attackSummary} + Gift`
       : combat.intentType === "heavy"
-        ? `· ${combat.intentDamage} Schaden · halber Block`
-        : `· ${combat.intentDamage} Schaden`;
+        ? `· ${attackSummary} · halber Block`
+        : `· ${attackSummary}`;
   document.getElementById("enemyIntent").innerHTML = `
     <span class="enemyIntentTag">NÄCHSTER ZUG</span>
     <strong>${combat.intentLabel}</strong>
@@ -225,8 +231,15 @@ function endTurn() {
     combat.enemyBlock += combat.intentBlock;
     log(`${combat.enemyName} geht in Deckung und erhält ${combat.intentBlock} Block.`);
   } else {
-    const effectiveBlock = combat.intentType === "heavy" ? Math.floor(combat.block * 0.5) : combat.block;
-    dmg = Math.max(0, combat.intentDamage - effectiveBlock);
+    const hitCount = combat.intentHits || 1;
+    let remainingBlock = combat.intentType === "heavy"
+      ? Math.floor(combat.block * 0.5)
+      : combat.block;
+    for (let hit = 0; hit < hitCount; hit += 1) {
+      const absorbed = Math.min(remainingBlock, combat.intentDamage);
+      remainingBlock -= absorbed;
+      dmg += combat.intentDamage - absorbed;
+    }
     state.health -= dmg;
     if (combat.intentType === "heavy") {
       log(`${combat.enemyName} setzt einen wuchtigen Hieb ein – nur die Hälfte deines Blocks zählt.`);
