@@ -42,7 +42,7 @@ const RESOURCE_DB = {
 };
 
 const ENEMY_DB = {
-  wolf:   { name: "Wolf", maxHp: 35, dmgMin: 8, dmgMax: 14, intent: "Schneller Biss" },
+  wolf:   { name: "Wolf", maxHp: 35, dmgMin: 4, dmgMax: 7, attackCount: 2, intent: "Schnelle Bisse" },
   looter: { name: "Plünderer", maxHp: 45, dmgMin: 10, dmgMax: 18, intent: "Angriff" },
   bear:   { name: "Bär", maxHp: 70, dmgMin: 14, dmgMax: 22, intent: "Hieb" },
   swamp_thing: { name: "Sumpfkriecher", maxHp: 60, dmgMin: 16, dmgMax: 24, intent: "Biss", poison:true, poisonChance:0.62, poisonTurns:3 },
