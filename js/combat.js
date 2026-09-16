@@ -22,6 +22,8 @@ function startCombat(enemyType, locName, extraNote) {
     intentHeal: 0,
     intentBlockBreak: 0,
     nextAttackBonus: 0,
+    nextHeavyBonus: 0,
+    nextHeavyLabel: "",
     enemyBlock: 0,
     poisonTurns: 0,
     enemyHp: scaledHp,
@@ -178,6 +180,9 @@ function renderCombat() {
   ${combat.nextAttackBonus > 0 ? `
     <span class="combatEffect">Konter +${combat.nextAttackBonus}</span>
   ` : ""}
+  ${combat.nextHeavyBonus > 0 ? `
+    <span class="combatEffect">${combat.nextHeavyLabel || "Ziel"} +${combat.nextHeavyBonus}</span>
+  ` : ""}
 `;
 
   const antidoteCount = state.consumables.filter(itemId => itemId === "gegenmittel").length;
@@ -230,6 +235,12 @@ function playCard(index) {
       log(`Dein Konter verstärkt ${info.name} um +${combat.nextAttackBonus} Schaden.`);
       combat.nextAttackBonus = 0;
     }
+    if (cardId === "heavy" && combat.nextHeavyBonus > 0) {
+      dmg += combat.nextHeavyBonus;
+      log(`Die Markierung verstärkt Schwerer Schlag um +${combat.nextHeavyBonus} Schaden.`);
+      combat.nextHeavyBonus = 0;
+      combat.nextHeavyLabel = "";
+    }
     const absorbed = Math.min(combat.enemyBlock, dmg);
     const dealt = dmg - absorbed;
     combat.enemyBlock -= absorbed;
@@ -258,6 +269,11 @@ function playCard(index) {
   if (info.category === "Verteidigung") {
     combat.nextAttackBonus = 4;
     log("Deine Verteidigung bereitet einen Konter vor: nächster Angriff +4 Schaden.");
+  }
+  if (info.marksFor === "heavy") {
+    combat.nextHeavyBonus = info.markBonus || 0;
+    combat.nextHeavyLabel = info.markLabel || "Ziel";
+    log(`${info.name} markiert den Gegner: nächster Schwerer Schlag +${combat.nextHeavyBonus} Schaden.`);
   }
 
   combat.discardPile.push(cardId);
@@ -325,6 +341,8 @@ function endTurn() {
   }
   combat.block = 0;
   combat.nextAttackBonus = 0;
+  combat.nextHeavyBonus = 0;
+  combat.nextHeavyLabel = "";
 
   if (dmg > 0) {
     spawnFloatNumber(document.getElementById("playerBarWrap"), "-" + dmg, "dmg");
