@@ -20,6 +20,7 @@ function startCombat(enemyType, locName, extraNote) {
     intentSteal: 0,
     intentApPenalty: 0,
     intentHeal: 0,
+    intentBlockBreak: 0,
     enemyBlock: 0,
     poisonTurns: 0,
     enemyHp: scaledHp,
@@ -70,6 +71,7 @@ function rollEnemyIntent() {
   combat.intentSteal = 0;
   combat.intentApPenalty = 0;
   combat.intentHeal = 0;
+  combat.intentBlockBreak = 0;
 
   const looterRoll = combat.enemyId === "looter" ? Math.random() : 1;
   const stealChance = enemyData?.stealChance || 0;
@@ -97,10 +99,15 @@ function rollEnemyIntent() {
     combat.intentLabel = enemyData.abilityLabel || "Uferheilung";
     combat.intentDamage = 0;
     combat.intentHeal = enemyData.abilityHeal || 14;
-  } else if ((combat.enemyId === "bear" || combat.enemyId === "mountain_titan") && Math.random() < 0.35) {
+  } else if (enemyData?.ability === "crush" && Math.random() < (enemyData.abilityChance || 0)) {
+    combat.intentType = "heavy";
+    combat.intentLabel = enemyData.abilityLabel || "Felssturz";
+    combat.intentBlockBreak = enemyData.abilityBlockBreak || 4;
+    combat.intentDamage += enemyData.abilityDamage || 10;
+  } else if (combat.enemyId === "bear" && Math.random() < 0.35) {
     combat.intentType = "heavy";
     combat.intentLabel = "Wuchtiger Hieb";
-    combat.intentDamage += combat.enemyId === "mountain_titan" ? 8 : 6;
+    combat.intentDamage += 6;
   } else if (ENEMY_DB[combat.enemyId]?.poison && Math.random() < (ENEMY_DB[combat.enemyId].poisonChance || 0.5)) {
     combat.intentType = "poison";
     combat.intentLabel = "Giftiger Biss";
@@ -137,7 +144,7 @@ function renderCombat() {
         : combat.intentType === "heal"
           ? `+${combat.intentHeal} Leben`
           : combat.intentType === "heavy"
-        ? `· ${attackSummary} · halber Block`
+        ? `· ${attackSummary} · halber Block${combat.intentBlockBreak > 0 ? " · bricht " + combat.intentBlockBreak + " Block" : ""}`
         : `· ${attackSummary}`;
   document.getElementById("enemyIntent").innerHTML = `
     <span class="enemyIntentTag">NÄCHSTER ZUG</span>
@@ -284,6 +291,9 @@ function endTurn() {
     let remainingBlock = combat.intentType === "heavy"
       ? Math.floor(combat.block * 0.5)
       : combat.block;
+    if (combat.intentBlockBreak > 0) {
+      remainingBlock = Math.max(0, remainingBlock - combat.intentBlockBreak);
+    }
     for (let hit = 0; hit < hitCount; hit += 1) {
       const absorbed = Math.min(remainingBlock, combat.intentDamage);
       remainingBlock -= absorbed;
