@@ -218,4 +218,10 @@ function getInventoryBreakdown() {
   };
 }
 function removeOneItem(name) { const idx = state.inventory.indexOf(name); if (idx !== -1) state.inventory.splice(idx, 1); }
-function removeOneFromDeck(cardId) { const idx = state.deck.indexOf(cardId); if (idx !== -1) state.deck.splice(idx, 1); }
+function removeOneFromDeck(cardId) {
+  if (!Array.isArray(state.deck) || state.deck.length <= 8) return false;
+  const idx = state.deck.indexOf(cardId);
+  if (idx === -1) return false;
+  state.deck.splice(idx, 1);
+  return true;
+}
