@@ -8,9 +8,9 @@ const CARD_DB = {
   defend_plus: { name: "Verteidigen+", category: "Verteidigung", cost: 1, desc: "Mehr Block als normales Verteidigen", icon: "🛡️" },
   dodge:       { name: "Ausweichen", category: "Verteidigung", cost: 1, desc: "Blockt den nächsten Angriff komplett", icon: "💨" },
   heavy:       { name: "Schwerer Schlag", category: "Angriff", cost: 2, desc: "Hoher Schaden am Gegner", icon: "🔨" },
-  heal:        { name: "Erste Hilfe", category: "Survival", cost: 1, desc: "+15 Leben", icon: "❤️‍🩹" },
+  heal:        { name: "Erste Hilfe", category: "Survival", cost: 1, desc: "+15 Leben", synergy:"survival", synergyThreshold:3, synergyBonus:5, synergyLabel:"Heilung", icon: "❤️‍🩹" },
   precise_strike: { name: "Gezielter Hieb", category: "Angriff", cost: 1, desc: "10–14 Schaden · markiert Ziel", marksFor:"heavy", markBonus:6, markLabel:"Ziel", icon: "⚔️" },
-  emergency_bandage: { name: "Notverband", category: "Survival", cost: 2, desc: "+25 Leben", icon: "❤️‍🩹" }
+  emergency_bandage: { name: "Notverband", category: "Survival", cost: 2, desc: "+25 Leben", synergy:"survival", synergyThreshold:3, synergyBonus:5, synergyLabel:"Heilung", icon: "❤️‍🩹" }
 };
  const CARD_ICON_FILES = {
   attack: "images/icons/attack.png",
