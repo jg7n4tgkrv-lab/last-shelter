@@ -79,6 +79,11 @@ function rollEnemyIntent() {
     combat.intentLabel = "Deckung";
     combat.intentDamage = 0;
     combat.intentBlock = 8;
+  } else if (enemyData?.ability === "stonewall" && Math.random() < (enemyData.abilityChance || 0)) {
+    combat.intentType = "block";
+    combat.intentLabel = enemyData.abilityLabel || "Steinwall";
+    combat.intentDamage = 0;
+    combat.intentBlock = enemyData.abilityBlock || 12;
   } else if ((combat.enemyId === "bear" || combat.enemyId === "mountain_titan") && Math.random() < 0.35) {
     combat.intentType = "heavy";
     combat.intentLabel = "Wuchtiger Hieb";
