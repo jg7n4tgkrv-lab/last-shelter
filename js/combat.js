@@ -195,7 +195,7 @@ function renderCombat() {
     ${info.name}
   </div>
 
-  <div class="cDesc">${info.desc}</div>
+  <div class="cDesc">${info.category || "Karte"} · ${info.desc}</div>
 `;
     el.onclick = () => playCard(index);
     handDiv.appendChild(el);
