@@ -421,6 +421,8 @@
     transition: transform 0.12s ease, filter 0.12s ease;
   }
   .eventChoice:active { transform: scale(0.98); filter: brightness(1.18); }
+  .eventChoice:disabled { opacity: 0.45; filter: saturate(0.55); cursor: not-allowed; }
+  .eventChoice:disabled:active { transform: none; filter: saturate(0.55); }
   .eventChoiceIcon { width: 28px; height: 28px; object-fit: contain; flex: 0 0 auto; }
   .eventChoiceBody { min-width: 0; }
   .eventChoiceName { display: block; font-size: 14px; font-weight: 700; }
