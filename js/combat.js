@@ -393,6 +393,34 @@ function endTurn() {
   renderCombat();
 }
 
+function drawCardRewardChoices(amount = 3) {
+  const pool = CARD_REWARD_POOL.filter(cardId => CARD_DB[cardId]);
+  const choices = [];
+
+  while (pool.length > 0 && choices.length < amount) {
+    const totalWeight = pool.reduce((total, cardId) => {
+      const rarity = CARD_DB[cardId].rarity || "common";
+      return total + (CARD_RARITY_WEIGHTS[rarity] || 1);
+    }, 0);
+
+    let roll = Math.random() * totalWeight;
+    let pickedIndex = 0;
+
+    for (let i = 0; i < pool.length; i++) {
+      const rarity = CARD_DB[pool[i]].rarity || "common";
+      roll -= CARD_RARITY_WEIGHTS[rarity] || 1;
+      if (roll < 0) {
+        pickedIndex = i;
+        break;
+      }
+    }
+
+    choices.push(pool.splice(pickedIndex, 1)[0]);
+  }
+
+  return choices;
+}
+
 function winCombat() {
   if (!state.runStats || typeof state.runStats !== "object") state.runStats = { expeditions:0, victories:0 };
   state.runStats.victories += 1;
@@ -424,7 +452,7 @@ function winCombat() {
     lootMsg += ` Beute gefunden: ${ITEM_DB[itemId].name} (${getRarityLabel(ITEM_DB[itemId])}).`;
   }
   const resultLabel = combat.boss ? "Gebietsjäger besiegt" : "Sieg";
-  state.pendingCardReward = shuffle(CARD_REWARD_POOL).slice(0, 3);
+  state.pendingCardReward = drawCardRewardChoices(3);
   lootMsg += " Eine Kartenbelohnung wartet.";
   endCombatOverlay(`${resultLabel} gegen ${combat.enemyName}! +${xpReward} XP.${lootMsg}`);
 }
