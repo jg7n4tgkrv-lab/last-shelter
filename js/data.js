@@ -26,6 +26,7 @@ const CARD_DB = {
 
 const DEFAULT_DECK = ["attack","attack","attack","attack","attack","defend","defend","dodge","heavy","heal"];
 const CARD_REWARD_POOL = ["attack","defend","dodge","heavy","heal","precise_strike","emergency_bandage"];
+const CARD_RARITY_WEIGHTS = { common: 6, uncommon: 3, rare: 1 };
 
 const FOOD_DB = {
   Beeren: { hunger: 15, icon: "images/icons/berries.png", label: "Beeren" },
