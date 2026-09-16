@@ -248,7 +248,8 @@ function equipItem(index) {
 function getAvailablePerks() {
   return PERKS.filter(p => {
     if (p.type === "card" && p.requiresCard) {
-      return state.deck.includes(p.requiresCard);
+      if (!state.deck.includes(p.requiresCard)) return false;
+      if (p.effect === "removeCard" && state.deck.length <= 8) return false;
     }
     return true;
   });
@@ -330,7 +331,9 @@ function choosePerk(perk) {
   } else if (perk.effect === "addCard") {
     state.deck.push(perk.card);
   } else if (perk.effect === "removeCard") {
-    removeOneFromDeck(perk.card);
+    if (!removeOneFromDeck(perk.card)) {
+      log("Dein Deck hat bereits die Mindestgröße von 8 Karten.");
+    }
   } else if (perk.effect === "upgradeCard") {
     const idx = state.deck.indexOf(perk.from);
     if (idx !== -1) state.deck[idx] = perk.to;
