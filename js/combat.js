@@ -127,9 +127,20 @@ function spawnFloatNumber(containerEl, text, cssClass) {
   setTimeout(() => num.remove(), 900);
 }
 
+function getSurvivalBuildBonus(cardId) {
+  const info = CARD_DB[cardId];
+  if (!info?.synergy || !Array.isArray(state.deck)) return 0;
+  const requiredCategory = String(info.synergy).toLowerCase();
+  const matchingCards = state.deck.filter(deckCardId => (
+    String(CARD_DB[deckCardId]?.category || "").toLowerCase() === requiredCategory
+  )).length;
+  return matchingCards >= (info.synergyThreshold || 3) ? (info.synergyBonus || 0) : 0;
+}
+
 function renderCombat() {
   updateBodyClass();
   const maxHp = getMaxHealth();
+  const survivalBonus = getSurvivalBuildBonus("heal");
   const enemyBlockLabel = combat.enemyBlock > 0 ? ` · ${combat.enemyBlock} Block` : "";
   document.getElementById("enemyName").textContent = `${combat.enemyName}  (${combat.enemyHp}/${combat.enemyMaxHp})${enemyBlockLabel}`;
   document.getElementById("enemyBar").style.width = Math.max(0, (combat.enemyHp / combat.enemyMaxHp) * 100) + "%";
@@ -182,6 +193,9 @@ function renderCombat() {
   ` : ""}
   ${combat.nextHeavyBonus > 0 ? `
     <span class="combatEffect">${combat.nextHeavyLabel || "Ziel"} +${combat.nextHeavyBonus}</span>
+  ` : ""}
+  ${survivalBonus > 0 ? `
+    <span class="combatEffect">${CARD_DB.heal.synergyLabel || "Heilung"} +${survivalBonus}</span>
   ` : ""}
 `;
 
@@ -256,14 +270,16 @@ function playCard(index) {
   } else if (cardId === "dodge") {
     combat.block += 999;
     spawnFloatNumber(playerBarWrap, "Ausgewichen!", "block");
-  } else if (cardId === "heal") {
+  } else if (cardId === "heal" || cardId === "emergency_bandage") {
     const before = state.health;
-    state.health = Math.min(getMaxHealth(), state.health + 15);
-    spawnFloatNumber(playerBarWrap, "+" + (state.health - before), "heal");
-  } else if (cardId === "emergency_bandage") {
-    const before = state.health;
-    state.health = Math.min(getMaxHealth(), state.health + 25);
-    spawnFloatNumber(playerBarWrap, "+" + (state.health - before), "heal");
+    const baseHeal = cardId === "heal" ? 15 : 25;
+    const healBonus = getSurvivalBuildBonus(cardId);
+    state.health = Math.min(getMaxHealth(), state.health + baseHeal + healBonus);
+    const healed = state.health - before;
+    spawnFloatNumber(playerBarWrap, "+" + healed, "heal");
+    if (healBonus > 0 && healed > 0) {
+      log(`Survival-Build verstärkt ${info.name} um +${healBonus} Heilung.`);
+    }
   }
 
   if (info.category === "Verteidigung") {
