@@ -287,7 +287,7 @@ function showCardRewardOverlay() {
         <span class='cardRarity rewardChoiceRarity rarity-${info.rarity || 'common'}'>${getRarityLabel(info)}</span>
         <span class='rewardChoiceDesc'>${info.cost} AP · ${info.category || 'Karte'} · ${info.desc}</span>
       </span>
-    `
+    `;
     button.onclick = () => chooseCardReward(cardId);
     list.appendChild(button);
   });
