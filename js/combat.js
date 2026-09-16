@@ -21,6 +21,7 @@ function startCombat(enemyType, locName, extraNote) {
     intentApPenalty: 0,
     intentHeal: 0,
     intentBlockBreak: 0,
+    nextAttackBonus: 0,
     enemyBlock: 0,
     poisonTurns: 0,
     enemyHp: scaledHp,
@@ -174,6 +175,9 @@ function renderCombat() {
       Gift ${combat.poisonTurns}
     </span>
   ` : ""}
+  ${combat.nextAttackBonus > 0 ? `
+    <span class="combatEffect">Konter +${combat.nextAttackBonus}</span>
+  ` : ""}
 `;
 
   const antidoteCount = state.consumables.filter(itemId => itemId === "gegenmittel").length;
@@ -221,6 +225,11 @@ function playCard(index) {
     else if (cardId === "attack_plus") dmg = 14 + Math.floor(Math.random() * 5) + str * 2 + weaponBonus;
     else if (cardId === "precise_strike") dmg = 10 + Math.floor(Math.random() * 5) + str * 2 + weaponBonus;
     else dmg = 18 + Math.floor(Math.random() * 5) + str * 3 + weaponBonus;
+    if (combat.nextAttackBonus > 0) {
+      dmg += combat.nextAttackBonus;
+      log(`Dein Konter verstärkt ${info.name} um +${combat.nextAttackBonus} Schaden.`);
+      combat.nextAttackBonus = 0;
+    }
     const absorbed = Math.min(combat.enemyBlock, dmg);
     const dealt = dmg - absorbed;
     combat.enemyBlock -= absorbed;
@@ -244,6 +253,11 @@ function playCard(index) {
     const before = state.health;
     state.health = Math.min(getMaxHealth(), state.health + 25);
     spawnFloatNumber(playerBarWrap, "+" + (state.health - before), "heal");
+  }
+
+  if (info.category === "Verteidigung") {
+    combat.nextAttackBonus = 4;
+    log("Deine Verteidigung bereitet einen Konter vor: nächster Angriff +4 Schaden.");
   }
 
   combat.discardPile.push(cardId);
@@ -310,6 +324,7 @@ function endTurn() {
     }
   }
   combat.block = 0;
+  combat.nextAttackBonus = 0;
 
   if (dmg > 0) {
     spawnFloatNumber(document.getElementById("playerBarWrap"), "-" + dmg, "dmg");
