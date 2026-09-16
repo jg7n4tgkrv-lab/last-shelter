@@ -206,7 +206,7 @@ function renderDeckOverview() {
           </span>
           ${info.name}
         </span>
-        <span class="deckCount">x${counts[cardId]}</span>
+        <span class="deckCount">x${counts[cardId]} · ${info.category || "Karte"}</span>
         <button class="deckRemove" type="button" onclick="removeDeckCard(&quot;${cardId}&quot;)" ${state.deck.length <= 8 ? "disabled" : ""}>Entfernen</button>
       </div>
     `;
@@ -278,7 +278,7 @@ function showCardRewardOverlay() {
     button.type = "button";
     button.innerHTML = "<img class=\"rewardChoiceIcon\" src=\"" + CARD_ICON_FILES[cardId] + "\" alt=\"\">" +
       "<span class=\"rewardChoiceBody\"><span class=\"rewardChoiceName\">" + info.name + "</span>" +
-      "<span class=\"rewardChoiceDesc\">" + info.cost + " AP · " + info.desc + "</span></span>";
+      "<span class=\"rewardChoiceDesc\">" + info.cost + " AP · " + (info.category || "Karte") + " · " + info.desc + "</span></span>";
     button.onclick = () => chooseCardReward(cardId);
     list.appendChild(button);
   });
