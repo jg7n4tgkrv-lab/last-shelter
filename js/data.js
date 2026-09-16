@@ -2,15 +2,15 @@
    Phase 1 foundation: content tables live separately from game logic.
 */
 const CARD_DB = {
-  attack:      { name: "Angriff", cost: 1, desc: "Schaden am Gegner", icon: "⚔️" },
-  attack_plus: { name: "Angriff+", cost: 1, desc: "Mehr Schaden als normaler Angriff", icon: "⚔️" },
-  defend:      { name: "Verteidigen", cost: 1, desc: "Block aufbauen", icon: "🛡️" },
-  defend_plus: { name: "Verteidigen+", cost: 1, desc: "Mehr Block als normales Verteidigen", icon: "🛡️" },
-  dodge:       { name: "Ausweichen", cost: 1, desc: "Blockt den nächsten Angriff komplett", icon: "💨" },
-  heavy:       { name: "Schwerer Schlag", cost: 2, desc: "Hoher Schaden am Gegner", icon: "🔨" },
-  heal:        { name: "Erste Hilfe", cost: 1, desc: "+15 Leben", icon: "❤️‍🩹" },
-  precise_strike: { name: "Gezielter Hieb", cost: 1, desc: "10–14 Schaden", icon: "⚔️" },
-  emergency_bandage: { name: "Notverband", cost: 2, desc: "+25 Leben", icon: "❤️‍🩹" }
+  attack:      { name: "Angriff", category: "Angriff", cost: 1, desc: "Schaden am Gegner", icon: "⚔️" },
+  attack_plus: { name: "Angriff+", category: "Angriff", cost: 1, desc: "Mehr Schaden als normaler Angriff", icon: "⚔️" },
+  defend:      { name: "Verteidigen", category: "Verteidigung", cost: 1, desc: "Block aufbauen", icon: "🛡️" },
+  defend_plus: { name: "Verteidigen+", category: "Verteidigung", cost: 1, desc: "Mehr Block als normales Verteidigen", icon: "🛡️" },
+  dodge:       { name: "Ausweichen", category: "Verteidigung", cost: 1, desc: "Blockt den nächsten Angriff komplett", icon: "💨" },
+  heavy:       { name: "Schwerer Schlag", category: "Angriff", cost: 2, desc: "Hoher Schaden am Gegner", icon: "🔨" },
+  heal:        { name: "Erste Hilfe", category: "Survival", cost: 1, desc: "+15 Leben", icon: "❤️‍🩹" },
+  precise_strike: { name: "Gezielter Hieb", category: "Angriff", cost: 1, desc: "10–14 Schaden", icon: "⚔️" },
+  emergency_bandage: { name: "Notverband", category: "Survival", cost: 2, desc: "+25 Leben", icon: "❤️‍🩹" }
 };
  const CARD_ICON_FILES = {
   attack: "images/icons/attack.png",
