@@ -5,7 +5,7 @@ const CURRENT_SAVE_VERSION = 4;
 
 let state = {
   saveVersion: CURRENT_SAVE_VERSION,
-  health: 100, hunger: 100, energy: 100, xp: 0, level: 1, day: 1, shelterLevel: 1,
+  health: 100, hunger: 100, energy: 100, xp: 0, level: 1, day: 1, shelterLevel: 1, shelterModules: [],
   inventory: [], deck: [...DEFAULT_DECK],
   attributes: { staerke:0, vitalitaet:0, geschicklichkeit:0, ueberleben:0, wahrnehmung:0 },
   pendingLevelUps: 0,
@@ -34,7 +34,7 @@ function loadGame() {
     if (!loaded || typeof loaded !== "object") return;
     state = Object.assign({
       saveVersion: CURRENT_SAVE_VERSION,
-      health: 100, hunger: 100, energy: 100, xp: 0, level: 1, day: 1, shelterLevel: 1,
+      health: 100, hunger: 100, energy: 100, xp: 0, level: 1, day: 1, shelterLevel: 1, shelterModules: [],
       inventory: [],
       deck: [...DEFAULT_DECK],
       attributes: { staerke:0, vitalitaet:0, geschicklichkeit:0, ueberleben:0, wahrnehmung:0 },
@@ -51,6 +51,8 @@ function loadGame() {
     if (!Array.isArray(state.inventory)) state.inventory = [];
     if (!Array.isArray(state.equipmentInventory)) state.equipmentInventory = [];
     state.equipmentInventory = state.equipmentInventory.filter(itemId => ITEM_DB[itemId]);
+    if (!Array.isArray(state.shelterModules)) state.shelterModules = [];
+    state.shelterModules = state.shelterModules.filter(moduleId => SHELTER_MODULES.some(module => module.id === moduleId));
     if (!Array.isArray(state.consumables)) state.consumables = [];
     state.consumables = state.consumables.filter(itemId => RECIPES.some(recipe => recipe.id === itemId));
     if (!Number.isFinite(state.health)) state.health = 100;
@@ -179,6 +181,15 @@ function getMaxHealth() { return 100 + state.attributes.vitalitaet * 5; }
 function getMaxEnergy() { return 100 + (state.shelterLevel - 1) * 10; }
 function getShelterStage() {
   return SHELTER_STAGES[Math.min(Math.max(state.shelterLevel, 1), SHELTER_STAGES.length) - 1];
+}
+function hasShelterModule(moduleId) {
+  return Array.isArray(state.shelterModules) && state.shelterModules.includes(moduleId);
+}
+function getSleepHealBonus() {
+  const module = SHELTER_MODULES.find(candidate => candidate.id === "sleeping_place");
+  return module && hasShelterModule(module.id) && module.effect === "sleepHealBonus"
+    ? module.value
+    : 0;
 }
 function getWeaponBonus() { return state.equipped.weapon ? ITEM_DB[state.equipped.weapon].bonus : 0; }
 function getArmorBonus() { return state.equipped.armor ? ITEM_DB[state.equipped.armor].bonus : 0; }
