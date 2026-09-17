@@ -194,7 +194,7 @@ function renderCharacter() {
             : "+" + item.bonus + " Holz beim Sammeln" + specialLabel;
 
       html += `
-        <div class="equipList-item" onclick="equipItem(${index})">
+        <button type="button" class="equipList-item" onclick="equipItem(${index})" aria-label="${item.name} ausrüsten">
           <span class="equipName">
             <img src="${ITEM_ICON_FILES[itemId]}" alt="">
             ${item.name}
@@ -204,7 +204,7 @@ function renderCharacter() {
             <span class="cardRarity rarity-${item.rarity || "common"}">${getRarityLabel(item)}</span>
             <span class="iBonus">${bonusLabel}</span>
           </span>
-        </div>
+        </button>
       `;
     });
   }
