@@ -123,6 +123,7 @@ const PERKS = [
   { id:"dex", type:"attr", attr:"geschicklichkeit", name:"Behändigkeit", desc:"+1 Geschicklichkeit – mehr Block", icon:"🤸" },
   { id:"sur", type:"attr", attr:"ueberleben", name:"Überlebenswille", desc:"+1 Überleben – weniger Hunger-/Energieverlust", icon:"🔥" },
   { id:"per", type:"attr", attr:"wahrnehmung", name:"Scharfe Sinne", desc:"+1 Wahrnehmung – Kämpfen leichter ausweichen", icon:"👁️" },
+  { id:"tough", type:"special", effect:"lowHealthBlock", name:"Zäh", desc:"Unter 30 % Leben: +6 Block zu Beginn deines Zuges", icon:"🛡️" },
   { id:"add_atk", type:"card", effect:"addCard", card:"attack", name:"Waffenkammer", desc:"+1 Angriffskarte kommt ins Deck", icon:"⚔️" },
   { id:"add_def", type:"card", effect:"addCard", card:"defend", name:"Schildwall", desc:"+1 Verteidigen-Karte kommt ins Deck", icon:"🛡️" },
   { id:"trim_def", type:"card", effect:"removeCard", card:"defend", requiresCard:"defend", name:"Gestrafft", desc:"Entfernt eine Verteidigen-Karte – Deck wird konsistenter", icon:"✂️" },
@@ -135,6 +136,7 @@ const PERKS = [
   dex: "images/icons/flee.png",
   sur: "images/icons/campfire.png",
   per: "images/icons/compass.png",
+  tough: "images/icons/shield.png",
 
   add_atk: "images/icons/attack.png",
   add_def: "images/icons/shield.png",
