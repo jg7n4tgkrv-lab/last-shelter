@@ -8,6 +8,32 @@ function renderCamp() {
     const nextStage = SHELTER_STAGES[state.shelterLevel] || null;
     const upgradeCost = nextStage ? nextStage.cost : null;
     const canUpgrade = Boolean(nextStage) && countItem("Holz") >= upgradeCost;
+    const unbuiltModule = SHELTER_MODULES.find(module => !hasShelterModule(module.id)) || null;
+    const builtModuleNames = SHELTER_MODULES
+      .filter(module => hasShelterModule(module.id))
+      .map(module => module.name)
+      .join(" · ");
+    const moduleCostText = unbuiltModule
+      ? Object.entries(unbuiltModule.cost).map(([item, amount]) => `${amount} ${item}`).join(" + ")
+      : "";
+    const canBuildModule = Boolean(unbuiltModule)
+      && Object.entries(unbuiltModule.cost).every(([item, amount]) => countItem(item) >= amount);
+    const shelterModuleHtml = unbuiltModule
+      ? `
+        <button type="button" class="campActionBtn shelterModuleBtn${canBuildModule ? "" : " disabled"}" onclick="buildShelterModule('${unbuiltModule.id}')" ${canBuildModule ? "" : "disabled"} aria-label="${unbuiltModule.name} bauen">
+          <span class="cIcon2"><img src="${unbuiltModule.icon}" alt=""></span>
+          <span class="btnText">
+            ${unbuiltModule.name} bauen
+            <span class="btnSub">${moduleCostText} · ${unbuiltModule.effectText}</span>
+          </span>
+        </button>
+      `
+      : `
+        <div class="shelterModuleSummary">
+          <span>MODULE</span>
+          <strong>${builtModuleNames}</strong>
+        </div>
+      `;
     shelterBox.innerHTML = `
       <h2 class="sectionTitle">
         <img src="images/icons/shelter.png" alt="">
@@ -25,6 +51,7 @@ function renderCamp() {
           <div class="campStatusBar"><span style="width:${state.safety}%"></span></div>
         </div>
       </div>
+      ${shelterModuleHtml}
       <button class="campActionBtn shelterUpgrade${canUpgrade ? "" : " disabled"}" onclick="upgradeShelter()">
         <span class="cIcon2"><img src="images/icons/chop-wood.png" alt=""></span>
         <span class="btnText">
@@ -254,7 +281,7 @@ function sleepAtCamp() {
   const oldHealth = state.health;
   const oldHunger = state.hunger;
   state.energy = getMaxEnergy();
-  state.health = Math.min(getMaxHealth(), state.health + 15);
+  state.health = Math.min(getMaxHealth(), state.health + 15 + getSleepHealBonus());
   state.hunger = Math.max(0, state.hunger - 15);
   changeCampStatus(5, 2);
   state.timeHour = 7;
@@ -349,6 +376,26 @@ function craftItem(recipe) {
   spendRecipeCost(recipe);
   if (recipe.result === "consumable") state.consumables.push(recipe.id);
   else state.equipmentInventory.push(recipe.id);
+  saveGame();
+  render();
+  renderCamp();
+}
+
+function buildShelterModule(moduleId) {
+  const module = SHELTER_MODULES.find(candidate => candidate.id === moduleId);
+  if (!module || hasShelterModule(module.id)) return;
+  const missing = Object.entries(module.cost).find(([item, amount]) => countItem(item) < amount);
+  if (missing) {
+    log(`Für den ${module.name} benötigst du ${Object.entries(module.cost).map(([item, amount]) => `${amount} ${item}`).join(" + ")}.`);
+    return;
+  }
+  Object.entries(module.cost).forEach(([item, amount]) => {
+    for (let i = 0; i < amount; i += 1) removeOneItem(item);
+  });
+  if (!Array.isArray(state.shelterModules)) state.shelterModules = [];
+  state.shelterModules.push(module.id);
+  changeCampStatus(3, 4);
+  log(`${module.name} gebaut: ${module.effectText}.`);
   saveGame();
   render();
   renderCamp();
