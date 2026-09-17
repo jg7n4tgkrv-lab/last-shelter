@@ -10,7 +10,7 @@ let state = {
   attributes: { staerke:0, vitalitaet:0, geschicklichkeit:0, ueberleben:0, wahrnehmung:0 },
   pendingLevelUps: 0,
   perks: [],
-  equipmentInventory: [], equipped: { weapon: null, armor: null, tool: null },
+  equipmentInventory: [], equipped: { weapon: null, armor: null, tool: null, accessory: null },
   consumables: [],
   timeHour: 8, weather: "Klar", pendingEvent: null,
   morale: 60, safety: 50, locationProgress: {}, bossesUnlocked: {}, bossesDefeated: {}, runStats: { expeditions:0, victories:0 }, pendingCardReward: [], dailyGoal: null, expedition: null
@@ -40,7 +40,7 @@ function loadGame() {
       attributes: { staerke:0, vitalitaet:0, geschicklichkeit:0, ueberleben:0, wahrnehmung:0 },
       pendingLevelUps: 0,
       perks: [],
-      equipmentInventory: [], equipped: { weapon: null, armor: null, tool: null },
+      equipmentInventory: [], equipped: { weapon: null, armor: null, tool: null, accessory: null },
       consumables: [], timeHour: 8, weather: "Klar", pendingEvent: null,
       morale: 60, safety: 50, locationProgress: {}, runStats: { expeditions:0, victories:0 }, pendingCardReward: [], dailyGoal: null, expedition: null
     }, loaded);
@@ -66,9 +66,10 @@ function loadGame() {
       if (!Number.isFinite(state.attributes[attr]) || state.attributes[attr] < 0) state.attributes[attr] = 0;
       state.attributes[attr] = Math.floor(state.attributes[attr]);
     });
-    if (!state.equipped || typeof state.equipped !== "object") state.equipped = { weapon: null, armor: null, tool: null };
+    if (!state.equipped || typeof state.equipped !== "object") state.equipped = { weapon: null, armor: null, tool: null, accessory: null };
     if (!Object.prototype.hasOwnProperty.call(state.equipped, "tool")) state.equipped.tool = null;
-    ["weapon", "armor", "tool"].forEach(slot => {
+    if (!Object.prototype.hasOwnProperty.call(state.equipped, "accessory")) state.equipped.accessory = null;
+    ["weapon", "armor", "tool", "accessory"].forEach(slot => {
       if (state.equipped[slot] && !ITEM_DB[state.equipped[slot]]) state.equipped[slot] = null;
     });
     if (state.timeHour === undefined) state.timeHour = 8;
@@ -190,6 +191,10 @@ function getPoisonResistance() {
   return armor && Number.isFinite(armor.poisonResistance) ? armor.poisonResistance : 0;
 }
 function getToolBonus() { return state.equipped.tool && ITEM_DB[state.equipped.tool] ? ITEM_DB[state.equipped.tool].bonus : 0; }
+function getAccessoryBonus() {
+  const accessory = state.equipped.accessory ? ITEM_DB[state.equipped.accessory] : null;
+  return accessory && Number.isFinite(accessory.rareLootBonus) ? accessory.rareLootBonus : 0;
+}
 function getRarityLabel(itemOrRarity) {
   const rarity = typeof itemOrRarity === "string" ? itemOrRarity : itemOrRarity?.rarity;
   return RARITY_LABELS[rarity] || RARITY_LABELS.common;
