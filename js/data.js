@@ -224,3 +224,16 @@ const SHELTER_STAGES = [
   { name:"Verstärktes Lager", description:"Dein Lager hält schlechtes Wetter besser aus und gibt dir Rückhalt.", next:"Fester Unterschlupf", cost:32 },
   { name:"Fester Unterschlupf", description:"Ein verlässlicher Ort, an dem du dich von Expeditionen erholen kannst.", next:null, cost:null }
 ];
+
+const SHELTER_MODULES = [
+  {
+    id:"sleeping_place",
+    name:"Schlafplatz",
+    description:"Ein richtiger Schlafplatz verbessert deine Erholung.",
+    cost:{Holz:12, Leder:2},
+    effect:"sleepHealBonus",
+    value:10,
+    effectText:"+10 zusätzliche Heilung beim Schlafen",
+    icon:"images/icons/sleep.png"
+  }
+];
