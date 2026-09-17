@@ -11,6 +11,7 @@ function renderCharacter() {
   const a = state.attributes;
   const runStats = state.runStats || { expeditions:0, victories:0 };
   const defeatedGuardians = Object.values(state.bossesDefeated || {}).filter(Boolean).length;
+  const activePerks = (state.perks || []).map(perkId => PERKS.find(perk => perk.id === perkId)).filter(Boolean);
 
   document.getElementById("attrsBox").innerHTML = `
     <h2 class="sectionTitle">
@@ -64,6 +65,12 @@ function renderCharacter() {
       <div class="runStat"><span>Siege</span><strong>${runStats.victories}</strong><small>errungen</small></div>
       <div class="runStat"><span>Wächter</span><strong>${defeatedGuardians}</strong><small>besiegt</small></div>
     </div>
+    ${activePerks.length ? `
+      <div class='activePerks'>
+        <span>Aktive Perks</span>
+        <strong>${activePerks.map(perk => perk.name).join(' · ')}</strong>
+      </div>
+    ` : ''}
   `;
 
   const weapon = state.equipped.weapon
