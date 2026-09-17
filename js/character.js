@@ -251,6 +251,7 @@ function equipItem(index) {
 function getAvailablePerks() {
   return PERKS.filter(p => {
     if (p.type === "card" && p.requiresCard) {
+    if (p.type === "special" && state.perks.includes(p.id)) return false;
       if (!state.deck.includes(p.requiresCard)) return false;
       if (p.effect === "removeCard" && state.deck.length <= 8) return false;
     }
@@ -334,7 +335,9 @@ function showPerkOverlay() {
 }
 
 function choosePerk(perk) {
-  if (perk.type === "attr") {
+  if (perk.type === "special") {
+    if (!state.perks.includes(perk.id)) state.perks.push(perk.id);
+  } else if (perk.type === "attr") {
     state.attributes[perk.attr] += 1;
   } else if (perk.effect === "addCard") {
     state.deck.push(perk.card);
