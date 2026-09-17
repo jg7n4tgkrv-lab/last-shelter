@@ -9,6 +9,7 @@ let state = {
   inventory: [], deck: [...DEFAULT_DECK],
   attributes: { staerke:0, vitalitaet:0, geschicklichkeit:0, ueberleben:0, wahrnehmung:0 },
   pendingLevelUps: 0,
+  perks: [],
   equipmentInventory: [], equipped: { weapon: null, armor: null, tool: null },
   consumables: [],
   timeHour: 8, weather: "Klar", pendingEvent: null,
@@ -38,6 +39,7 @@ function loadGame() {
       deck: [...DEFAULT_DECK],
       attributes: { staerke:0, vitalitaet:0, geschicklichkeit:0, ueberleben:0, wahrnehmung:0 },
       pendingLevelUps: 0,
+      perks: [],
       equipmentInventory: [], equipped: { weapon: null, armor: null, tool: null },
       consumables: [], timeHour: 8, weather: "Klar", pendingEvent: null,
       morale: 60, safety: 50, locationProgress: {}, runStats: { expeditions:0, victories:0 }, pendingCardReward: [], dailyGoal: null, expedition: null
@@ -83,6 +85,8 @@ function loadGame() {
     if (!Number.isFinite(state.runStats.expeditions)) state.runStats.expeditions = 0;
     if (!Number.isFinite(state.runStats.victories)) state.runStats.victories = 0;
     if (!Array.isArray(state.pendingCardReward)) state.pendingCardReward = [];
+    if (!Array.isArray(state.perks)) state.perks = [];
+    state.perks = state.perks.filter(perkId => PERKS.some(perk => perk.id === perkId));
     state.pendingCardReward = state.pendingCardReward.filter(cardId => CARD_DB[cardId]);
     if (!state.expedition || typeof state.expedition !== "object" || !LOCATIONS.some(loc => loc.id === state.expedition.locationId)) {
       state.expedition = null;
