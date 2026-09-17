@@ -24,6 +24,7 @@ function startCombat(enemyType, locName, extraNote) {
     nextAttackBonus: 0,
     nextHeavyBonus: 0,
     nextHeavyLabel: "",
+    firstAttackUsed: false,
     enemyBlock: 0,
     poisonTurns: 0,
     enemyHp: scaledHp,
@@ -254,6 +255,11 @@ function playCard(index) {
       log(`Die Markierung verstärkt Schwerer Schlag um +${combat.nextHeavyBonus} Schaden.`);
       combat.nextHeavyBonus = 0;
       combat.nextHeavyLabel = "";
+    }
+    if (state.perks?.includes("hunter") && !combat.firstAttackUsed) {
+      dmg = Math.floor(dmg * 1.3);
+      combat.firstAttackUsed = true;
+      log("Jäger verstärkt den ersten Angriff: +30 % Schaden.");
     }
     const absorbed = Math.min(combat.enemyBlock, dmg);
     const dealt = dmg - absorbed;
