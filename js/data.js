@@ -124,6 +124,7 @@ const PERKS = [
   { id:"sur", type:"attr", attr:"ueberleben", name:"Überlebenswille", desc:"+1 Überleben – weniger Hunger-/Energieverlust", icon:"🔥" },
   { id:"per", type:"attr", attr:"wahrnehmung", name:"Scharfe Sinne", desc:"+1 Wahrnehmung – Kämpfen leichter ausweichen", icon:"👁️" },
   { id:"tough", type:"special", effect:"lowHealthBlock", name:"Zäh", desc:"Unter 30 % Leben: +6 Block zu Beginn deines Zuges", icon:"🛡️" },
+  { id:"hunter", type:"special", effect:"firstAttackBonus", name:"Jäger", desc:"Der erste Angriff jedes Kampfes verursacht +30 % Schaden", icon:"🎯" },
   { id:"add_atk", type:"card", effect:"addCard", card:"attack", name:"Waffenkammer", desc:"+1 Angriffskarte kommt ins Deck", icon:"⚔️" },
   { id:"add_def", type:"card", effect:"addCard", card:"defend", name:"Schildwall", desc:"+1 Verteidigen-Karte kommt ins Deck", icon:"🛡️" },
   { id:"trim_def", type:"card", effect:"removeCard", card:"defend", requiresCard:"defend", name:"Gestrafft", desc:"Entfernt eine Verteidigen-Karte – Deck wird konsistenter", icon:"✂️" },
@@ -137,6 +138,7 @@ const PERKS = [
   sur: "images/icons/campfire.png",
   per: "images/icons/compass.png",
   tough: "images/icons/shield.png",
+  hunter: "images/icons/attack.png",
 
   add_atk: "images/icons/attack.png",
   add_def: "images/icons/shield.png",
