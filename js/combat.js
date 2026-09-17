@@ -384,6 +384,12 @@ function endTurn() {
     }
   }
 
+  if (state.perks?.includes("tough") && state.health <= getMaxHealth() * 0.3) {
+    combat.block += 6;
+    log("Zäh schützt dich: +6 Block für deinen nächsten Zug.");
+    spawnFloatNumber(document.getElementById("playerBarWrap"), "+6 Block", "block");
+  }
+
   combat.discardPile.push(...combat.hand);
   combat.hand = [];
   const apPenalty = combat.intentType === "root" ? (combat.intentApPenalty || 1) : 0;
