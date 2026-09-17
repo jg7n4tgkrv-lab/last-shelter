@@ -21,7 +21,7 @@ function renderCharacter() {
     <div class="stat-row">
       <span class="stat-label">
         <span class="icn"><img src="${ATTRIBUTE_ICON_FILES.staerke}" alt=""></span>
-        Stärke
+        <span class="attributeName">Stärke <small>Schaden</small></span>
       </span>
       <span>${a.staerke}</span>
     </div>
@@ -29,7 +29,7 @@ function renderCharacter() {
     <div class="stat-row">
       <span class="stat-label">
         <span class="icn"><img src="${ATTRIBUTE_ICON_FILES.vitalitaet}" alt=""></span>
-        Vitalität
+        <span class="attributeName">Vitalität <small>Leben</small></span>
       </span>
       <span>${a.vitalitaet}</span>
     </div>
@@ -37,7 +37,7 @@ function renderCharacter() {
     <div class="stat-row">
       <span class="stat-label">
         <span class="icn"><img src="${ATTRIBUTE_ICON_FILES.geschicklichkeit}" alt=""></span>
-        Geschicklichkeit
+        <span class="attributeName">Geschicklichkeit <small>Block</small></span>
       </span>
       <span>${a.geschicklichkeit}</span>
     </div>
@@ -45,7 +45,7 @@ function renderCharacter() {
     <div class="stat-row">
       <span class="stat-label">
         <span class="icn"><img src="${ATTRIBUTE_ICON_FILES.ueberleben}" alt=""></span>
-        Überleben
+        <span class="attributeName">Überleben <small>Kosten</small></span>
       </span>
       <span>${a.ueberleben}</span>
     </div>
@@ -53,7 +53,7 @@ function renderCharacter() {
     <div class="stat-row">
       <span class="stat-label">
         <span class="icn"><img src="${ATTRIBUTE_ICON_FILES.wahrnehmung}" alt=""></span>
-        Wahrnehmung
+        <span class="attributeName">Wahrnehmung <small>Gefahr</small></span>
       </span>
       <span>${a.wahrnehmung}</span>
     </div>
