@@ -200,7 +200,10 @@ function renderCharacter() {
             ${item.name}
           </span>
 
-          <span class="iBonus">${bonusLabel}</span>
+          <span class="deckMeta">
+            <span class="cardRarity rarity-${item.rarity || "common"}">${getRarityLabel(item)}</span>
+            <span class="iBonus">${bonusLabel}</span>
+          </span>
         </div>
       `;
     });
