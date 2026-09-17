@@ -339,7 +339,8 @@ function getRuinsLootChance(location) {
   if (location.id !== "ruinen" || !state.expedition) return 0;
   const hours = Number.isFinite(state.expedition.hours) ? state.expedition.hours : 0;
   const risk = Number.isFinite(state.expedition.risk) ? state.expedition.risk : 0;
-  return Math.min(0.62, 0.18 + hours * 0.035 + risk / 250);
+  const baseChance = Math.min(0.62, 0.18 + hours * 0.035 + risk / 250);
+  return Math.min(0.75, baseChance + getAccessoryBonus());
 }
 
 function explore(loc) {
