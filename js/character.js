@@ -85,6 +85,13 @@ function renderCharacter() {
     ? ITEM_DB[state.equipped.tool]
     : null;
 
+  const accessory = state.equipped.accessory
+    ? ITEM_DB[state.equipped.accessory]
+    : null;
+  const accessoryBonusLabel = accessory?.rareLootBonus
+    ? "+" + Math.round(accessory.rareLootBonus * 100) + " % Ruinenbeute"
+    : "";
+
   let html = `
     <h2 class="sectionTitle">
       <img src="images/icons/settings.png" alt="">
@@ -149,6 +156,21 @@ function renderCharacter() {
     </div>
   `;
 
+  html += `
+    <div class="stat-row">
+      <span class="stat-label">
+        <span class="icn">
+          <img src="${state.equipped.accessory ? ITEM_ICON_FILES[state.equipped.accessory] : "images/icons/compass.png"}" alt="">
+        </span>
+        Accessoire
+      </span>
+
+      <span class="${accessory ? "equipItem" : "equipEmpty"}">
+        ${accessory ? accessory.name + (accessoryBonusLabel ? " (" + accessoryBonusLabel + ")" : "") : "keines"}
+      </span>
+    </div>
+  `;
+
   if (state.equipmentInventory.length > 0) {
     html += `
       <div style="margin-top:8px; font-size:12px; color:#9a9689;">
@@ -167,7 +189,9 @@ function renderCharacter() {
         ? "+" + item.bonus + " Schaden" + specialLabel
         : item.type === "armor"
           ? "+" + item.bonus + " Block" + specialLabel
-          : "+" + item.bonus + " Holz beim Sammeln" + specialLabel;
+          : item.type === "accessory"
+            ? "+" + Math.round((item.rareLootBonus || 0) * 100) + " % Ruinenbeute" + specialLabel
+            : "+" + item.bonus + " Holz beim Sammeln" + specialLabel;
 
       html += `
         <div class="equipList-item" onclick="equipItem(${index})">
