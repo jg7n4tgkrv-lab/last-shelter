@@ -295,5 +295,15 @@ const SHELTER_MODULES = [
     value:15,
     effectText:"+15 Sicherheit im Shelter",
     icon:"images/icons/shield.png"
+  },
+  {
+    id:"lookout",
+    name:"Aussichtspunkt",
+    description:"Ein erhöhter Aussichtspunkt hilft dir, Wege effizienter zu planen.",
+    cost:{Holz:34, Leder:4},
+    effect:"explorationEnergyReduction",
+    value:1,
+    effectText:"−1 Energie bei Erkundungsaktionen",
+    icon:"images/icons/compass.png"
   }
 ];
