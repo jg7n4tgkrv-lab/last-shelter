@@ -253,6 +253,7 @@ function renderForge() {
     <span class="btnSub">${subText}</span>
   </span>
 `;
+    btn.disabled = !entry.can;
     btn.onclick = entry.can ? entry.action : null;
     forgeDiv.appendChild(btn);
   });
