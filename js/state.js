@@ -222,6 +222,13 @@ function getInventoryCapacity() {
   return 30 + getInventoryCapacityBonus();
 }
 
+function getHealingItemBonus() {
+  const module = SHELTER_MODULES.find(candidate => candidate.id === "infirmary");
+  return module && hasShelterModule(module.id) && module.effect === "healingItemBonus"
+    ? module.value
+    : 0;
+}
+
 function getEffectiveRecipeCost(recipe) {
   const reduction = getCraftCostReduction();
   return Object.fromEntries(Object.entries(recipe.cost).map(([item, amount]) => [
