@@ -2,6 +2,11 @@
    Phase 1 foundation: shelter, food, treatment, crafting and rest.
 */
 function renderCamp() {
+  const sleepHealthRecovery = getSleepHealthRecovery();
+  const sleepEnergyPenalty = getSleepEnergyPenalty();
+  const sleepEnergyText = sleepEnergyPenalty > 0
+    ? `Energie bis ${getSleepEnergyRecovery()}`
+    : "Energie auffüllen";
   const shelterBox = document.getElementById("shelterBox");
   if (shelterBox) {
     const shelterStage = getShelterStage();
@@ -63,7 +68,7 @@ function renderCamp() {
         <span class="cIcon2"><img src="images/icons/sleep.png" alt=""></span>
         <span class="btnText">
           Schlafen und neuen Tag beginnen
-          <span class="btnSub">Energie auffüllen · bis zu 15 Leben regenerieren · −15 Hunger</span>
+          <span class="btnSub">${sleepEnergyText} · +${sleepHealthRecovery} Leben · −15 Hunger</span>
         </span>
       </button>
     `;
@@ -288,15 +293,16 @@ function sleepAtCamp() {
   }
   const oldHealth = state.health;
   const oldHunger = state.hunger;
-  state.energy = getMaxEnergy();
-  state.health = Math.min(getMaxHealth(), state.health + 15 + getSleepHealBonus());
+  const sleepHealthRecovery = getSleepHealthRecovery();
+  state.energy = getSleepEnergyRecovery();
+  state.health = Math.min(getMaxHealth(), state.health + sleepHealthRecovery);
   state.hunger = Math.max(0, state.hunger - 15);
   changeCampStatus(5, 2);
   state.timeHour = 7;
   state.day += 1;
   state.dailyGoal = createDailyGoal(state.day);
   state.weather = WEATHER_TYPES[Math.floor(Math.random() * WEATHER_TYPES.length)];
-  log("Du hast im Lager geschlafen und dich erholt. Ein neuer Morgen beginnt.");
+  log(`Du hast im Lager geschlafen (${getSleepQualityLabel()}) und dich erholt. Ein neuer Morgen beginnt.`);
   checkDeathConditions();
   saveGame();
   render();
