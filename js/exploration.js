@@ -121,9 +121,10 @@ function renderActionCards() {
     + (state.weather === "Regen" ? 3 : 0);
   const trackEnergyCost = 4 + escalation + coldPenalty;
   const trackHungerCost = 1 + Math.floor(escalation / 2);
-  const canGather = state.energy >= gatherEnergyCost;
-  const canExplore = state.energy >= exploreEnergyCost;
-  const canTrack = state.energy >= trackEnergyCost;
+  const canCarryLoot = hasInventorySpace();
+  const canGather = state.energy >= gatherEnergyCost && canCarryLoot;
+  const canExplore = state.energy >= exploreEnergyCost && canCarryLoot;
+  const canTrack = state.energy >= trackEnergyCost && canCarryLoot;
   const gatherItem = location.gatherItem || "Holz";
   const gatherItemInfo = RESOURCE_DB[gatherItem] || FOOD_DB[gatherItem];
   const specialAction = location.specialAction || null;
@@ -146,9 +147,28 @@ function renderActionCards() {
           <small>${state.expedition.hours} h · ${lootCount} Beute · Risiko ${getExpeditionRiskLabel()}</small>
         </div>
         <div class="expeditionDecisionButtons">
-          <button class="expeditionDecision continue" type="button" onclick="continueExpedition()">
-            <strong>Weiter</strong><small>mehr Risiko</small>
+          <button class="expeditionDecision continue${hasInventorySpace() ? "" : " disabled"}" type="button" onclick="continueExpedition()" ${hasInventorySpace() ? "" : "disabled"}>
+            <strong>Weiter</strong><small>${hasInventorySpace() ? "mehr Risiko" : "Lager voll"}</small>
           </button>
+          <button class="expeditionDecision return" type="button" onclick="returnToCamp()">
+            <strong>Zum Lager</strong><small>Beute sichern</small>
+          </button>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  if (state.expedition && !canCarryLoot) {
+    const lootCount = getExpeditionLootCount();
+    actionDiv.className = "actionCards";
+    actionDiv.innerHTML = `
+      <div class="expeditionPanel">
+        <div class="expeditionPanelHead">
+          <span><img src="images/icons/backpack.png" alt=""> Lager voll</span>
+          <small>${getInventoryLoad()}/${getInventoryCapacity()} Plätze · ${lootCount} Beute unterwegs</small>
+        </div>
+        <div class="expeditionDecisionButtons">
           <button class="expeditionDecision return" type="button" onclick="returnToCamp()">
             <strong>Zum Lager</strong><small>Beute sichern</small>
           </button>
@@ -181,6 +201,7 @@ function renderActionCards() {
   const actionHint = document.querySelector(".actionHint");
   if (actionHint) actionHint.textContent = `${location.identity} · ${getDangerLabel(location)} · ${getDailyGoalHint()}`;
   actionDiv.className = "actionCards";
+  const actionDisabledLabel = canCarryLoot ? "Nicht genug Energie" : "Lager voll · Zum Shelter zurück";
   actionDiv.innerHTML = `
     <button class="actionCard" onclick="${gatherActionHandler}"${canGather ? "" : " disabled"}>
       <span class="actionCardIcon"><img src="${gatherIcon}" alt=""></span>
@@ -188,7 +209,7 @@ function renderActionCards() {
         <span class="actionCardName">${gatherActionName}</span>
         <span class="actionCardDesc">${gatherActionDesc}</span>
       </span>
-      <span class="actionCardCost">${canGather ? `−${gatherEnergyCost} Energie<br>−2 Hunger` : "Nicht genug Energie"}</span>
+      <span class="actionCardCost">${canGather ? `−${gatherEnergyCost} Energie<br>−2 Hunger` : actionDisabledLabel}</span>
     </button>
 
     <button class="actionCard primary" onclick="explore(getSelectedLocation())"${canExplore ? "" : " disabled"}>
@@ -197,7 +218,7 @@ function renderActionCards() {
         <span class="actionCardName">${exploreActionName}</span>
         <span class="actionCardDesc">${exploreActionDesc}</span>
       </span>
-      <span class="actionCardCost">${canExplore ? `−${exploreEnergyCost} Energie<br>−${exploreHungerCost} Hunger` : "Nicht genug Energie"}</span>
+      <span class="actionCardCost">${canExplore ? `−${exploreEnergyCost} Energie<br>−${exploreHungerCost} Hunger` : actionDisabledLabel}</span>
     </button>
 
     <button class="actionCard" onclick="trackLocation()"${canTrack ? "" : " disabled"}>
@@ -206,7 +227,7 @@ function renderActionCards() {
         <span class="actionCardName">Spuren lesen</span>
         <span class="actionCardDesc">Deine Wahrnehmung hilft dir, Gefahren früh zu erkennen.</span>
       </span>
-      <span class="actionCardCost">${canTrack ? `−${trackEnergyCost} Energie<br>−${trackHungerCost} Hunger` : "Nicht genug Energie"}</span>
+      <span class="actionCardCost">${canTrack ? `−${trackEnergyCost} Energie<br>−${trackHungerCost} Hunger` : actionDisabledLabel}</span>
     </button>
   `;
   if (state.bossesUnlocked?.[location.id] && !state.bossesDefeated?.[location.id]) {
