@@ -140,23 +140,24 @@ function recordLocationProgress(location) {
 
   state.xp += 12;
   if (location.id === "ruinen") {
-    state.equipmentInventory.push("rusty_knife");
-    return `Entdeckung: Rostiges Messer gefunden. +12 XP. ${bossMessage}`.trim();
+    const stored = addExpeditionLoot("rusty_knife", "equipment");
+    return `Entdeckung: Rostiges Messer ${stored ? "gefunden" : "gefunden, aber das Lager ist voll"}. +12 XP. ${bossMessage}`.trim();
   }
   if (location.id === "fluss") {
-    state.inventory.push("Beeren", "Beeren");
-    return `Entdeckung: 2 Beeren gefunden. +12 XP. ${bossMessage}`.trim();
+    const firstStored = addExpeditionLoot("Beeren");
+    const secondStored = addExpeditionLoot("Beeren");
+    return `Entdeckung: ${firstStored && secondStored ? "2 Beeren gefunden" : "Beeren gefunden, aber das Lager ist voll"}. +12 XP. ${bossMessage}`.trim();
   }
   if (location.id === "berge") {
-    state.equipmentInventory.push("spear");
-    return `Entdeckung: Speer gefunden. +12 XP. ${bossMessage}`.trim();
+    const stored = addExpeditionLoot("spear", "equipment");
+    return `Entdeckung: Speer ${stored ? "gefunden" : "gefunden, aber das Lager ist voll"}. +12 XP. ${bossMessage}`.trim();
   }
   if (location.id === "sumpf") {
-    state.consumables.push("verband");
-    return `Entdeckung: Verband gefunden. +12 XP. ${bossMessage}`.trim();
+    const stored = addExpeditionLoot("verband", "consumables");
+    return `Entdeckung: Verband ${stored ? "gefunden" : "gefunden, aber das Lager ist voll"}. +12 XP. ${bossMessage}`.trim();
   }
-  state.equipmentInventory.push("hand_axe");
-  return `Entdeckung: Handaxt gefunden. +12 XP. ${bossMessage}`.trim();
+  const stored = addExpeditionLoot("hand_axe", "equipment");
+  return `Entdeckung: Handaxt ${stored ? "gefunden" : "gefunden, aber das Lager ist voll"}. +12 XP. ${bossMessage}`.trim();
 }
 
 function createDailyGoal(day) {
@@ -188,8 +189,10 @@ function progressDailyGoal(type) {
 
   goal.completed = true;
   state.xp += 12;
-  state.inventory.push("Holz");
-  return "Tagesziel erfüllt! +12 XP und 1 Holz.";
+  const stored = addExpeditionLoot("Holz");
+  return stored
+    ? "Tagesziel erfüllt! +12 XP und 1 Holz."
+    : "Tagesziel erfüllt! +12 XP, aber dein Lager ist voll.";
 }
 
 function appendLatestLog(extraMessage) {
@@ -293,7 +296,7 @@ function render() {
   const inventoryMeta = document.getElementById("inventoryMeta");
   if (inventoryMeta) {
     const inventoryBreakdown = getInventoryBreakdown();
-    const parts = [];
+    const parts = [`Lager ${getInventoryLoad()}/${getInventoryCapacity()}`];
     if (inventoryBreakdown.resources > 0) parts.push(`Rohstoffe ${inventoryBreakdown.resources}`);
     if (inventoryBreakdown.food > 0) parts.push(`Nahrung ${inventoryBreakdown.food}`);
     if (inventoryBreakdown.equipment > 0) parts.push(`Ausrüstung ${inventoryBreakdown.equipment}`);
