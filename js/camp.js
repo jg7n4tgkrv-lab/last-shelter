@@ -188,7 +188,6 @@ function renderForge() {
   const holz = countItem("Holz");
   const atkCount = state.deck.filter(c => c === "attack").length;
   const defCount = state.deck.filter(c => c === "defend").length;
-
   const forgeDiv = document.getElementById("forgeList");
   forgeDiv.innerHTML = "";
 
@@ -198,21 +197,21 @@ function renderForge() {
     cost: 4,
     icon: "images/icons/attack.png",
     action: () => forgeCard("attack", 4),
-    can: holz >= 4
+    can: holz >= getEffectiveForgeCost(4)
   },
   {
     label: "Verteidigen-Karte schmieden",
     cost: 4,
     icon: "images/icons/shield.png",
     action: () => forgeCard("defend", 4),
-    can: holz >= 4
+    can: holz >= getEffectiveForgeCost(4)
   },
   {
     label: "Angriff verbessern → Angriff+",
     cost: 6,
     icon: "images/icons/attack.png",
     action: () => upgradeDeckCard("attack", "attack_plus", 6),
-    can: holz >= 6 && atkCount > 0,
+    can: holz >= getEffectiveForgeCost(6) && atkCount > 0,
     note: atkCount === 0 ? "Keine Angriffskarte im Deck" : null
   },
   {
@@ -220,7 +219,7 @@ function renderForge() {
     cost: 6,
     icon: "images/icons/shield.png",
     action: () => upgradeDeckCard("defend", "defend_plus", 6),
-    can: holz >= 6 && defCount > 0,
+    can: holz >= getEffectiveForgeCost(6) && defCount > 0,
     note: defCount === 0 ? "Keine Verteidigen-Karte im Deck" : null
   },
   {
@@ -228,21 +227,22 @@ function renderForge() {
     cost: 7,
     icon: "images/icons/attack.png",
     action: () => forgeCard("precise_strike", 7),
-    can: holz >= 7
+    can: holz >= getEffectiveForgeCost(7)
   },
   {
     label: "Karte: Notverband",
     cost: 6,
     icon: "images/icons/heal.png",
     action: () => forgeCard("emergency_bandage", 6),
-    can: holz >= 6
+    can: holz >= getEffectiveForgeCost(6)
   }
 ];
 
   entries.forEach(entry => {
     const btn = document.createElement("button");
     btn.className = "campActionBtn" + (entry.can ? "" : " disabled");
-    const subText = entry.note ? entry.note : `Kosten: ${entry.cost} Holz – du hast ${holz} Holz`;
+    const effectiveCost = getEffectiveForgeCost(entry.cost);
+    const subText = entry.note ? entry.note : `Kosten: ${effectiveCost} Holz – du hast ${holz} Holz`;
     btn.innerHTML = `
   <span class="cIcon2">
     <img src="${entry.icon}" alt="">
@@ -258,7 +258,8 @@ function renderForge() {
   });
 }
 
-function forgeCard(cardId, cost) {
+function forgeCard(cardId, baseCost) {
+  const cost = getEffectiveForgeCost(baseCost);
   if (countItem("Holz") < cost) return;
   for (let i = 0; i < cost; i++) removeOneItem("Holz");
   state.deck.push(cardId);
@@ -267,7 +268,8 @@ function forgeCard(cardId, cost) {
   renderCamp();
 }
 
-function upgradeDeckCard(fromId, toId, cost) {
+function upgradeDeckCard(fromId, toId, baseCost) {
+  const cost = getEffectiveForgeCost(baseCost);
   const idx = state.deck.indexOf(fromId);
   if (idx === -1 || countItem("Holz") < cost) return;
   for (let i = 0; i < cost; i++) removeOneItem("Holz");
