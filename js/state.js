@@ -140,16 +140,21 @@ function saveGame() {
 }
 
 function addExpeditionLoot(itemId, type = "inventory") {
-  if (!itemId) return;
+  if (!itemId) return false;
+  if (!hasInventorySpace()) {
+    if (typeof log === "function") log("Dein Lager ist voll. Kehre zum Shelter zurück.");
+    return false;
+  }
   const validTypes = ["inventory", "equipment", "consumables"];
   const targetType = validTypes.includes(type) ? type : "inventory";
   if (state.expedition?.loot && Array.isArray(state.expedition.loot[targetType])) {
     state.expedition.loot[targetType].push(itemId);
-    return;
+    return true;
   }
   if (targetType === "equipment") state.equipmentInventory.push(itemId);
   else if (targetType === "consumables") state.consumables.push(itemId);
   else state.inventory.push(itemId);
+  return true;
 }
 
 function getExpeditionLootCount() {
@@ -206,6 +211,17 @@ function getCraftCostReduction() {
     : 0;
 }
 
+function getInventoryCapacityBonus() {
+  const module = SHELTER_MODULES.find(candidate => candidate.id === "storage");
+  return module && hasShelterModule(module.id) && module.effect === "inventoryCapacityBonus"
+    ? module.value
+    : 0;
+}
+
+function getInventoryCapacity() {
+  return 30 + getInventoryCapacityBonus();
+}
+
 function getEffectiveRecipeCost(recipe) {
   const reduction = getCraftCostReduction();
   return Object.fromEntries(Object.entries(recipe.cost).map(([item, amount]) => [
@@ -249,6 +265,12 @@ function formatRecipeCost(recipe) {
 }
 function getTotalInventoryCount() {
   return state.inventory.length + state.equipmentInventory.length + state.consumables.length;
+}
+function getInventoryLoad() {
+  return getTotalInventoryCount() + getExpeditionLootCount();
+}
+function hasInventorySpace(amount = 1) {
+  return getInventoryLoad() + amount <= getInventoryCapacity();
 }
 function getInventoryBreakdown() {
   const food = state.inventory.filter(item => FOOD_DB[item]).length;
