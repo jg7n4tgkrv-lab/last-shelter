@@ -265,5 +265,15 @@ const SHELTER_MODULES = [
     value:10,
     effectText:"+10 Inventarplätze",
     icon:"images/icons/backpack.png"
+  },
+  {
+    id:"infirmary",
+    name:"Krankenstation",
+    description:"Eine einfache Krankenstation versorgt Verletzungen besser.",
+    cost:{Holz:26, Heilkräuter:5},
+    effect:"healingItemBonus",
+    value:10,
+    effectText:"+10 Heilung durch Verbände",
+    icon:"images/icons/heal.png"
   }
 ];
