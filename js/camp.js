@@ -116,6 +116,8 @@ document.getElementById("eatBtnWrap").innerHTML =
 const bandageCount = state.consumables.filter(c => c === "verband").length;
 const antidoteCount = state.consumables.filter(c => c === "gegenmittel").length;
 const treatmentButtons = [];
+const bandageHealing = 25 + getHealingItemBonus();
+const bandageEffectLabel = getHealingItemBonus() > 0 ? ` · Krankenstation +${getHealingItemBonus()}` : "";
 
 if (bandageCount > 0) {
   treatmentButtons.push(`
@@ -123,7 +125,7 @@ if (bandageCount > 0) {
       <span class="cIcon2"><img src="images/icons/heal.png" alt=""></span>
       <span class="btnText">
         Verband benutzen (${bandageCount})
-        <span class="btnSub">+25 Leben</span>
+        <span class="btnSub">+${bandageHealing} Leben${bandageEffectLabel}</span>
       </span>
     </button>
   `);
@@ -357,9 +359,10 @@ function drinkWater() {
 function useBandage() {
   const idx = state.consumables.indexOf("verband");
   if (idx === -1) return;
+  const healingValue = 25 + getHealingItemBonus();
   state.consumables.splice(idx, 1);
-  state.health = Math.min(getMaxHealth(), state.health + 25);
-  log("Du hast einen Verband benutzt und dich geheilt.");
+  state.health = Math.min(getMaxHealth(), state.health + healingValue);
+  log(`Du hast einen Verband benutzt und dich um ${healingValue} Leben geheilt.`);
   saveGame();
   render();
   renderCamp();
