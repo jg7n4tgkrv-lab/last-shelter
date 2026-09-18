@@ -112,14 +112,16 @@ function renderActionCards() {
 
   const escalation = getExpeditionEscalation();
   const coldPenalty = getMountainColdPenalty(location);
-  const gatherEnergyCost = 5 + escalation + coldPenalty;
-  const exploreEnergyCost = Math.max(4, 10 - state.attributes.ueberleben)
-    + escalation
-    + coldPenalty
-    + (state.weather === "Sturm" ? 5 : 0);
+  const gatherEnergyCost = getEffectiveExplorationEnergyCost(5 + escalation + coldPenalty);
+  const exploreEnergyCost = getEffectiveExplorationEnergyCost(
+    Math.max(4, 10 - state.attributes.ueberleben)
+      + escalation
+      + coldPenalty
+      + (state.weather === "Sturm" ? 5 : 0)
+  );
   const exploreHungerCost = Math.max(2, 5 - Math.floor(state.attributes.ueberleben / 2))
     + (state.weather === "Regen" ? 3 : 0);
-  const trackEnergyCost = 4 + escalation + coldPenalty;
+  const trackEnergyCost = getEffectiveExplorationEnergyCost(4 + escalation + coldPenalty);
   const trackHungerCost = 1 + Math.floor(escalation / 2);
   const canCarryLoot = hasInventorySpace();
   const canGather = state.energy >= gatherEnergyCost && canCarryLoot;
@@ -254,7 +256,7 @@ function fishAtRiver() {
     return;
   }
   const escalation = getExpeditionEscalation();
-  const energyCost = 5 + escalation;
+  const energyCost = getEffectiveExplorationEnergyCost(5 + escalation);
   if (state.energy < energyCost) {
     log("Zu wenig Energie zum Fischen.");
     return;
@@ -288,7 +290,7 @@ function gatherResources() {
   const location = getSelectedLocation();
   if (state.expedition?.awaitingDecision) { log("Entscheide zuerst, ob du weitergehst oder zurückkehrst."); return; }
   const escalation = getExpeditionEscalation();
-  const energyCost = 5 + escalation + getMountainColdPenalty(location);
+  const energyCost = getEffectiveExplorationEnergyCost(5 + escalation + getMountainColdPenalty(location));
   if (state.energy < energyCost) { log("Zu wenig Energie zum Sammeln."); return; }
   if (!beginExpedition(location)) return;
   state.energy = Math.max(0, state.energy - energyCost);
@@ -323,7 +325,7 @@ function trackLocation() {
   const location = getSelectedLocation();
   if (state.expedition?.awaitingDecision) { log("Entscheide zuerst, ob du weitergehst oder zurückkehrst."); return; }
   const escalation = getExpeditionEscalation();
-  const energyCost = 4 + escalation + getMountainColdPenalty(location);
+  const energyCost = getEffectiveExplorationEnergyCost(4 + escalation + getMountainColdPenalty(location));
   if (state.energy < energyCost) { log("Zu wenig Energie, um Spuren zu lesen."); return; }
   if (!beginExpedition(location)) return;
   state.energy = Math.max(0, state.energy - energyCost);
@@ -368,13 +370,18 @@ function explore(loc) {
   if (state.expedition?.awaitingDecision) { log("Entscheide zuerst, ob du weitergehst oder zurückkehrst."); return; }
   const escalation = getExpeditionEscalation();
   const coldPenalty = getMountainColdPenalty(loc);
-  if (state.energy < 10 + escalation + coldPenalty) { log("Zu wenig Energie zum Erkunden! Geh ins Lager."); return; }
+  const ueb = state.attributes.ueberleben;
+  const energyCost = getEffectiveExplorationEnergyCost(
+    Math.max(4, 10 - ueb)
+      + escalation
+      + coldPenalty
+      + (state.weather === "Sturm" ? 5 : 0)
+  );
+  if (state.energy < energyCost) { log("Zu wenig Energie zum Erkunden! Geh ins Lager."); return; }
   if (!beginExpedition(loc)) return;
 
-  const ueb = state.attributes.ueberleben;
-  let energyCost = Math.max(4, 10 - ueb) + escalation + coldPenalty;
   let hungerCost = Math.max(2, 5 - Math.floor(ueb / 2));
-  if (state.weather === "Sturm") energyCost += 5;
+  if (state.weather === "Regen") hungerCost += 3;
   if (state.weather === "Regen") hungerCost += 3;
   state.energy = Math.max(0, state.energy - energyCost);
   state.hunger = Math.max(0, state.hunger - hungerCost);
