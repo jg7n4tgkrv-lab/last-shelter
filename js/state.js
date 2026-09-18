@@ -197,6 +197,36 @@ function getSleepHealBonus() {
     : 0;
 }
 
+function getMoraleSleepModifier() {
+  if (state.morale >= 70) return 5;
+  if (state.morale <= 25) return -5;
+  return 0;
+}
+
+function getSafetySleepModifier() {
+  if (state.safety >= 70) return 3;
+  if (state.safety <= 25) return -3;
+  return 0;
+}
+
+function getSleepHealthRecovery() {
+  return Math.max(0, 15 + getSleepHealBonus() + getMoraleSleepModifier() + getSafetySleepModifier());
+}
+
+function getSleepEnergyPenalty() {
+  return state.safety <= 25 ? 10 : 0;
+}
+
+function getSleepEnergyRecovery() {
+  return Math.max(0, getMaxEnergy() - getSleepEnergyPenalty());
+}
+
+function getSleepQualityLabel() {
+  if (state.morale <= 25 || state.safety <= 25) return "unruhiger Schlaf";
+  if (state.morale >= 70 && state.safety >= 70) return "erholsamer Schlaf";
+  return "ruhiger Schlaf";
+}
+
 function getFoodHungerBonus() {
   const module = SHELTER_MODULES.find(candidate => candidate.id === "fireplace");
   return module && hasShelterModule(module.id) && module.effect === "foodHungerBonus"
