@@ -285,5 +285,15 @@ const SHELTER_MODULES = [
     value:1,
     effectText:"−1 Holz pro geschmiedeter Karte (mindestens 1)",
     icon:"images/icons/attack.png"
+  },
+  {
+    id:"fortification",
+    name:"Befestigung",
+    description:"Verstärkte Wände schützen Vorräte und Schlafplatz besser.",
+    cost:{Holz:32, Metall:6},
+    effect:"safetyBonus",
+    value:15,
+    effectText:"+15 Sicherheit im Shelter",
+    icon:"images/icons/shield.png"
   }
 ];
