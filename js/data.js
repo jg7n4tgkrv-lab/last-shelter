@@ -255,5 +255,15 @@ const SHELTER_MODULES = [
     value:1,
     effectText:"−1 Material pro Handwerkszutat (mindestens 1)",
     icon:"images/icons/settings.png"
+  },
+  {
+    id:"storage",
+    name:"Lager",
+    description:"Ein ordentliches Lager schafft Platz für Vorräte und Beute.",
+    cost:{Holz:24, Metall:5},
+    effect:"inventoryCapacityBonus",
+    value:10,
+    effectText:"+10 Inventarplätze",
+    icon:"images/icons/backpack.png"
   }
 ];
