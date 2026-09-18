@@ -245,5 +245,15 @@ const SHELTER_MODULES = [
     value:5,
     effectText:"+5 Hungerwert pro Nahrung",
     icon:"images/icons/campfire.png"
+  },
+  {
+    id:"workbench",
+    name:"Werkbank",
+    description:"Eine Werkbank macht aus Rohstoffen verlässliche Ausrüstung.",
+    cost:{Holz:20, Metall:4},
+    effect:"craftCostReduction",
+    value:1,
+    effectText:"−1 Material pro Handwerkszutat (mindestens 1)",
+    icon:"images/icons/settings.png"
   }
 ];
