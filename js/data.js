@@ -275,5 +275,15 @@ const SHELTER_MODULES = [
     value:10,
     effectText:"+10 Heilung durch Verbände",
     icon:"images/icons/heal.png"
+  },
+  {
+    id:"forge",
+    name:"Schmiede",
+    description:"Eine Schmiede macht deine Karten günstiger und zuverlässiger herstellbar.",
+    cost:{Holz:28, Metall:6},
+    effect:"forgeCostReduction",
+    value:1,
+    effectText:"−1 Holz pro geschmiedeter Karte (mindestens 1)",
+    icon:"images/icons/attack.png"
   }
 ];
