@@ -73,12 +73,15 @@ const foodButtons = [];
 Object.entries(FOOD_DB).forEach(([foodId, food]) => {
   const count = countItem(foodId);
   if (count <= 0) return;
+  const hungerBonus = getFoodHungerBonus();
+  const hungerValue = food.hunger + hungerBonus;
+  const foodEffectLabel = hungerBonus > 0 ? ` · Feuerstelle +${hungerBonus}` : "";
   foodButtons.push(`
     <button class='campActionBtn' onclick='eatFood("${foodId}")'>
       <span class='cIcon2'><img src="${food.icon}" alt=""></span>
       <span class='btnText'>
         ${food.label} essen (${count})
-        <span class='btnSub'>+${food.hunger} Hunger</span>
+        <span class='btnSub'>+${hungerValue} Hunger${foodEffectLabel}</span>
       </span>
     </button>
   `);
@@ -327,9 +330,11 @@ function showMorningSummary(summary) {
 function eatFood(itemId) {
   const food = FOOD_DB[itemId];
   if (!food || countItem(itemId) === 0) return;
+  const hungerBonus = getFoodHungerBonus();
+  const hungerValue = food.hunger + hungerBonus;
   removeOneItem(itemId);
-  state.hunger = Math.min(100, state.hunger + food.hunger);
-  log(`Du hast ${food.label} gegessen. +${food.hunger} Hunger.`);
+  state.hunger = Math.min(100, state.hunger + hungerValue);
+  log(`Du hast ${food.label} gegessen. +${hungerValue} Hunger.`);
   saveGame();
   render();
   renderCamp();
