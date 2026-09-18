@@ -227,6 +227,13 @@ function getSleepQualityLabel() {
   return "ruhiger Schlaf";
 }
 
+function getNightRaidChance() {
+  if (state.safety >= 70) return 0;
+  const baseChance = state.safety <= 25 ? 0.55 : state.safety <= 45 ? 0.18 : 0;
+  const fortificationReduction = hasShelterModule("fortification") ? 0.25 : 0;
+  return Math.max(0, baseChance - fortificationReduction);
+}
+
 function getFoodHungerBonus() {
   const module = SHELTER_MODULES.find(candidate => candidate.id === "fireplace");
   return module && hasShelterModule(module.id) && module.effect === "foodHungerBonus"
