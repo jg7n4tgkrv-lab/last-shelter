@@ -191,6 +191,13 @@ function getSleepHealBonus() {
     ? module.value
     : 0;
 }
+
+function getFoodHungerBonus() {
+  const module = SHELTER_MODULES.find(candidate => candidate.id === "fireplace");
+  return module && hasShelterModule(module.id) && module.effect === "foodHungerBonus"
+    ? module.value
+    : 0;
+}
 function getWeaponBonus() { return state.equipped.weapon ? ITEM_DB[state.equipped.weapon].bonus : 0; }
 function getArmorBonus() { return state.equipped.armor ? ITEM_DB[state.equipped.armor].bonus : 0; }
 function getColdProtection() {
