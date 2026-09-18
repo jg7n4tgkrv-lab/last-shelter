@@ -406,6 +406,9 @@ function buildShelterModule(moduleId) {
   if (!Array.isArray(state.shelterModules)) state.shelterModules = [];
   state.shelterModules.push(module.id);
   changeCampStatus(3, 4);
+  if (module.effect === "safetyBonus") {
+    state.safety = Math.min(100, state.safety + module.value);
+  }
   log(`${module.name} gebaut: ${module.effectText}.`);
   saveGame();
   render();
