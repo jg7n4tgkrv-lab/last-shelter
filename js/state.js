@@ -229,6 +229,17 @@ function getHealingItemBonus() {
     : 0;
 }
 
+function getForgeCostReduction() {
+  const module = SHELTER_MODULES.find(candidate => candidate.id === "forge");
+  return module && hasShelterModule(module.id) && module.effect === "forgeCostReduction"
+    ? module.value
+    : 0;
+}
+
+function getEffectiveForgeCost(baseCost) {
+  return Math.max(1, baseCost - getForgeCostReduction());
+}
+
 function getEffectiveRecipeCost(recipe) {
   const reduction = getCraftCostReduction();
   return Object.fromEntries(Object.entries(recipe.cost).map(([item, amount]) => [
