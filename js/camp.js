@@ -285,6 +285,27 @@ function upgradeDeckCard(fromId, toId, baseCost) {
   renderCamp();
 }
 
+function resolveNightRisk() {
+  const chance = getNightRaidChance();
+  if (!chance || Math.random() >= chance) {
+    return {
+      type: "quiet",
+      label: state.safety >= 70 ? "Sichere Nacht" : "Ruhige Nacht"
+    };
+  }
+
+  const supplies = state.inventory.filter(item => FOOD_DB[item] || RESOURCE_DB[item]);
+  changeCampStatus(-5, -8);
+  if (supplies.length === 0) {
+    return { type: "raid", label: "Überfall abgewehrt" };
+  }
+
+  const lostItem = supplies[Math.floor(Math.random() * supplies.length)];
+  removeOneItem(lostItem);
+  const itemName = FOOD_DB[lostItem]?.label || RESOURCE_DB[lostItem]?.label || lostItem;
+  return { type: "raid", label: `Überfall: ${itemName} verloren` };
+}
+
 function sleepAtCamp() {
   if (state.expedition) {
     log("Du bist noch auf Expedition. Kehre zuerst zum Lager zurück.");
@@ -294,7 +315,10 @@ function sleepAtCamp() {
   const oldHealth = state.health;
   const oldHunger = state.hunger;
   const sleepHealthRecovery = getSleepHealthRecovery();
-  state.energy = getSleepEnergyRecovery();
+  const sleepEnergyRecovery = getSleepEnergyRecovery();
+  const sleepQuality = getSleepQualityLabel();
+  const nightReport = resolveNightRisk();
+  state.energy = sleepEnergyRecovery;
   state.health = Math.min(getMaxHealth(), state.health + sleepHealthRecovery);
   state.hunger = Math.max(0, state.hunger - 15);
   changeCampStatus(5, 2);
@@ -302,14 +326,15 @@ function sleepAtCamp() {
   state.day += 1;
   state.dailyGoal = createDailyGoal(state.day);
   state.weather = WEATHER_TYPES[Math.floor(Math.random() * WEATHER_TYPES.length)];
-  log(`Du hast im Lager geschlafen (${getSleepQualityLabel()}) und dich erholt. Ein neuer Morgen beginnt.`);
+  log(`Du hast im Lager geschlafen (${sleepQuality}; ${nightReport.label}) und dich erholt. Ein neuer Morgen beginnt.`);
   checkDeathConditions();
   saveGame();
   render();
   renderCamp();
   showMorningSummary({
     healthGain: state.health - oldHealth,
-    hungerCost: oldHunger - state.hunger
+    hungerCost: oldHunger - state.hunger,
+    nightReport
   });
 }
 
@@ -322,7 +347,7 @@ function showMorningSummary(summary) {
   if (!overlay || !title || !text || !facts || !continueButton) return;
 
   title.textContent = `Tag ${state.day}`;
-  text.textContent = `${state.weather} · ${formatTime()} · Dein Lager gibt dir Zeit zum Durchatmen.`;
+  text.textContent = `${state.weather} · ${formatTime()} · ${summary.nightReport?.label || "Ruhige Nacht"}.`;
   facts.innerHTML = `
     <div class="morningFact">Energie<strong>${state.energy}/${getMaxEnergy()}</strong></div>
     <div class="morningFact">Leben<strong>+${summary.healthGain}</strong></div>
