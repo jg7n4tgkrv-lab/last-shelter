@@ -240,6 +240,17 @@ function getEffectiveForgeCost(baseCost) {
   return Math.max(1, baseCost - getForgeCostReduction());
 }
 
+function getExplorationEnergyReduction() {
+  const module = SHELTER_MODULES.find(candidate => candidate.id === "lookout");
+  return module && hasShelterModule(module.id) && module.effect === "explorationEnergyReduction"
+    ? module.value
+    : 0;
+}
+
+function getEffectiveExplorationEnergyCost(baseCost) {
+  return Math.max(1, baseCost - getExplorationEnergyReduction());
+}
+
 function getEffectiveRecipeCost(recipe) {
   const reduction = getCraftCostReduction();
   return Object.fromEntries(Object.entries(recipe.cost).map(([item, amount]) => [
