@@ -198,6 +198,21 @@ function getFoodHungerBonus() {
     ? module.value
     : 0;
 }
+
+function getCraftCostReduction() {
+  const module = SHELTER_MODULES.find(candidate => candidate.id === "workbench");
+  return module && hasShelterModule(module.id) && module.effect === "craftCostReduction"
+    ? module.value
+    : 0;
+}
+
+function getEffectiveRecipeCost(recipe) {
+  const reduction = getCraftCostReduction();
+  return Object.fromEntries(Object.entries(recipe.cost).map(([item, amount]) => [
+    item,
+    Math.max(1, amount - reduction)
+  ]));
+}
 function getWeaponBonus() { return state.equipped.weapon ? ITEM_DB[state.equipped.weapon].bonus : 0; }
 function getArmorBonus() { return state.equipped.armor ? ITEM_DB[state.equipped.armor].bonus : 0; }
 function getColdProtection() {
@@ -222,15 +237,15 @@ function getLootTableForEnemy(enemyId) {
 }
 function countItem(name) { return state.inventory.filter(i => i === name).length; }
 function hasRecipeCost(recipe) {
-  return Object.entries(recipe.cost).every(([item, amount]) => countItem(item) >= amount);
+  return Object.entries(getEffectiveRecipeCost(recipe)).every(([item, amount]) => countItem(item) >= amount);
 }
 function spendRecipeCost(recipe) {
-  Object.entries(recipe.cost).forEach(([item, amount]) => {
+  Object.entries(getEffectiveRecipeCost(recipe)).forEach(([item, amount]) => {
     for (let i = 0; i < amount; i++) removeOneItem(item);
   });
 }
 function formatRecipeCost(recipe) {
-  return Object.entries(recipe.cost).map(([item, amount]) => `${amount} ${item}`).join(" + ");
+  return Object.entries(getEffectiveRecipeCost(recipe)).map(([item, amount]) => `${amount} ${item}`).join(" + ");
 }
 function getTotalInventoryCount() {
   return state.inventory.length + state.equipmentInventory.length + state.consumables.length;
