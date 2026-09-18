@@ -235,5 +235,15 @@ const SHELTER_MODULES = [
     value:10,
     effectText:"+10 zusätzliche Heilung beim Schlafen",
     icon:"images/icons/sleep.png"
+  },
+  {
+    id:"fireplace",
+    name:"Feuerstelle",
+    description:"Eine geschützte Feuerstelle bereitet Nahrung besser zu.",
+    cost:{Holz:18, Metall:3},
+    effect:"foodHungerBonus",
+    value:5,
+    effectText:"+5 Hungerwert pro Nahrung",
+    icon:"images/icons/campfire.png"
   }
 ];
