@@ -192,6 +192,29 @@ const EVENT_DB = {
       { id: "salvage", name: "Metall bergen", desc: "Benötigt Stärke 2 · −5 Energie · +1 Metall · +12 XP", icon: "images/icons/metal-ingot.png", requirement: { attr: "staerke", min: 2 } }
     ]
   },
+  swamp_herb_grove: {
+    title: "Heilkräuter im Nebel",
+    tone: "positive",
+    locationIds: ["sumpf"],
+    timeOfDayIds: ["Morgen", "Mittag"],
+    text: "Zwischen den knorrigen Wurzeln wächst ein dichter Teppich aus Heilkräutern. Der Sumpf ist hier ungewöhnlich still.",
+    choices: [
+      { id: "harvest", name: "Kräuter ernten", desc: "Benötigt Überleben 2 · +2 Heilkräuter · +10 XP", icon: "images/icons/herbs.png", requirement: { attr: "ueberleben", min: 2 } },
+      { id: "mark", name: "Fundort markieren", desc: "+1 Moral · +2 Sicherheit · +5 XP", icon: "images/icons/compass.png" }
+    ]
+  },
+  swamp_miasma: {
+    title: "Giftiger Nebel",
+    tone: "risky",
+    locationIds: ["sumpf"],
+    weatherIds: ["Nebel", "Sturm"],
+    text: "Ein grünlicher Nebel zieht zwischen den Wasserlöchern auf. Jeder Atemzug kratzt im Hals.",
+    choices: [
+      { id: "detour", name: "Sicheren Umweg suchen", desc: "Benötigt Wahrnehmung 2 · −2 Energie · +1 Heilkräuter · +9 XP", icon: "images/icons/compass.png", requirement: { attr: "wahrnehmung", min: 2 } },
+      { id: "push", name: "Durch den Nebel", desc: "−5 Energie · −6 Leben · +2 Heilkräuter · +14 XP", icon: "images/icons/poison.png" },
+      { id: "retreat", name: "Zurückweichen", desc: "+1 Sicherheit · sicherer Rückzug", icon: "images/icons/flee.png" }
+    ]
+  },
   sumpf_spores: {
     title: "Giftige Sporen",
     tone: "risky",
