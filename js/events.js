@@ -245,6 +245,39 @@ function chooseWorldEvent(eventId, choiceId) {
     log(stored
       ? "Du hast zwischen dem Geröll Metall geborgen. −5 Energie, +12 XP."
       : "Du hast das Metall geborgen, aber dein Lager ist voll. −5 Energie, +12 XP.");
+  } else if (eventId === "swamp_herb_grove" && choiceId === "harvest") {
+    const firstStored = addExpeditionLoot("Heilkräuter");
+    const secondStored = addExpeditionLoot("Heilkräuter");
+    state.xp += 10;
+    changeCampStatus(3, 0);
+    log(firstStored && secondStored
+      ? "Du hast zwei Bündel Heilkräuter im stillen Sumpf gefunden. +10 XP."
+      : "Du hast Heilkräuter gefunden, aber dein Lager ist voll. +10 XP.");
+  } else if (eventId === "swamp_herb_grove" && choiceId === "mark") {
+    state.xp += 5;
+    changeCampStatus(1, 2);
+    log("Du hast den Kräuterfundort markiert und den Weg gesichert. +5 XP.");
+  } else if (eventId === "swamp_miasma" && choiceId === "detour") {
+    state.energy = Math.max(0, state.energy - 2);
+    const stored = addExpeditionLoot("Heilkräuter");
+    state.xp += 9;
+    changeCampStatus(2, -1);
+    log(stored
+      ? "Du hast einen sicheren Umweg durch den Giftnebel gefunden. −2 Energie, +1 Heilkräuter und +9 XP."
+      : "Du hast den Giftnebel sicher umgangen, aber dein Lager ist voll. −2 Energie und +9 XP.");
+  } else if (eventId === "swamp_miasma" && choiceId === "push") {
+    state.energy = Math.max(0, state.energy - 5);
+    state.health = Math.max(0, state.health - 6);
+    const firstStored = addExpeditionLoot("Heilkräuter");
+    const secondStored = addExpeditionLoot("Heilkräuter");
+    state.xp += 14;
+    changeCampStatus(-2, -3);
+    log(firstStored && secondStored
+      ? "Du bist durch den Giftnebel gegangen und hast zwei Bündel Heilkräuter geborgen. −5 Energie, −6 Leben und +14 XP."
+      : "Du hast den Giftnebel durchquert, aber dein Lager ist voll. −5 Energie, −6 Leben und +14 XP.");
+  } else if (eventId === "swamp_miasma" && choiceId === "retreat") {
+    changeCampStatus(0, 1);
+    log("Du bist vor dem Giftnebel zurückgewichen.");
   } else if (eventId === "sumpf_spores" && choiceId === "antidote") {
     const antidoteIndex = state.consumables.indexOf("gegenmittel");
     if (antidoteIndex !== -1) {
