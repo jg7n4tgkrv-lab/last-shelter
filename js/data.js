@@ -65,6 +65,7 @@ const LOCATIONS = [
 const EVENT_DB = {
   tracks: {
     title: "Frische Spuren",
+    tone: "positive",
     text: "Im feuchten Boden erkennst du Spuren, die noch nicht alt sein können.",
     choices: [
       { id:"follow", name:"Den Spuren folgen", desc:"−6 Energie · +15 XP · Moral +4", icon:"images/icons/compass.png" },
@@ -73,6 +74,7 @@ const EVENT_DB = {
   },
   cache: {
     title: "Verlassene Tasche",
+    tone: "positive",
     text: "Zwischen Wurzeln liegt eine alte Tasche. Etwas darin scheint noch brauchbar zu sein.",
     choices: [
       { id:"take", name:"Tasche öffnen", desc:"1 Verband und 1 Holz · Moral +3", icon:"images/icons/backpack.png" },
@@ -81,6 +83,7 @@ const EVENT_DB = {
   },
   rain: {
     title: "Der Regen wird stärker",
+    tone: "neutral",
     text: "Dunkle Wolken ziehen auf. Du musst entscheiden, ob du Schutz suchst oder weitermachst.",
     choices: [
       { id:"shelter", name:"Schutz suchen", desc:"+4 Energie · Sicherheit +3", icon:"images/icons/shelter.png" },
@@ -89,6 +92,7 @@ const EVENT_DB = {
   },
   ruin_door: {
     title: "Verschlossene Metalltür",
+    tone: "risky",
     text: "Zwischen den Trümmern liegt eine schwere Tür. Dahinter könnte noch etwas Brauchbares verborgen sein.",
     locationIds: ["ruinen"],
     choices: [
@@ -99,6 +103,7 @@ const EVENT_DB = {
   },
   sumpf_spores: {
     title: "Giftige Sporen",
+    tone: "risky",
     text: "Eine Wolke aus grünem Staub hängt zwischen den Wurzeln. Du musst schnell entscheiden.",
     locationIds: ["sumpf"],
     choices: [
