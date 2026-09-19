@@ -137,6 +137,28 @@ const EVENT_DB = {
       { id: "retreat", name: "Sofort zurück", desc: "+2 Sicherheit · +5 XP", icon: "images/icons/flee.png" }
     ]
   },
+  river_fishing_spot: {
+    title: "Verlassene Angelstelle",
+    tone: "positive",
+    locationIds: ["fluss"],
+    timeOfDayIds: ["Morgen", "Mittag"],
+    text: "Am Ufer entdeckst du eine alte Angelstelle. Jemand hat sie erst vor kurzer Zeit verlassen.",
+    choices: [
+      { id: "cast", name: "Netz auswerfen", desc: "Benötigt Überleben 2 · +2 Fisch · +10 XP", icon: "images/icons/fish.png", requirement: { attr: "ueberleben", min: 2 } },
+      { id: "supplies", name: "Vorräte durchsuchen", desc: "Benötigt Wahrnehmung 2 · +1 Wasser und Heilkräuter · +8 XP", icon: "images/icons/backpack.png", requirement: { attr: "wahrnehmung", min: 2 } }
+    ]
+  },
+  river_flood: {
+    title: "Steigendes Wasser",
+    tone: "risky",
+    locationIds: ["fluss"],
+    weatherIds: ["Regen", "Sturm"],
+    text: "Der Fluss steigt schneller als erwartet. Treibgut prallt gegen die Uferböschung.",
+    choices: [
+      { id: "highground", name: "Höheres Ufer suchen", desc: "+2 Sicherheit · +5 XP", icon: "images/icons/flee.png" },
+      { id: "crate", name: "Kiste bergen", desc: "Benötigt Stärke 2 · −4 Energie · +1 Metall · +10 XP", icon: "images/icons/metal-ingot.png", requirement: { attr: "staerke", min: 2 } }
+    ]
+  },
   ruin_door: {
     title: "Verschlossene Metalltür",
     tone: "risky",
