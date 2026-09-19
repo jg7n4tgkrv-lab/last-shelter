@@ -115,7 +115,30 @@ function chooseWorldEvent(eventId, choiceId) {
   state.pendingEvent = null;
   document.getElementById("eventOverlay").classList.remove("active");
 
-  if (eventId === "tracks" && choiceId === "follow") {
+  if (eventId === "forest_watchpost" && choiceId === "search") {
+    const stored = addExpeditionLoot("Leder");
+    state.xp += 12;
+    changeCampStatus(3, 1);
+    log(stored
+      ? "Du hast im alten Wachposten Leder gefunden. +12 XP."
+      : "Der Wachposten war nützlich, aber dein Lager ist voll. +12 XP.");
+  } else if (eventId === "forest_watchpost" && choiceId === "mark") {
+    state.xp += 5;
+    changeCampStatus(2, 3);
+    log("Du hast den alten Wachposten markiert. Andere Überlebende können die Stelle meiden. +5 XP.");
+  } else if (eventId === "wolf_pack" && choiceId === "circle") {
+    state.xp += 5;
+    changeCampStatus(0, 2);
+    log("Du hast das Wolfsrudel weiträumig umgangen. +5 XP.");
+  } else if (eventId === "wolf_pack" && choiceId === "observe") {
+    state.energy = Math.max(0, state.energy - 3);
+    const stored = addExpeditionLoot("Fleisch");
+    state.xp += 14;
+    changeCampStatus(2, -2);
+    log(stored
+      ? "Du hast den Leitwolf studiert und Fleisch gefunden. +14 XP."
+      : "Du hast den Leitwolf studiert, aber dein Lager ist voll. +14 XP.");
+  } else if (eventId === "tracks" && choiceId === "follow") {
     state.energy = Math.max(0, state.energy - 6);
     state.xp += 15;
     addExpeditionLoot("Holz");
