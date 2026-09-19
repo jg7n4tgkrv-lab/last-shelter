@@ -11,6 +11,48 @@ function getDangerLabel(location) {
   return "Gefahr: niedrig";
 }
 
+function getTimeOfDayExplorationProfile() {
+  const timeOfDay = getTimeOfDay();
+  if (timeOfDay === "Mittag") {
+    return {
+      note: "Mittag · beste Sammelzeit",
+      gatherEnergyReduction: 1,
+      gatherYieldBonus: 1,
+      riskBonus: 0,
+      enemyThresholdPenalty: 0,
+      rareLootBonus: 0
+    };
+  }
+  if (timeOfDay === "Abend") {
+    return {
+      note: "Abend · höhere Gefahr",
+      gatherEnergyReduction: 0,
+      gatherYieldBonus: 0,
+      riskBonus: 6,
+      enemyThresholdPenalty: 0.08,
+      rareLootBonus: 0
+    };
+  }
+  if (timeOfDay === "Nacht") {
+    return {
+      note: "Nacht · seltene Beute, hohe Gefahr",
+      gatherEnergyReduction: 0,
+      gatherYieldBonus: 0,
+      riskBonus: 12,
+      enemyThresholdPenalty: 0.15,
+      rareLootBonus: 0.08
+    };
+  }
+  return {
+    note: "Morgen · normale Bedingungen",
+    gatherEnergyReduction: 0,
+    gatherYieldBonus: 0,
+    riskBonus: 0,
+    enemyThresholdPenalty: 0,
+    rareLootBonus: 0
+  };
+}
+
 function selectLocation(loc) {
   if (state.level < loc.minLevel) return;
   if (state.expedition && state.expedition.locationId !== loc.id) {
@@ -61,13 +103,13 @@ function beginExpedition(location) {
   return true;
 }
 
-function recordExpeditionAction(location, hours) {
+function recordExpeditionAction(location, hours, timeProfile = getTimeOfDayExplorationProfile()) {
   if (!state.expedition || state.expedition.locationId !== location.id) return;
   state.expedition.hours += hours;
   state.expedition.damage = Math.max(0, state.expedition.startingHealth - state.health);
   state.expedition.risk = Math.min(
     100,
-    state.expedition.risk + 8 + Math.round(location.danger * 18) + (isNight() ? 12 : 0)
+    state.expedition.risk + 8 + Math.round(location.danger * 18) + timeProfile.riskBonus
   );
   state.expedition.awaitingDecision = true;
 }
@@ -112,7 +154,10 @@ function renderActionCards() {
 
   const escalation = getExpeditionEscalation();
   const coldPenalty = getMountainColdPenalty(location);
-  const gatherEnergyCost = getEffectiveExplorationEnergyCost(5 + escalation + coldPenalty);
+  const timeProfile = getTimeOfDayExplorationProfile();
+  const gatherEnergyCost = getEffectiveExplorationEnergyCost(
+    Math.max(1, 5 + escalation + coldPenalty - timeProfile.gatherEnergyReduction)
+  );
   const exploreEnergyCost = getEffectiveExplorationEnergyCost(
     Math.max(4, 10 - state.attributes.ueberleben)
       + escalation
@@ -201,7 +246,7 @@ function renderActionCards() {
 
   label.textContent = location.name;
   const actionHint = document.querySelector(".actionHint");
-  if (actionHint) actionHint.textContent = `${location.identity} · ${getDangerLabel(location)} · ${getDailyGoalHint()}`;
+  if (actionHint) actionHint.textContent = `${location.identity} · ${getDangerLabel(location)} · ${timeProfile.note} · ${getDailyGoalHint()}`;
   actionDiv.className = "actionCards";
   const actionDisabledLabel = canCarryLoot ? "Nicht genug Energie" : "Lager voll · Zum Shelter zurück";
   actionDiv.innerHTML = `
@@ -256,7 +301,10 @@ function fishAtRiver() {
     return;
   }
   const escalation = getExpeditionEscalation();
-  const energyCost = getEffectiveExplorationEnergyCost(5 + escalation);
+  const timeProfile = getTimeOfDayExplorationProfile();
+  const energyCost = getEffectiveExplorationEnergyCost(
+    Math.max(1, 5 + escalation - timeProfile.gatherEnergyReduction)
+  );
   if (state.energy < energyCost) {
     log("Zu wenig Energie zum Fischen.");
     return;
@@ -265,16 +313,25 @@ function fishAtRiver() {
   state.energy = Math.max(0, state.energy - energyCost);
   state.hunger = Math.max(0, state.hunger - 2);
   advanceTime(1);
-  recordExpeditionAction(location, 1);
+  recordExpeditionAction(location, 1, timeProfile);
 
   const fishChance = Math.min(0.82, 0.55 + state.attributes.ueberleben * 0.04 + state.attributes.wahrnehmung * 0.03);
+  let gatheredItem;
   let resultMessage;
   if (Math.random() < fishChance) {
-    addExpeditionLoot("Fisch");
+    gatheredItem = "Fisch";
+    addExpeditionLoot(gatheredItem);
     resultMessage = "Flussufer: Du hast einen Fisch gefangen.";
   } else {
-    addExpeditionLoot("Wasser");
+    gatheredItem = "Wasser";
+    addExpeditionLoot(gatheredItem);
     resultMessage = "Flussufer: Du hast klares Wasser geschöpft.";
+  }
+  if (timeProfile.gatherYieldBonus > 0) {
+    const extraStored = addExpeditionLoot(gatheredItem);
+    resultMessage += extraStored
+      ? " Die Mittagssonne bringt einen Zusatzfund."
+      : " Das Lager ist voll; kein Zusatzfund.";
   }
   const goalMessage = progressDailyGoal("gather");
   const milestone = recordLocationProgress(location);
@@ -290,27 +347,40 @@ function gatherResources() {
   const location = getSelectedLocation();
   if (state.expedition?.awaitingDecision) { log("Entscheide zuerst, ob du weitergehst oder zurückkehrst."); return; }
   const escalation = getExpeditionEscalation();
-  const energyCost = getEffectiveExplorationEnergyCost(5 + escalation + getMountainColdPenalty(location));
+  const timeProfile = getTimeOfDayExplorationProfile();
+  const energyCost = getEffectiveExplorationEnergyCost(
+    Math.max(1, 5 + escalation + getMountainColdPenalty(location) - timeProfile.gatherEnergyReduction)
+  );
   if (state.energy < energyCost) { log("Zu wenig Energie zum Sammeln."); return; }
   if (!beginExpedition(location)) return;
   state.energy = Math.max(0, state.energy - energyCost);
   state.hunger = Math.max(0, state.hunger - 2);
   advanceTime(1);
-  recordExpeditionAction(location, 1);
+  recordExpeditionAction(location, 1, timeProfile);
+  let gatheredItem;
   let resultMessage;
   if (location.id === "sumpf") {
-    addExpeditionLoot(location.gatherItem);
+    gatheredItem = location.gatherItem;
+    addExpeditionLoot(gatheredItem);
     resultMessage = `${location.name}: ${location.gatherText}.`;
   } else if (Math.random() < (location.gatherChance || 0.58)) {
-    addExpeditionLoot(location.gatherItem || "Holz");
+    gatheredItem = location.gatherItem || "Holz";
+    addExpeditionLoot(gatheredItem);
     resultMessage = `${location.name}: ${location.gatherText}.`;
-    if (location.gatherItem === "Holz" && getToolBonus() > 0) {
+    if (gatheredItem === "Holz" && getToolBonus() > 0) {
       addExpeditionLoot("Holz");
       resultMessage += " Deine Handaxt bringt zusätzliches Holz.";
     }
   } else {
-    addExpeditionLoot(location.altGatherItem || "Beeren");
+    gatheredItem = location.altGatherItem || "Beeren";
+    addExpeditionLoot(gatheredItem);
     resultMessage = `${location.name}: ${location.altGatherText || "Du hast essbare Beeren gefunden"}.`;
+  }
+  if (timeProfile.gatherYieldBonus > 0) {
+    const extraStored = addExpeditionLoot(gatheredItem);
+    resultMessage += extraStored
+      ? " Die Mittagssonne bringt einen Zusatzfund."
+      : " Das Lager ist voll; kein Zusatzfund.";
   }
   const goalMessage = progressDailyGoal("gather");
   log(`${resultMessage}${getMountainColdNote(location)} ${recordLocationProgress(location)} ${goalMessage}`.trim());
@@ -325,13 +395,14 @@ function trackLocation() {
   const location = getSelectedLocation();
   if (state.expedition?.awaitingDecision) { log("Entscheide zuerst, ob du weitergehst oder zurückkehrst."); return; }
   const escalation = getExpeditionEscalation();
+  const timeProfile = getTimeOfDayExplorationProfile();
   const energyCost = getEffectiveExplorationEnergyCost(4 + escalation + getMountainColdPenalty(location));
   if (state.energy < energyCost) { log("Zu wenig Energie, um Spuren zu lesen."); return; }
   if (!beginExpedition(location)) return;
   state.energy = Math.max(0, state.energy - energyCost);
   state.hunger = Math.max(0, state.hunger - (1 + Math.floor(escalation / 2)));
   advanceTime(1);
-  recordExpeditionAction(location, 1);
+  recordExpeditionAction(location, 1, timeProfile);
   const goalMessage = progressDailyGoal("track");
   const perceptionChance = Math.min(0.9, 0.45 + state.attributes.wahrnehmung * 0.06);
   const trackReward = location.trackReward || null;
@@ -358,18 +429,19 @@ function trackLocation() {
   startCombat(ENEMY_DB[enemyId], location.name, "Du wurdest überrascht!");
 }
 
-function getRuinsLootChance(location) {
+function getRuinsLootChance(location, timeProfile = getTimeOfDayExplorationProfile()) {
   if (location.id !== "ruinen" || !state.expedition) return 0;
   const hours = Number.isFinite(state.expedition.hours) ? state.expedition.hours : 0;
   const risk = Number.isFinite(state.expedition.risk) ? state.expedition.risk : 0;
   const baseChance = Math.min(0.62, 0.18 + hours * 0.035 + risk / 250);
-  return Math.min(0.75, baseChance + getAccessoryBonus());
+  return Math.min(0.75, baseChance + getAccessoryBonus() + timeProfile.rareLootBonus);
 }
 
 function explore(loc) {
   if (state.expedition?.awaitingDecision) { log("Entscheide zuerst, ob du weitergehst oder zurückkehrst."); return; }
   const escalation = getExpeditionEscalation();
   const coldPenalty = getMountainColdPenalty(loc);
+  const timeProfile = getTimeOfDayExplorationProfile();
   const ueb = state.attributes.ueberleben;
   const energyCost = getEffectiveExplorationEnergyCost(
     Math.max(4, 10 - ueb)
@@ -387,11 +459,10 @@ function explore(loc) {
   state.hunger = Math.max(0, state.hunger - hungerCost);
   const expeditionHours = 2 + Math.floor(Math.random() * 3);
   advanceTime(expeditionHours);
-  recordExpeditionAction(loc, expeditionHours);
+  recordExpeditionAction(loc, expeditionHours, timeProfile);
   const goalMessage = progressDailyGoal("explore");
 
-  let dangerThreshold = 0.65;
-  if (isNight()) dangerThreshold -= 0.15;
+  let dangerThreshold = Math.max(0.15, 0.65 - timeProfile.enemyThresholdPenalty);
   if (state.expedition) {
     dangerThreshold = Math.min(0.78, dangerThreshold + state.expedition.risk / 100 * 0.12);
   }
@@ -399,7 +470,7 @@ function explore(loc) {
     0.98,
     0.95 + (state.expedition ? state.expedition.risk / 100 * 0.15 : 0)
   );
-  const ruinLootChance = getRuinsLootChance(loc);
+  const ruinLootChance = getRuinsLootChance(loc, timeProfile);
   const coldNote = getMountainColdNote(loc);
 
   let roll = Math.random();
