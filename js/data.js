@@ -63,6 +63,27 @@ const LOCATIONS = [
 ];
 
 const EVENT_DB = {
+  storm_signal: {
+    title: "Sturm legt Relais frei",
+    tone: "risky",
+    weatherIds: ["Sturm"],
+    text: "Ein Blitz hat ein altes Relais freigelegt. Zwischen den nassen Kabeln blinkt noch ein schwaches Licht.",
+    choices: [
+      { id: "salvage", name: "Relais bergen", desc: "Benötigt Wahrnehmung 2 · −4 Energie · +1 Metall · +14 XP", icon: "images/icons/metal-ingot.png", requirement: { attr: "wahrnehmung", min: 2 } },
+      { id: "shelter", name: "Schutz suchen", desc: "+2 Sicherheit · +5 XP", icon: "images/icons/flee.png" }
+    ]
+  },
+  lookout_signal: {
+    title: "Licht vom Aussichtspunkt",
+    tone: "positive",
+    timeOfDayIds: ["Abend", "Nacht"],
+    requiredShelterModule: "lookout",
+    text: "Vom Aussichtspunkt aus hast du ein schwaches Licht in der Ferne entdeckt. Vielleicht antwortet dort jemand.",
+    choices: [
+      { id: "follow", name: "Dem Licht folgen", desc: "Benötigt Wahrnehmung 2 · −2 Energie · +1 Metall · +12 XP", icon: "images/icons/compass.png", requirement: { attr: "wahrnehmung", min: 2 } },
+      { id: "mark", name: "Richtung markieren", desc: "+2 Sicherheit · +6 XP", icon: "images/icons/shelter.png" }
+    ]
+  },
   radio_static: {
     title: "Funkrauschen im Wind",
     tone: "positive",
