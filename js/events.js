@@ -11,16 +11,47 @@ function canChooseWorldEvent(choice) {
   return value >= requirement.min;
 }
 
-function maybeTriggerWorldEvent(location) {
-  location = location || getSelectedLocation();
-  if (state.pendingEvent || state.pendingLevelUps > 0) return;
+function getWorldEventChance(location) {
   const expeditionRiskBonus = state.expedition
     ? Math.min(0.18, state.expedition.risk / 100 * 0.18)
     : 0;
-  const eventChance = Math.min(0.56, 0.16 + (location.danger * 0.18) + expeditionRiskBonus);
+  const moraleModifier = state.morale <= 25 ? 0.08 : state.morale >= 70 ? -0.04 : 0;
+  const safetyModifier = state.safety <= 25 ? 0.10 : state.safety >= 70 ? -0.06 : 0;
+  return Math.max(
+    0.08,
+    Math.min(0.64, 0.16 + (location.danger * 0.18) + expeditionRiskBonus + moraleModifier + safetyModifier)
+  );
+}
+
+function getWorldEventWeight(event) {
+  if (event?.tone === "positive" && (state.morale >= 70 || state.safety >= 70)) return 1.35;
+  if (event?.tone === "risky" && (state.morale <= 25 || state.safety <= 25)) return 1.35;
+  return 1;
+}
+
+function pickWorldEventId(eventIds) {
+  const weightedEvents = eventIds.map(id => ({
+    id,
+    weight: getWorldEventWeight(EVENT_DB[id])
+  }));
+  const totalWeight = weightedEvents.reduce((total, entry) => total + entry.weight, 0);
+  let roll = Math.random() * totalWeight;
+  for (const entry of weightedEvents) {
+    roll -= entry.weight;
+    if (roll <= 0) return entry.id;
+  }
+  return weightedEvents[weightedEvents.length - 1]?.id || null;
+}
+
+function maybeTriggerWorldEvent(location) {
+  location = location || getSelectedLocation();
+  if (state.pendingEvent || state.pendingLevelUps > 0) return;
+  const eventChance = getWorldEventChance(location);
   if (Math.random() > eventChance) return;
   const eventIds = Object.keys(EVENT_DB).filter(id => !EVENT_DB[id].locationIds || EVENT_DB[id].locationIds.includes(location.id));
-  const eventId = eventIds[Math.floor(Math.random() * eventIds.length)];
+  if (eventIds.length === 0) return;
+  const eventId = pickWorldEventId(eventIds);
+  if (!eventId) return;
   state.pendingEvent = { id: eventId, locationId: location.id };
   saveGame();
   showWorldEvent();
