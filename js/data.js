@@ -73,6 +73,28 @@ const EVENT_DB = {
       { id:"avoid", name:"Abstand halten", desc:"Sicher zurückkehren · Sicherheit +2", icon:"images/icons/flee.png" }
     ]
   },
+  forest_watchpost: {
+    title: "Alter Wachposten",
+    tone: "positive",
+    locationIds: ["wald"],
+    timeOfDayIds: ["Morgen", "Mittag"],
+    text: "Zwischen den Fichten entdeckst du die Reste eines alten Beobachtungspostens.",
+    choices: [
+      { id: "search", name: "Wachposten durchsuchen", desc: "Benötigt Wahrnehmung 2 · +1 Leder · +12 XP", icon: "images/icons/compass.png", requirement: { attr: "wahrnehmung", min: 2 } },
+      { id: "mark", name: "Stelle markieren", desc: "+3 Sicherheit · +5 XP", icon: "images/icons/shelter.png" }
+    ]
+  },
+  wolf_pack: {
+    title: "Wolfsrudel am Waldrand",
+    tone: "risky",
+    locationIds: ["wald"],
+    timeOfDayIds: ["Abend", "Nacht"],
+    text: "Im Dunkel hörst du mehrere Wölfe. Einer von ihnen hat dich bereits bemerkt.",
+    choices: [
+      { id: "circle", name: "Rudel umgehen", desc: "+2 Sicherheit · +5 XP", icon: "images/icons/flee.png" },
+      { id: "observe", name: "Leitwolf beobachten", desc: "Benötigt Wahrnehmung 2 · −3 Energie · +1 Fleisch · +14 XP", icon: "images/icons/compass.png", requirement: { attr: "wahrnehmung", min: 2 } }
+    ]
+  },
   cache: {
     title: "Verlassene Tasche",
     tone: "positive",
