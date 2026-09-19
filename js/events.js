@@ -192,6 +192,30 @@ function chooseWorldEvent(eventId, choiceId) {
     log(stored
       ? "Du hast den Leitwolf studiert und Fleisch gefunden. +14 XP."
       : "Du hast den Leitwolf studiert, aber dein Lager ist voll. +14 XP.");
+  } else if (eventId === "storm_signal" && choiceId === "salvage") {
+    state.energy = Math.max(0, state.energy - 4);
+    const stored = addExpeditionLoot("Metall");
+    state.xp += 14;
+    changeCampStatus(0, -2);
+    log(stored
+      ? "Du hast das alte Relais geborgen und Metall gesichert. −4 Energie, −2 Sicherheit und +14 XP."
+      : "Du hast das Relais geborgen, aber dein Lager ist voll. −4 Energie, −2 Sicherheit und +14 XP.");
+  } else if (eventId === "storm_signal" && choiceId === "shelter") {
+    state.xp += 5;
+    changeCampStatus(0, 2);
+    log("Du hast im Sturm rechtzeitig Schutz gefunden. +5 XP.");
+  } else if (eventId === "lookout_signal" && choiceId === "follow") {
+    state.energy = Math.max(0, state.energy - 2);
+    const stored = addExpeditionLoot("Metall");
+    state.xp += 12;
+    changeCampStatus(2, 0);
+    log(stored
+      ? "Du bist dem Licht gefolgt und hast Metall gefunden. −2 Energie und +12 XP."
+      : "Du bist dem Licht gefolgt, aber dein Lager ist voll. −2 Energie und +12 XP.");
+  } else if (eventId === "lookout_signal" && choiceId === "mark") {
+    state.xp += 6;
+    changeCampStatus(0, 2);
+    log("Du hast die Richtung des fernen Lichts markiert. +6 XP.");
   } else if (eventId === "radio_static" && choiceId === "listen") {
     state.energy = Math.max(0, state.energy - 2);
     state.xp += 12;
