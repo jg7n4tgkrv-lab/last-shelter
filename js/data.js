@@ -63,6 +63,27 @@ const LOCATIONS = [
 ];
 
 const EVENT_DB = {
+  radio_static: {
+    title: "Funkrauschen im Wind",
+    tone: "positive",
+    timeOfDayIds: ["Abend", "Nacht"],
+    text: "Im Rauschen des Windes hörst du drei kurze Töne. Irgendwo in der Wildnis sendet noch jemand.",
+    choices: [
+      { id: "listen", name: "Signal belauschen", desc: "Benötigt Wahrnehmung 2 · −2 Energie · +12 XP · Sicherheit +2", icon: "images/icons/compass.png", requirement: { attr: "wahrnehmung", min: 2 } },
+      { id: "mark", name: "Frequenz merken", desc: "+1 Moral · +5 XP", icon: "images/icons/shelter.png" }
+    ]
+  },
+  stranded_survivor: {
+    title: "Spuren eines Überlebenden",
+    tone: "neutral",
+    timeOfDayIds: ["Morgen", "Mittag"],
+    text: "Neben einem ausgebrannten Feuer findest du frische Fußspuren und einen zurückgelassenen Stofffetzen.",
+    choices: [
+      { id: "follow", name: "Den Spuren folgen", desc: "Benötigt Wahrnehmung 2 · +1 Leder · +12 XP", icon: "images/icons/compass.png", requirement: { attr: "wahrnehmung", min: 2 } },
+      { id: "help", name: "Hilfe zurücklassen", desc: "−3 Energie · +4 Moral · +8 XP", icon: "images/icons/heal.png" },
+      { id: "avoid", name: "Abstand halten", desc: "+2 Sicherheit · +5 XP", icon: "images/icons/flee.png" }
+    ]
+  },
   tracks: {
     title: "Frische Spuren",
     tone: "positive",
