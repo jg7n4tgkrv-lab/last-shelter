@@ -46,12 +46,31 @@ function pickWorldEventId(eventIds) {
   return weightedEvents[weightedEvents.length - 1]?.id || null;
 }
 
+function isWorldEventAvailable(event, location) {
+  if (!event) return false;
+  if (event.locationIds && (!location || !event.locationIds.includes(location.id))) return false;
+  if (event.weatherIds && !event.weatherIds.includes(state.weather)) return false;
+  if (event.timeOfDayIds && !event.timeOfDayIds.includes(getTimeOfDay())) return false;
+  if (Number.isFinite(event.minLevel) && state.level < event.minLevel) return false;
+  if (event.requiredShelterModule && !hasShelterModule(event.requiredShelterModule)) return false;
+  if (event.requiredEquipment && !(state.equipmentInventory || []).includes(event.requiredEquipment)) return false;
+  if (event.requiredAttribute) {
+    const value = state.attributes?.[event.requiredAttribute.name] || 0;
+    if (value < event.requiredAttribute.min) return false;
+  }
+  return true;
+}
+
+function getAvailableWorldEventIds(location) {
+  return Object.keys(EVENT_DB).filter(id => isWorldEventAvailable(EVENT_DB[id], location));
+}
+
 function maybeTriggerWorldEvent(location) {
   location = location || getSelectedLocation();
   if (state.pendingEvent || state.pendingLevelUps > 0) return;
   const eventChance = getWorldEventChance(location);
   if (Math.random() > eventChance) return;
-  const eventIds = Object.keys(EVENT_DB).filter(id => !EVENT_DB[id].locationIds || EVENT_DB[id].locationIds.includes(location.id));
+  const eventIds = getAvailableWorldEventIds(location);
   if (eventIds.length === 0) return;
   const eventId = pickWorldEventId(eventIds);
   if (!eventId) return;
