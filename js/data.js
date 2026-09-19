@@ -115,6 +115,28 @@ const EVENT_DB = {
       { id:"continue", name:"Weitergehen", desc:"−3 Energie · −2 Hunger · Moral −2", icon:"images/icons/forest.png" }
     ]
   },
+  ruin_archive: {
+    title: "Verstecktes Archiv",
+    tone: "positive",
+    locationIds: ["ruinen"],
+    timeOfDayIds: ["Morgen", "Mittag"],
+    text: "Hinter einer eingestürzten Wand entdeckst du ein kleines Archiv. Zwischen den Papieren liegt etwas Metallisches.",
+    choices: [
+      { id: "read", name: "Archiv durchsuchen", desc: "Benötigt Wahrnehmung 3 · Alter Kompass · +15 XP", icon: "images/icons/compass.png", requirement: { attr: "wahrnehmung", min: 3 } },
+      { id: "salvage", name: "Metall sichern", desc: "+1 Metall · +8 XP", icon: "images/icons/metal-ingot.png" }
+    ]
+  },
+  ruin_collapse: {
+    title: "Einsturz im Obergeschoss",
+    tone: "risky",
+    locationIds: ["ruinen"],
+    timeOfDayIds: ["Abend", "Nacht"],
+    text: "Über dir knirschen die Träger. Ein weiterer Schritt könnte den ganzen Raum zum Einsturz bringen.",
+    choices: [
+      { id: "support", name: "Träger abstützen", desc: "Benötigt Stärke 2 · −4 Energie · +1 Metall · +10 XP", icon: "images/icons/shield.png", requirement: { attr: "staerke", min: 2 } },
+      { id: "retreat", name: "Sofort zurück", desc: "+2 Sicherheit · +5 XP", icon: "images/icons/flee.png" }
+    ]
+  },
   ruin_door: {
     title: "Verschlossene Metalltür",
     tone: "risky",
