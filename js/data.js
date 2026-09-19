@@ -170,6 +170,28 @@ const EVENT_DB = {
       { id:"leave", name:"Später zurückkehren", desc:"Sicherer Rückzug · +5 XP", icon:"images/icons/flee.png" }
     ]
   },
+  mountain_shelter: {
+    title: "Verlassene Berghütte",
+    tone: "positive",
+    locationIds: ["berge"],
+    timeOfDayIds: ["Morgen", "Mittag"],
+    text: "Unter einem Felsvorsprung findest du eine alte Berghütte. Der Wind pfeift durch die Ritzen, doch das Dach hält noch.",
+    choices: [
+      { id: "rest", name: "Kurz verschnaufen", desc: "−1 Hunger · +3 Energie · +4 XP", icon: "images/icons/shelter.png" },
+      { id: "search", name: "Hütte durchsuchen", desc: "Benötigt Wahrnehmung 2 · +1 Leder · +12 XP", icon: "images/icons/compass.png", requirement: { attr: "wahrnehmung", min: 2 } }
+    ]
+  },
+  mountain_rockslide: {
+    title: "Felssturz im Sturm",
+    tone: "risky",
+    locationIds: ["berge"],
+    weatherIds: ["Sturm"],
+    text: "Ein Felssturz donnert den Hang hinab. Zwischen den Geröllbrocken blitzt etwas Metallisches auf.",
+    choices: [
+      { id: "shelter", name: "Schutz suchen", desc: "+2 Sicherheit · +5 XP", icon: "images/icons/flee.png" },
+      { id: "salvage", name: "Metall bergen", desc: "Benötigt Stärke 2 · −5 Energie · +1 Metall · +12 XP", icon: "images/icons/metal-ingot.png", requirement: { attr: "staerke", min: 2 } }
+    ]
+  },
   sumpf_spores: {
     title: "Giftige Sporen",
     tone: "risky",
