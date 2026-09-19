@@ -220,6 +220,31 @@ function chooseWorldEvent(eventId, choiceId) {
     state.xp += 8;
     changeCampStatus(-2, -2);
     log("Du bist trotz des Regens weitergegangen. +8 XP.");
+  } else if (eventId === "mountain_shelter" && choiceId === "rest") {
+    state.energy = Math.min(getMaxEnergy(), state.energy + 3);
+    state.hunger = Math.max(0, state.hunger - 1);
+    state.xp += 4;
+    changeCampStatus(2, 1);
+    log("Du hast in der alten Berghütte kurz verschnauft. −1 Hunger, +3 Energie und +4 XP.");
+  } else if (eventId === "mountain_shelter" && choiceId === "search") {
+    const stored = addExpeditionLoot("Leder");
+    state.xp += 12;
+    changeCampStatus(3, 1);
+    log(stored
+      ? "Du hast in der Berghütte brauchbares Leder gefunden. +12 XP."
+      : "Die Berghütte war nützlich, aber dein Lager ist voll. +12 XP.");
+  } else if (eventId === "mountain_rockslide" && choiceId === "shelter") {
+    state.xp += 5;
+    changeCampStatus(0, 2);
+    log("Du hast im Sturm rechtzeitig Schutz gefunden. +5 XP.");
+  } else if (eventId === "mountain_rockslide" && choiceId === "salvage") {
+    state.energy = Math.max(0, state.energy - 5);
+    const stored = addExpeditionLoot("Metall");
+    state.xp += 12;
+    changeCampStatus(0, -3);
+    log(stored
+      ? "Du hast zwischen dem Geröll Metall geborgen. −5 Energie, +12 XP."
+      : "Du hast das Metall geborgen, aber dein Lager ist voll. −5 Energie, +12 XP.");
   } else if (eventId === "sumpf_spores" && choiceId === "antidote") {
     const antidoteIndex = state.consumables.indexOf("gegenmittel");
     if (antidoteIndex !== -1) {
