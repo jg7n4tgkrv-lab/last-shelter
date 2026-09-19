@@ -107,7 +107,17 @@ function advanceTime(hours) {
   if (Math.random() < 0.3) state.weather = WEATHER_TYPES[Math.floor(Math.random() * WEATHER_TYPES.length)];
 }
 function formatTime() { return `${String(state.timeHour).padStart(2, "0")}:00`; }
-function updateBodyClass() { document.body.classList.toggle("night", isNight()); }
+function updateBodyClass() {
+  document.body.classList.toggle("night", isNight());
+  document.body.classList.remove("weather-clear", "weather-rain", "weather-fog", "weather-storm");
+  const weatherClass = {
+    Klar: "weather-clear",
+    Regen: "weather-rain",
+    Nebel: "weather-fog",
+    Sturm: "weather-storm"
+  }[state.weather] || "weather-clear";
+  document.body.classList.add(weatherClass);
+}
 function getConditionLabel() {
   if (state.health <= getMaxHealth() * 0.35) return "Verletzt";
   if (state.energy <= 25) return "Erschöpft";
