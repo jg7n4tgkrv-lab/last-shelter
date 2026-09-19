@@ -30,12 +30,17 @@ function getWorldMapIcon(location) {
     || "images/icons/compass.png";
 }
 
+function getLocationProgressStatus(location) {
+  const progress = Math.min(getLocationProgress(location), LOCATION_BOSS_GOAL);
+  const progressLabel = `${progress}/${LOCATION_BOSS_GOAL}`;
+  if (state.bossesDefeated?.[location.id]) return `${progressLabel} · Gebiet gesichert`;
+  if (state.bossesUnlocked?.[location.id]) return `${progressLabel} · Wächter wartet`;
+  return `Spuren ${progressLabel}`;
+}
+
 function getWorldMapNodeState(location) {
   if (state.level < location.minLevel) return `Ab Level ${location.minLevel}`;
-  if (state.bossesDefeated?.[location.id]) return "Wächter besiegt";
-  if (state.bossesUnlocked?.[location.id]) return "Wächter wartet";
-  const progress = Math.min(getLocationProgress(location), LOCATION_BOSS_GOAL);
-  return `Spuren ${progress}/${LOCATION_BOSS_GOAL}`;
+  return getLocationProgressStatus(location);
 }
 
 function openWorldMap() {
@@ -334,12 +339,7 @@ function render() {
     card.style.setProperty("--accent", loc.accent);
 
     if (unlocked) {
-      const progress = Math.min(getLocationProgress(loc), LOCATION_BOSS_GOAL);
-      const bossStatus = state.bossesDefeated?.[loc.id]
-        ? "Wächter besiegt"
-        : state.bossesUnlocked?.[loc.id]
-          ? "Wächter wartet"
-          : `Spuren ${progress}/${LOCATION_BOSS_GOAL}`;
+      const bossStatus = getLocationProgressStatus(loc);
       card.innerHTML = `
         <span class="cIcon">${loc.icon}</span>
         <span class="locationName">${loc.name}</span>
