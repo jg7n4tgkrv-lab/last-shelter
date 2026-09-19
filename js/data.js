@@ -193,7 +193,7 @@ const EVENT_DB = {
     ]
   },
   swamp_herb_grove: {
-    title: "Heilkräuter im Nebel",
+    title: "Heilkräuter im Wurzelwerk",
     tone: "positive",
     locationIds: ["sumpf"],
     timeOfDayIds: ["Morgen", "Mittag"],
