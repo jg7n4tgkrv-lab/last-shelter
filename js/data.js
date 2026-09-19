@@ -271,6 +271,7 @@ const EVENT_DB = {
 };
 
 const LOCATION_GOAL = 5;
+const LOCATION_BOSS_GOAL = LOCATION_GOAL * 2;
 
 const DAILY_GOALS = [
   { type: "gather", label: "Sammeln", target: 3 },
