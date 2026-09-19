@@ -34,8 +34,8 @@ function getWorldMapNodeState(location) {
   if (state.level < location.minLevel) return `Ab Level ${location.minLevel}`;
   if (state.bossesDefeated?.[location.id]) return "Wächter besiegt";
   if (state.bossesUnlocked?.[location.id]) return "Wächter wartet";
-  const progress = Math.min(getLocationProgress(location), LOCATION_GOAL * 2);
-  return `Spuren ${progress}/${LOCATION_GOAL * 2}`;
+  const progress = Math.min(getLocationProgress(location), LOCATION_BOSS_GOAL);
+  return `Spuren ${progress}/${LOCATION_BOSS_GOAL}`;
 }
 
 function openWorldMap() {
@@ -139,11 +139,20 @@ function getLocationProgress(location) {
 
 function recordLocationProgress(location) {
   if (!state.locationProgress) state.locationProgress = {};
-  const next = getLocationProgress(location) + 1;
-  state.locationProgress[location.id] = next;
+  const current = getLocationProgress(location);
   if (!state.bossesUnlocked || typeof state.bossesUnlocked !== "object") state.bossesUnlocked = {};
   if (!state.bossesDefeated || typeof state.bossesDefeated !== "object") state.bossesDefeated = {};
-  const bossUnlocked = next === LOCATION_GOAL * 2 && !state.bossesUnlocked[location.id] && !state.bossesDefeated[location.id];
+
+  if (current >= LOCATION_BOSS_GOAL) {
+    if (!state.bossesDefeated[location.id]) state.bossesUnlocked[location.id] = true;
+    return state.bossesDefeated[location.id]
+      ? "Gebiet gesichert."
+      : `Gebiet vollständig erkundet. ${location.bossName} wartet.`;
+  }
+
+  const next = Math.min(LOCATION_BOSS_GOAL, current + 1);
+  state.locationProgress[location.id] = next;
+  const bossUnlocked = next === LOCATION_BOSS_GOAL && !state.bossesUnlocked[location.id] && !state.bossesDefeated[location.id];
   if (bossUnlocked) state.bossesUnlocked[location.id] = true;
   const bossMessage = bossUnlocked ? `Gebietswächter freigeschaltet: ${location.bossName}.` : "";
   if (next % LOCATION_GOAL !== 0) return "";
@@ -325,12 +334,12 @@ function render() {
     card.style.setProperty("--accent", loc.accent);
 
     if (unlocked) {
-      const progress = Math.min(getLocationProgress(loc), LOCATION_GOAL * 2);
+      const progress = Math.min(getLocationProgress(loc), LOCATION_BOSS_GOAL);
       const bossStatus = state.bossesDefeated?.[loc.id]
         ? "Wächter besiegt"
         : state.bossesUnlocked?.[loc.id]
           ? "Wächter wartet"
-          : `Spuren ${progress}/${LOCATION_GOAL * 2}`;
+          : `Spuren ${progress}/${LOCATION_BOSS_GOAL}`;
       card.innerHTML = `
         <span class="cIcon">${loc.icon}</span>
         <span class="locationName">${loc.name}</span>
