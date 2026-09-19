@@ -53,6 +53,51 @@ function getTimeOfDayExplorationProfile() {
   };
 }
 
+function getWeatherExplorationProfile() {
+  if (state.weather === "Regen") {
+    return {
+      note: "Regen · mehr Energieverbrauch",
+      energySurcharge: 2,
+      gatherChanceBonus: 0.12,
+      riskBonus: 2,
+      enemyThresholdPenalty: 0,
+      perceptionPenalty: 0,
+      eventChanceBonus: 0.02
+    };
+  }
+  if (state.weather === "Nebel") {
+    return {
+      note: "Nebel · Wahrnehmung erschwert",
+      energySurcharge: 0,
+      gatherChanceBonus: 0,
+      riskBonus: 4,
+      enemyThresholdPenalty: 0.10,
+      perceptionPenalty: 0.10,
+      eventChanceBonus: 0.08
+    };
+  }
+  if (state.weather === "Sturm") {
+    return {
+      note: "Sturm · sehr gefährlich",
+      energySurcharge: 4,
+      gatherChanceBonus: 0,
+      riskBonus: 10,
+      enemyThresholdPenalty: 0.12,
+      perceptionPenalty: 0.05,
+      eventChanceBonus: 0.12
+    };
+  }
+  return {
+    note: "Klar · normale Bedingungen",
+    energySurcharge: 0,
+    gatherChanceBonus: 0,
+    riskBonus: 0,
+    enemyThresholdPenalty: 0,
+    perceptionPenalty: 0,
+    eventChanceBonus: 0
+  };
+}
+
 function selectLocation(loc) {
   if (state.level < loc.minLevel) return;
   if (state.expedition && state.expedition.locationId !== loc.id) {
@@ -103,13 +148,22 @@ function beginExpedition(location) {
   return true;
 }
 
-function recordExpeditionAction(location, hours, timeProfile = getTimeOfDayExplorationProfile()) {
+function recordExpeditionAction(
+  location,
+  hours,
+  timeProfile = getTimeOfDayExplorationProfile(),
+  weatherProfile = getWeatherExplorationProfile()
+) {
   if (!state.expedition || state.expedition.locationId !== location.id) return;
   state.expedition.hours += hours;
   state.expedition.damage = Math.max(0, state.expedition.startingHealth - state.health);
   state.expedition.risk = Math.min(
     100,
-    state.expedition.risk + 8 + Math.round(location.danger * 18) + timeProfile.riskBonus
+    state.expedition.risk
+      + 8
+      + Math.round(location.danger * 18)
+      + timeProfile.riskBonus
+      + weatherProfile.riskBonus
   );
   state.expedition.awaitingDecision = true;
 }
@@ -155,18 +209,22 @@ function renderActionCards() {
   const escalation = getExpeditionEscalation();
   const coldPenalty = getMountainColdPenalty(location);
   const timeProfile = getTimeOfDayExplorationProfile();
+  const weatherProfile = getWeatherExplorationProfile();
   const gatherEnergyCost = getEffectiveExplorationEnergyCost(
     Math.max(1, 5 + escalation + coldPenalty - timeProfile.gatherEnergyReduction)
+      + weatherProfile.energySurcharge
   );
   const exploreEnergyCost = getEffectiveExplorationEnergyCost(
     Math.max(4, 10 - state.attributes.ueberleben)
       + escalation
       + coldPenalty
-      + (state.weather === "Sturm" ? 5 : 0)
+      + weatherProfile.energySurcharge
   );
   const exploreHungerCost = Math.max(2, 5 - Math.floor(state.attributes.ueberleben / 2))
     + (state.weather === "Regen" ? 3 : 0);
-  const trackEnergyCost = getEffectiveExplorationEnergyCost(4 + escalation + coldPenalty);
+  const trackEnergyCost = getEffectiveExplorationEnergyCost(
+    4 + escalation + coldPenalty + weatherProfile.energySurcharge
+  );
   const trackHungerCost = 1 + Math.floor(escalation / 2);
   const canCarryLoot = hasInventorySpace();
   const canGather = state.energy >= gatherEnergyCost && canCarryLoot;
@@ -246,7 +304,7 @@ function renderActionCards() {
 
   label.textContent = location.name;
   const actionHint = document.querySelector(".actionHint");
-  if (actionHint) actionHint.textContent = `${location.identity} · ${getDangerLabel(location)} · ${timeProfile.note} · ${getDailyGoalHint()}`;
+  if (actionHint) actionHint.textContent = `${location.identity} · ${getDangerLabel(location)} · ${timeProfile.note} · ${weatherProfile.note} · ${getDailyGoalHint()}`;
   actionDiv.className = "actionCards";
   const actionDisabledLabel = canCarryLoot ? "Nicht genug Energie" : "Lager voll · Zum Shelter zurück";
   actionDiv.innerHTML = `
@@ -302,8 +360,10 @@ function fishAtRiver() {
   }
   const escalation = getExpeditionEscalation();
   const timeProfile = getTimeOfDayExplorationProfile();
+  const weatherProfile = getWeatherExplorationProfile();
   const energyCost = getEffectiveExplorationEnergyCost(
     Math.max(1, 5 + escalation - timeProfile.gatherEnergyReduction)
+      + weatherProfile.energySurcharge
   );
   if (state.energy < energyCost) {
     log("Zu wenig Energie zum Fischen.");
@@ -313,7 +373,7 @@ function fishAtRiver() {
   state.energy = Math.max(0, state.energy - energyCost);
   state.hunger = Math.max(0, state.hunger - 2);
   advanceTime(1);
-  recordExpeditionAction(location, 1, timeProfile);
+  recordExpeditionAction(location, 1, timeProfile, weatherProfile);
 
   const fishChance = Math.min(0.82, 0.55 + state.attributes.ueberleben * 0.04 + state.attributes.wahrnehmung * 0.03);
   let gatheredItem;
@@ -348,22 +408,24 @@ function gatherResources() {
   if (state.expedition?.awaitingDecision) { log("Entscheide zuerst, ob du weitergehst oder zurückkehrst."); return; }
   const escalation = getExpeditionEscalation();
   const timeProfile = getTimeOfDayExplorationProfile();
+  const weatherProfile = getWeatherExplorationProfile();
   const energyCost = getEffectiveExplorationEnergyCost(
     Math.max(1, 5 + escalation + getMountainColdPenalty(location) - timeProfile.gatherEnergyReduction)
+      + weatherProfile.energySurcharge
   );
   if (state.energy < energyCost) { log("Zu wenig Energie zum Sammeln."); return; }
   if (!beginExpedition(location)) return;
   state.energy = Math.max(0, state.energy - energyCost);
   state.hunger = Math.max(0, state.hunger - 2);
   advanceTime(1);
-  recordExpeditionAction(location, 1, timeProfile);
+  recordExpeditionAction(location, 1, timeProfile, weatherProfile);
   let gatheredItem;
   let resultMessage;
   if (location.id === "sumpf") {
     gatheredItem = location.gatherItem;
     addExpeditionLoot(gatheredItem);
     resultMessage = `${location.name}: ${location.gatherText}.`;
-  } else if (Math.random() < (location.gatherChance || 0.58)) {
+  } else if (Math.random() < Math.min(0.95, (location.gatherChance || 0.58) + weatherProfile.gatherChanceBonus)) {
     gatheredItem = location.gatherItem || "Holz";
     addExpeditionLoot(gatheredItem);
     resultMessage = `${location.name}: ${location.gatherText}.`;
@@ -396,13 +458,16 @@ function trackLocation() {
   if (state.expedition?.awaitingDecision) { log("Entscheide zuerst, ob du weitergehst oder zurückkehrst."); return; }
   const escalation = getExpeditionEscalation();
   const timeProfile = getTimeOfDayExplorationProfile();
-  const energyCost = getEffectiveExplorationEnergyCost(4 + escalation + getMountainColdPenalty(location));
+  const weatherProfile = getWeatherExplorationProfile();
+  const energyCost = getEffectiveExplorationEnergyCost(
+    4 + escalation + getMountainColdPenalty(location) + weatherProfile.energySurcharge
+  );
   if (state.energy < energyCost) { log("Zu wenig Energie, um Spuren zu lesen."); return; }
   if (!beginExpedition(location)) return;
   state.energy = Math.max(0, state.energy - energyCost);
   state.hunger = Math.max(0, state.hunger - (1 + Math.floor(escalation / 2)));
   advanceTime(1);
-  recordExpeditionAction(location, 1, timeProfile);
+  recordExpeditionAction(location, 1, timeProfile, weatherProfile);
   const goalMessage = progressDailyGoal("track");
   const perceptionChance = Math.min(0.9, 0.45 + state.attributes.wahrnehmung * 0.06);
   const trackReward = location.trackReward || null;
@@ -442,27 +507,30 @@ function explore(loc) {
   const escalation = getExpeditionEscalation();
   const coldPenalty = getMountainColdPenalty(loc);
   const timeProfile = getTimeOfDayExplorationProfile();
+  const weatherProfile = getWeatherExplorationProfile();
   const ueb = state.attributes.ueberleben;
   const energyCost = getEffectiveExplorationEnergyCost(
     Math.max(4, 10 - ueb)
       + escalation
       + coldPenalty
-      + (state.weather === "Sturm" ? 5 : 0)
+      + weatherProfile.energySurcharge
   );
   if (state.energy < energyCost) { log("Zu wenig Energie zum Erkunden! Geh ins Lager."); return; }
   if (!beginExpedition(loc)) return;
 
   let hungerCost = Math.max(2, 5 - Math.floor(ueb / 2));
   if (state.weather === "Regen") hungerCost += 3;
-  if (state.weather === "Regen") hungerCost += 3;
   state.energy = Math.max(0, state.energy - energyCost);
   state.hunger = Math.max(0, state.hunger - hungerCost);
   const expeditionHours = 2 + Math.floor(Math.random() * 3);
   advanceTime(expeditionHours);
-  recordExpeditionAction(loc, expeditionHours, timeProfile);
+  recordExpeditionAction(loc, expeditionHours, timeProfile, weatherProfile);
   const goalMessage = progressDailyGoal("explore");
 
-  let dangerThreshold = Math.max(0.15, 0.65 - timeProfile.enemyThresholdPenalty);
+  let dangerThreshold = Math.max(
+    0.12,
+    0.65 - timeProfile.enemyThresholdPenalty - weatherProfile.enemyThresholdPenalty
+  );
   if (state.expedition) {
     dangerThreshold = Math.min(0.78, dangerThreshold + state.expedition.risk / 100 * 0.12);
   }
@@ -488,8 +556,10 @@ function explore(loc) {
     addExpeditionLoot(loc.altGatherItem || "Beeren");
     log(`${loc.name}: ${loc.altGatherText || "Du hast Beeren gefunden"}. ${goalMessage}`.trim());
   } else if (roll < dangerThreshold) {
-    let avoidChance = state.attributes.wahrnehmung * 0.03;
-    if (state.weather === "Nebel") avoidChance += 0.1;
+    let avoidChance = Math.max(
+      0,
+      state.attributes.wahrnehmung * 0.03 - weatherProfile.perceptionPenalty
+    );
     if (Math.random() < avoidChance) {
       addExpeditionLoot(loc.exploreItem || "Holz");
       log(`${loc.name}: Deine Wahrnehmung hat dich vor einer Gefahr gewarnt – du hast stattdessen einen sicheren Fund gemacht. ${goalMessage}`.trim());
