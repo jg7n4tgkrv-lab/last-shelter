@@ -15,7 +15,7 @@ function getTimeOfDayExplorationProfile() {
   const timeOfDay = getTimeOfDay();
   if (timeOfDay === "Mittag") {
     return {
-      note: "Mittag · beste Sammelzeit",
+      note: "Mittag · Sammelbonus",
       gatherEnergyReduction: 1,
       gatherYieldBonus: 1,
       riskBonus: 0,
@@ -25,7 +25,7 @@ function getTimeOfDayExplorationProfile() {
   }
   if (timeOfDay === "Abend") {
     return {
-      note: "Abend · höhere Gefahr",
+      note: "Abend · Gefahr+",
       gatherEnergyReduction: 0,
       gatherYieldBonus: 0,
       riskBonus: 6,
@@ -35,7 +35,7 @@ function getTimeOfDayExplorationProfile() {
   }
   if (timeOfDay === "Nacht") {
     return {
-      note: "Nacht · seltene Beute, hohe Gefahr",
+      note: "Nacht · seltene Beute",
       gatherEnergyReduction: 0,
       gatherYieldBonus: 0,
       riskBonus: 12,
@@ -44,7 +44,7 @@ function getTimeOfDayExplorationProfile() {
     };
   }
   return {
-    note: "Morgen · normale Bedingungen",
+    note: "Morgen",
     gatherEnergyReduction: 0,
     gatherYieldBonus: 0,
     riskBonus: 0,
@@ -56,7 +56,7 @@ function getTimeOfDayExplorationProfile() {
 function getWeatherExplorationProfile() {
   if (state.weather === "Regen") {
     return {
-      note: "Regen · mehr Energieverbrauch",
+      note: "Regen · Energie+",
       energySurcharge: 2,
       gatherChanceBonus: 0.12,
       riskBonus: 2,
@@ -67,7 +67,7 @@ function getWeatherExplorationProfile() {
   }
   if (state.weather === "Nebel") {
     return {
-      note: "Nebel · Wahrnehmung erschwert",
+      note: "Nebel · Überraschungen",
       energySurcharge: 0,
       gatherChanceBonus: 0,
       riskBonus: 4,
@@ -78,7 +78,7 @@ function getWeatherExplorationProfile() {
   }
   if (state.weather === "Sturm") {
     return {
-      note: "Sturm · sehr gefährlich",
+      note: "Sturm · Gefahr+",
       energySurcharge: 4,
       gatherChanceBonus: 0,
       riskBonus: 10,
@@ -88,7 +88,7 @@ function getWeatherExplorationProfile() {
     };
   }
   return {
-    note: "Klar · normale Bedingungen",
+    note: "Klar",
     energySurcharge: 0,
     gatherChanceBonus: 0,
     riskBonus: 0,
