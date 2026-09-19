@@ -115,7 +115,33 @@ function chooseWorldEvent(eventId, choiceId) {
   state.pendingEvent = null;
   document.getElementById("eventOverlay").classList.remove("active");
 
-  if (eventId === "forest_watchpost" && choiceId === "search") {
+  if (eventId === "ruin_archive" && choiceId === "read") {
+    const stored = addExpeditionLoot("old_compass", "equipment");
+    state.xp += 15;
+    changeCampStatus(3, 1);
+    log(stored
+      ? "Im Archiv lag ein Alter Kompass. +15 XP."
+      : "Du hast das Archiv durchsucht, aber dein Lager ist voll. +15 XP.");
+  } else if (eventId === "ruin_archive" && choiceId === "salvage") {
+    const stored = addExpeditionLoot("Metall");
+    state.xp += 8;
+    changeCampStatus(1, 1);
+    log(stored
+      ? "Du hast brauchbares Metall aus dem Archiv geborgen. +8 XP."
+      : "Das Metall bleibt zurück, weil dein Lager voll ist. +8 XP.");
+  } else if (eventId === "ruin_collapse" && choiceId === "support") {
+    state.energy = Math.max(0, state.energy - 4);
+    const stored = addExpeditionLoot("Metall");
+    state.xp += 10;
+    changeCampStatus(0, -3);
+    log(stored
+      ? "Du hast den Träger abgestützt und Metall geborgen. −4 Energie, +10 XP."
+      : "Du hast den Träger abgestützt, aber dein Lager ist voll. −4 Energie, +10 XP.");
+  } else if (eventId === "ruin_collapse" && choiceId === "retreat") {
+    state.xp += 5;
+    changeCampStatus(0, 2);
+    log("Du bist rechtzeitig aus dem einsturzgefährdeten Raum zurückgewichen. +5 XP.");
+  } else if (eventId === "forest_watchpost" && choiceId === "search") {
     const stored = addExpeditionLoot("Leder");
     state.xp += 12;
     changeCampStatus(3, 1);
