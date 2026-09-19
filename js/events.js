@@ -115,7 +115,35 @@ function chooseWorldEvent(eventId, choiceId) {
   state.pendingEvent = null;
   document.getElementById("eventOverlay").classList.remove("active");
 
-  if (eventId === "ruin_archive" && choiceId === "read") {
+  if (eventId === "river_fishing_spot" && choiceId === "cast") {
+    const firstStored = addExpeditionLoot("Fisch");
+    const secondStored = addExpeditionLoot("Fisch");
+    state.xp += 10;
+    changeCampStatus(3, 0);
+    log(firstStored && secondStored
+      ? "Du hast zwei Fische aus dem alten Netz geholt. +10 XP."
+      : "Du hast die Angelstelle genutzt, aber dein Lager ist voll. +10 XP.");
+  } else if (eventId === "river_fishing_spot" && choiceId === "supplies") {
+    const waterStored = addExpeditionLoot("Wasser");
+    const herbsStored = addExpeditionLoot("Heilkräuter");
+    state.xp += 8;
+    changeCampStatus(2, 1);
+    log(waterStored && herbsStored
+      ? "Du hast Wasser und Heilkräuter in den alten Vorräten gefunden. +8 XP."
+      : "Du hast die Vorräte durchsucht, aber dein Lager ist voll. +8 XP.");
+  } else if (eventId === "river_flood" && choiceId === "highground") {
+    state.xp += 5;
+    changeCampStatus(0, 2);
+    log("Du hast rechtzeitig das höhere Ufer erreicht. +5 XP.");
+  } else if (eventId === "river_flood" && choiceId === "crate") {
+    state.energy = Math.max(0, state.energy - 4);
+    const stored = addExpeditionLoot("Metall");
+    state.xp += 10;
+    changeCampStatus(0, -3);
+    log(stored
+      ? "Du hast die Kiste geborgen und Metall gesichert. −4 Energie, +10 XP."
+      : "Du hast die Kiste geborgen, aber dein Lager ist voll. −4 Energie, +10 XP.");
+  } else if (eventId === "ruin_archive" && choiceId === "read") {
     const stored = addExpeditionLoot("old_compass", "equipment");
     state.xp += 15;
     changeCampStatus(3, 1);
