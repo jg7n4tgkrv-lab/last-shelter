@@ -336,7 +336,9 @@ function renderActionCards() {
     </button>
   `;
   if (state.bossesUnlocked?.[location.id] && !state.bossesDefeated?.[location.id]) {
-    actionDiv.innerHTML += `<button class="actionCard primary" onclick="challengeRegionBoss()"><span class="actionCardIcon"><img src="images/icons/star.png" alt=""></span><span class="actionCardText"><span class="actionCardName">${location.bossName} herausfordern</span><span class="actionCardDesc">Der Gebietswächter wartet. Besiege ihn für einzigartige Beute.</span></span><span class="actionCardCost">FREIWILLIG</span></button>`;
+    const bossReward = ITEM_DB[ENEMY_DB[location.bossId]?.reward];
+    const bossRewardLabel = bossReward?.name || "Einzigartige Beute";
+    actionDiv.innerHTML += `<button class="actionCard primary" onclick="challengeRegionBoss()"><span class="actionCardIcon"><img src="images/icons/star.png" alt=""></span><span class="actionCardText"><span class="actionCardName">${location.bossName} herausfordern</span><span class="actionCardDesc">Einzigartige Beute: ${bossRewardLabel}</span></span><span class="actionCardCost">FREIWILLIG<br>BEUTE: ${bossRewardLabel}</span></button>`;
   }
 }
 
