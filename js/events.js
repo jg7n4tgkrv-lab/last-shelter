@@ -192,6 +192,31 @@ function chooseWorldEvent(eventId, choiceId) {
     log(stored
       ? "Du hast den Leitwolf studiert und Fleisch gefunden. +14 XP."
       : "Du hast den Leitwolf studiert, aber dein Lager ist voll. +14 XP.");
+  } else if (eventId === "radio_static" && choiceId === "listen") {
+    state.energy = Math.max(0, state.energy - 2);
+    state.xp += 12;
+    changeCampStatus(0, 2);
+    log("Du hast das Funksignal belauscht und seine Frequenz notiert. −2 Energie, +12 XP.");
+  } else if (eventId === "radio_static" && choiceId === "mark") {
+    state.xp += 5;
+    changeCampStatus(1, 0);
+    log("Du hast dir die Frequenz des Signals gemerkt. +5 XP.");
+  } else if (eventId === "stranded_survivor" && choiceId === "follow") {
+    const stored = addExpeditionLoot("Leder");
+    state.xp += 12;
+    changeCampStatus(2, 0);
+    log(stored
+      ? "Du bist den frischen Spuren gefolgt und hast Leder gefunden. +12 XP."
+      : "Du bist den frischen Spuren gefolgt, aber dein Lager ist voll. +12 XP.");
+  } else if (eventId === "stranded_survivor" && choiceId === "help") {
+    state.energy = Math.max(0, state.energy - 3);
+    state.xp += 8;
+    changeCampStatus(4, -1);
+    log("Du hast am verlassenen Feuer Hilfe zurückgelassen. −3 Energie, +4 Moral und +8 XP.");
+  } else if (eventId === "stranded_survivor" && choiceId === "avoid") {
+    state.xp += 5;
+    changeCampStatus(0, 2);
+    log("Du hast Abstand gehalten und den Fundort sicher umgangen. +5 XP.");
   } else if (eventId === "tracks" && choiceId === "follow") {
     state.energy = Math.max(0, state.energy - 6);
     state.xp += 15;
