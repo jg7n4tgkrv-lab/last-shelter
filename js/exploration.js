@@ -12,45 +12,61 @@ function getDangerLabel(location) {
 }
 
 function getTimeOfDayExplorationProfile() {
-  const timeOfDay = getTimeOfDay();
-  if (timeOfDay === "Mittag") {
-    return {
+  const profiles = {
+    Morgen: {
+      note: "Morgen · aufmerksam",
+      gatherEnergyReduction: 0,
+      gatherYieldBonus: 0,
+      gatherChanceBonus: 0.04,
+      trackChanceBonus: 0.12,
+      energySurcharge: 0,
+      hungerSurcharge: 0,
+      riskBonus: 0,
+      enemyThresholdPenalty: -0.05,
+      rareLootBonus: 0,
+      eventChanceBonus: -0.02
+    },
+    Mittag: {
       note: "Mittag · Sammelbonus",
       gatherEnergyReduction: 1,
       gatherYieldBonus: 1,
+      gatherChanceBonus: 0.10,
+      trackChanceBonus: 0.04,
+      energySurcharge: 0,
+      hungerSurcharge: 0,
       riskBonus: 0,
       enemyThresholdPenalty: 0,
-      rareLootBonus: 0
-    };
-  }
-  if (timeOfDay === "Abend") {
-    return {
-      note: "Abend · Gefahr+",
+      rareLootBonus: 0,
+      eventChanceBonus: 0
+    },
+    Abend: {
+      note: "Abend · Dämmerung",
       gatherEnergyReduction: 0,
       gatherYieldBonus: 0,
+      gatherChanceBonus: 0,
+      trackChanceBonus: -0.02,
+      energySurcharge: 1,
+      hungerSurcharge: 0,
       riskBonus: 6,
       enemyThresholdPenalty: 0.08,
-      rareLootBonus: 0
-    };
-  }
-  if (timeOfDay === "Nacht") {
-    return {
-      note: "Nacht · seltene Beute",
+      rareLootBonus: 0,
+      eventChanceBonus: 0.05
+    },
+    Nacht: {
+      note: "Nacht · riskant, selten",
       gatherEnergyReduction: 0,
       gatherYieldBonus: 0,
+      gatherChanceBonus: -0.04,
+      trackChanceBonus: -0.12,
+      energySurcharge: 2,
+      hungerSurcharge: 1,
       riskBonus: 12,
       enemyThresholdPenalty: 0.15,
-      rareLootBonus: 0.08
-    };
-  }
-  return {
-    note: "Morgen",
-    gatherEnergyReduction: 0,
-    gatherYieldBonus: 0,
-    riskBonus: 0,
-    enemyThresholdPenalty: 0,
-    rareLootBonus: 0
+      rareLootBonus: 0.08,
+      eventChanceBonus: 0.10
+    }
   };
+  return profiles[getTimeOfDay()] || profiles.Morgen;
 }
 
 function getWeatherExplorationProfile() {
@@ -210,19 +226,21 @@ function renderActionCards() {
   const timeProfile = getTimeOfDayExplorationProfile();
   const weatherProfile = getWeatherExplorationProfile();
   const gatherEnergyCost = getEffectiveExplorationEnergyCost(
-    Math.max(1, 5 + escalation + coldPenalty - timeProfile.gatherEnergyReduction)
+    Math.max(1, 5 + escalation + coldPenalty - timeProfile.gatherEnergyReduction + timeProfile.energySurcharge)
       + weatherProfile.energySurcharge
   );
   const exploreEnergyCost = getEffectiveExplorationEnergyCost(
     Math.max(4, 10 - state.attributes.ueberleben)
       + escalation
       + coldPenalty
+      + timeProfile.energySurcharge
       + weatherProfile.energySurcharge
   );
   const exploreHungerCost = Math.max(2, 5 - Math.floor(state.attributes.ueberleben / 2))
-    + (state.weather === "Regen" ? 3 : 0);
+    + (state.weather === "Regen" ? 3 : 0)
+    + timeProfile.hungerSurcharge;
   const trackEnergyCost = getEffectiveExplorationEnergyCost(
-    4 + escalation + coldPenalty + weatherProfile.energySurcharge
+    4 + escalation + coldPenalty + timeProfile.energySurcharge + weatherProfile.energySurcharge
   );
   const trackHungerCost = 1 + Math.floor(escalation / 2);
   const canCarryLoot = hasInventorySpace();
@@ -376,7 +394,14 @@ function fishAtRiver() {
   advanceTime(1);
   recordExpeditionAction(location, 1, timeProfile, weatherProfile);
 
-  const fishChance = Math.min(0.82, 0.55 + state.attributes.ueberleben * 0.04 + state.attributes.wahrnehmung * 0.03);
+  const fishChance = Math.min(
+    0.90,
+    0.55
+      + state.attributes.ueberleben * 0.04
+      + state.attributes.wahrnehmung * 0.03
+      + timeProfile.gatherChanceBonus
+      + weatherProfile.gatherChanceBonus
+  );
   let gatheredItem;
   let resultMessage;
   if (Math.random() < fishChance) {
@@ -427,7 +452,9 @@ function gatherResources() {
     gatheredItem = location.gatherItem;
     addExpeditionLoot(gatheredItem);
     resultMessage = `${location.name}: ${location.gatherText}.`;
-  } else if (Math.random() < Math.min(0.95, (location.gatherChance || 0.58) + weatherProfile.gatherChanceBonus)) {
+  } else if (Math.random() < Math.min(0.95, (location.gatherChance || 0.58)
+      + timeProfile.gatherChanceBonus
+      + weatherProfile.gatherChanceBonus)) {
     gatheredItem = location.gatherItem || "Holz";
     addExpeditionLoot(gatheredItem);
     resultMessage = `${location.name}: ${location.gatherText}.`;
@@ -472,7 +499,12 @@ function trackLocation() {
   advanceTime(1);
   recordExpeditionAction(location, 1, timeProfile, weatherProfile);
   const goalMessage = progressDailyGoal("track");
-  const perceptionChance = Math.min(0.9, 0.45 + state.attributes.wahrnehmung * 0.06);
+  const perceptionChance = Math.min(
+    0.95,
+    0.45
+      + state.attributes.wahrnehmung * 0.06
+      + timeProfile.trackChanceBonus
+  );
   const trackReward = location.trackReward || null;
   if (Math.random() < perceptionChance) {
     const milestone = recordLocationProgress(location);
@@ -516,6 +548,7 @@ function explore(loc) {
     Math.max(4, 10 - ueb)
       + escalation
       + coldPenalty
+      + timeProfile.energySurcharge
       + weatherProfile.energySurcharge
   );
   if (state.energy < energyCost) { log("Zu wenig Energie zum Erkunden! Geh ins Lager."); return; }
@@ -523,6 +556,7 @@ function explore(loc) {
 
   let hungerCost = Math.max(2, 5 - Math.floor(ueb / 2));
   if (state.weather === "Regen") hungerCost += 3;
+  hungerCost += timeProfile.hungerSurcharge;
   state.energy = Math.max(0, state.energy - energyCost);
   state.hunger = Math.max(0, state.hunger - hungerCost);
   const expeditionHours = 2 + Math.floor(Math.random() * 3);
