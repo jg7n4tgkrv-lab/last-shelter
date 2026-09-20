@@ -270,7 +270,8 @@
   .campActionBtn:active { background: #262922; transform: scale(0.97); }
   .campActionBtn.disabled { opacity: 0.35; }
   .campActionBtn .btnSub { display:block; font-size: 11px; color: #9a9689; margin-top: 2px; }
-  .campActionBtn .btnText { flex: 1; }
+  .campActionBtn .btnText { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  .shelterModuleSummary strong { min-width: 0; overflow: hidden; text-align: right; text-overflow: ellipsis; white-space: nowrap; }
 
   .overlay {
     display: none;
@@ -389,6 +390,8 @@
   .rewardSkip:active { transform: scale(0.98); filter: brightness(1.18); }
   .morningPrompt {
     width: min(100%, 430px);
+    max-height: calc(100dvh - 36px);
+    overflow-y: auto;
     background: linear-gradient(160deg, #283323, #151d16);
     border: 1px solid #68764b;
     border-radius: 20px;
@@ -455,6 +458,8 @@
   .morningContinue:active { transform: scale(0.98); filter: brightness(1.16); }
   .eventPrompt {
     width: min(100%, 430px);
+    max-height: calc(100dvh - 36px);
+    overflow-y: auto;
     background: linear-gradient(160deg, #283323, #151d16);
     border: 1px solid #68764b;
     border-radius: 20px;
@@ -1035,10 +1040,10 @@ body {
 .actionCard:disabled:active { transform: none; filter: saturate(0.55); }
 .actionCardIcon { width: 34px; height: 34px; padding: 6px; border-radius: 10px; background: rgba(0,0,0,0.25); flex: 0 0 auto; }
 .actionCardIcon img { width: 100%; height: 100%; object-fit: contain; }
-.actionCardText { min-width: 0; flex: 1; }
+.actionCardText { min-width: 0; flex: 1; overflow: hidden; }
 .actionCardName { display: block; font-size: 14px; font-weight: 700; }
 .actionCardDesc { display: block; margin-top: 3px; color: #aab29e; font-size: 11px; line-height: 1.25; }
-.actionCardCost { color: #d4c879; font-size: 10px; white-space: nowrap; }
+.actionCardCost { min-width: 0; max-width: 42%; color: #d4c879; font-size: 10px; white-space: nowrap; overflow-wrap: anywhere; }
 .eventCard { display: flex; align-items: flex-start; gap: 11px; margin: 0 0 15px; padding: 13px; border-radius: 15px; background: linear-gradient(145deg, #302b1b, #211e15); border: 1px solid #62532f; box-shadow: inset 0 1px rgba(255,255,255,0.08); }
 .eventCardIcon { width: 32px; height: 32px; padding: 6px; border-radius: 10px; background: rgba(0,0,0,0.2); flex: 0 0 auto; }
 .eventCardIcon img { width: 100%; height: 100%; object-fit: contain; }
@@ -1193,9 +1198,13 @@ body {
   }
 
   #screenExplore .actionCardCost {
+    max-width: 38%;
     margin-top: 0;
     font-size: 9px;
+    line-height: 1.15;
     text-align: right;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 
   #screenExplore .eventCard {
@@ -1404,9 +1413,12 @@ button,
   }
 
   #main.exploreFixed #screenExplore .actionCardCost {
+    max-width: 100%;
     margin-top: auto;
     font-size: 8px;
     line-height: 1.1;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 
   #main.exploreFixed #screenExplore .eventCard {
@@ -2008,15 +2020,15 @@ button,
   </div>
 </div>
 
-<script src="js/data.js?v=20260919-boss-display"></script>
-<script src="js/state.js?v=20260919-boss-display"></script>
-<script src="js/exploration.js?v=20260919-boss-display"></script>
-<script src="js/events.js?v=20260919-boss-display"></script>
-<script src="js/character.js?v=20260919-boss-display"></script>
-<script src="js/combat.js?v=20260919-boss-display"></script>
-<script src="js/camp.js?v=20260919-boss-display"></script>
-<script src="js/ui.js?v=20260919-boss-display"></script>
-<script src="js/main.js?v=20260919-boss-display"></script>
+<script src="js/data.js?v=20260920-audit-optimized"></script>
+<script src="js/state.js?v=20260920-audit-optimized"></script>
+<script src="js/exploration.js?v=20260920-audit-optimized"></script>
+<script src="js/events.js?v=20260920-audit-optimized"></script>
+<script src="js/character.js?v=20260920-audit-optimized"></script>
+<script src="js/combat.js?v=20260920-audit-optimized"></script>
+<script src="js/camp.js?v=20260920-audit-optimized"></script>
+<script src="js/ui.js?v=20260920-audit-optimized"></script>
+<script src="js/main.js?v=20260920-audit-optimized"></script>
 
 
 </body>
