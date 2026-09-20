@@ -53,7 +53,11 @@ function isWorldEventAvailable(event, location) {
   if (event.timeOfDayIds && !event.timeOfDayIds.includes(getTimeOfDay())) return false;
   if (Number.isFinite(event.minLevel) && state.level < event.minLevel) return false;
   if (event.requiredShelterModule && !hasShelterModule(event.requiredShelterModule)) return false;
-  if (event.requiredEquipment && !(state.equipmentInventory || []).includes(event.requiredEquipment)) return false;
+  if (event.requiredEquipment) {
+    const carried = (state.equipmentInventory || []).includes(event.requiredEquipment);
+    const equipped = Object.values(state.equipped || {}).includes(event.requiredEquipment);
+    if (!carried && !equipped) return false;
+  }
   if (event.requiredAttribute) {
     const value = state.attributes?.[event.requiredAttribute.name] || 0;
     if (value < event.requiredAttribute.min) return false;
@@ -104,7 +108,9 @@ function showWorldEvent() {
     button.onclick = choose;
     choiceList.appendChild(button);
   });
-  document.getElementById("eventOverlay").classList.add("active");
+  const eventOverlay = document.getElementById("eventOverlay");
+  eventOverlay.classList.add("active");
+  eventOverlay.setAttribute("aria-hidden", "false");
 }
 
 function chooseWorldEvent(eventId, choiceId) {
@@ -113,7 +119,9 @@ function chooseWorldEvent(eventId, choiceId) {
   const choice = event?.choices.find(item => item.id === choiceId);
   if (!choice || !canChooseWorldEvent(choice)) return;
   state.pendingEvent = null;
-  document.getElementById("eventOverlay").classList.remove("active");
+  const eventOverlay = document.getElementById("eventOverlay");
+  eventOverlay.classList.remove("active");
+  eventOverlay.setAttribute("aria-hidden", "true");
 
   if (eventId === "river_fishing_spot" && choiceId === "cast") {
     const firstStored = addExpeditionLoot("Fisch");
