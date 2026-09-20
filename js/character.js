@@ -283,11 +283,11 @@ function equipItem(index) {
 
 
 function getAvailablePerks() {
-  return PERKS.filter(p => {
-    if (p.type === "card" && p.requiresCard) {
-    if (p.type === "special" && state.perks.includes(p.id)) return false;
-      if (!state.deck.includes(p.requiresCard)) return false;
-      if (p.effect === "removeCard" && state.deck.length <= 8) return false;
+  return PERKS.filter(perk => {
+    if (perk.type === "special" && state.perks.includes(perk.id)) return false;
+    if (perk.type === "card" && perk.requiresCard) {
+      if (!state.deck.includes(perk.requiresCard)) return false;
+      if (perk.effect === "removeCard" && state.deck.length <= 8) return false;
     }
     return true;
   });
@@ -347,8 +347,22 @@ function chooseCardReward(cardId) {
 }
 
 function showPerkOverlay() {
-  document.getElementById("perkOverlay").classList.add("active");
+  const overlay = document.getElementById("perkOverlay");
   const pool = getAvailablePerks();
+  if (pool.length === 0) {
+    const pending = Math.max(0, state.pendingLevelUps || 0);
+    state.attributes.ueberleben += pending;
+    state.pendingLevelUps = 0;
+    overlay.classList.remove("active");
+    if (pending > 0) {
+      log(`Alle besonderen Perks sind bereits vergeben. +${pending} Überleben als Ersatz.`);
+    }
+    saveGame();
+    render();
+    maybeShowCardReward();
+    return;
+  }
+  overlay.classList.add("active");
   const choices = shuffle(pool).slice(0, 3);
   const list = document.getElementById("perkList");
   list.innerHTML = "";
