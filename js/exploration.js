@@ -179,7 +179,6 @@ function continueExpedition() {
 function returnToCamp() {
   if (!state.expedition) return;
   const expedition = state.expedition;
-  const lootCount = Math.max(0, state.inventory.length - expedition.lootStart);
   const damage = Math.max(expedition.damage, expedition.startingHealth - state.health);
   const hours = expedition.hours;
   const securedLoot = secureExpeditionLoot();
@@ -402,6 +401,7 @@ function fishAtRiver() {
   checkDeathConditions();
   saveGame();
   render();
+  maybeShowPerkSelection();
   maybeTriggerWorldEvent(location);
 }
 
@@ -452,6 +452,7 @@ function gatherResources() {
   checkDeathConditions();
   saveGame();
   render();
+  maybeShowPerkSelection();
   maybeTriggerWorldEvent(location);
 }
 
