@@ -72,46 +72,58 @@ function getTimeOfDayExplorationProfile() {
 function getWeatherExplorationProfile() {
   if (state.weather === "Regen") {
     return {
-      note: "Regen · Energie+",
+      note: "Regen · Energie+ · Beute+",
       energySurcharge: 2,
       gatherChanceBonus: 0.12,
+      favoredGatherItems: ["Beeren", "Fisch", "Wasser", "Heilkräuter"],
       riskBonus: 2,
       enemyThresholdPenalty: 0,
       perceptionPenalty: 0,
-      eventChanceBonus: 0.02
+      eventChanceBonus: 0.04
     };
   }
   if (state.weather === "Nebel") {
     return {
-      note: "Nebel · Überraschungen",
+      note: "Nebel · Sicht− · Überraschungen",
       energySurcharge: 0,
       gatherChanceBonus: 0,
-      riskBonus: 4,
-      enemyThresholdPenalty: 0.10,
-      perceptionPenalty: 0.10,
-      eventChanceBonus: 0.08
+      favoredGatherItems: [],
+      riskBonus: 5,
+      enemyThresholdPenalty: 0.12,
+      perceptionPenalty: 0.12,
+      eventChanceBonus: 0.10
     };
   }
   if (state.weather === "Sturm") {
     return {
-      note: "Sturm · Gefahr+",
+      note: "Sturm · Gefahr++ · Ereignisse",
       energySurcharge: 4,
       gatherChanceBonus: 0,
-      riskBonus: 10,
-      enemyThresholdPenalty: 0.12,
-      perceptionPenalty: 0.05,
-      eventChanceBonus: 0.12
+      favoredGatherItems: [],
+      riskBonus: 12,
+      enemyThresholdPenalty: 0.16,
+      perceptionPenalty: 0.08,
+      eventChanceBonus: 0.16
     };
   }
   return {
-    note: "Klar",
+    note: "Klar · stabil",
     energySurcharge: 0,
     gatherChanceBonus: 0,
+    favoredGatherItems: [],
     riskBonus: 0,
     enemyThresholdPenalty: 0,
     perceptionPenalty: 0,
     eventChanceBonus: 0
   };
+}
+
+function getWeatherGatherChanceBonus(primaryItem, alternateItem) {
+  const profile = getWeatherExplorationProfile();
+  if (!profile.gatherChanceBonus || !Array.isArray(profile.favoredGatherItems)) return 0;
+  if (profile.favoredGatherItems.includes(primaryItem)) return profile.gatherChanceBonus;
+  if (profile.favoredGatherItems.includes(alternateItem)) return -profile.gatherChanceBonus;
+  return 0;
 }
 
 function selectLocation(loc) {
@@ -321,7 +333,7 @@ function renderActionCards() {
 
   label.textContent = location.name;
   const actionHint = document.querySelector(".actionHint");
-  if (actionHint) actionHint.textContent = `${location.identity} · ${getDangerLabel(location)} · ${timeProfile.note} · ${weatherProfile.note} · ${getDailyGoalHint()}`;
+  if (actionHint) actionHint.textContent = `${weatherProfile.note} · ${timeProfile.note} · ${location.identity} · ${getDangerLabel(location)} · ${getDailyGoalHint()}`;
   actionDiv.className = "actionCards";
   const actionDisabledLabel = canCarryLoot ? "Nicht genug Energie" : "Lager voll · Zum Shelter zurück";
   actionDiv.innerHTML = `
@@ -381,7 +393,7 @@ function fishAtRiver() {
   const timeProfile = getTimeOfDayExplorationProfile();
   const weatherProfile = getWeatherExplorationProfile();
   const energyCost = getEffectiveExplorationEnergyCost(
-    Math.max(1, 5 + escalation - timeProfile.gatherEnergyReduction)
+    Math.max(1, 5 + escalation - timeProfile.gatherEnergyReduction + timeProfile.energySurcharge)
       + weatherProfile.energySurcharge
   );
   if (state.energy < energyCost) {
@@ -400,7 +412,7 @@ function fishAtRiver() {
       + state.attributes.ueberleben * 0.04
       + state.attributes.wahrnehmung * 0.03
       + timeProfile.gatherChanceBonus
-      + weatherProfile.gatherChanceBonus
+      + getWeatherGatherChanceBonus("Fisch", "Wasser")
   );
   let gatheredItem;
   let resultMessage;
@@ -437,7 +449,7 @@ function gatherResources() {
   const timeProfile = getTimeOfDayExplorationProfile();
   const weatherProfile = getWeatherExplorationProfile();
   const energyCost = getEffectiveExplorationEnergyCost(
-    Math.max(1, 5 + escalation + getMountainColdPenalty(location) - timeProfile.gatherEnergyReduction)
+    Math.max(1, 5 + escalation + getMountainColdPenalty(location) - timeProfile.gatherEnergyReduction + timeProfile.energySurcharge)
       + weatherProfile.energySurcharge
   );
   if (state.energy < energyCost) { log("Zu wenig Energie zum Sammeln."); return; }
@@ -454,7 +466,7 @@ function gatherResources() {
     resultMessage = `${location.name}: ${location.gatherText}.`;
   } else if (Math.random() < Math.min(0.95, (location.gatherChance || 0.58)
       + timeProfile.gatherChanceBonus
-      + weatherProfile.gatherChanceBonus)) {
+      + getWeatherGatherChanceBonus(location.gatherItem, location.altGatherItem))) {
     gatheredItem = location.gatherItem || "Holz";
     addExpeditionLoot(gatheredItem);
     resultMessage = `${location.name}: ${location.gatherText}.`;
@@ -490,7 +502,7 @@ function trackLocation() {
   const timeProfile = getTimeOfDayExplorationProfile();
   const weatherProfile = getWeatherExplorationProfile();
   const energyCost = getEffectiveExplorationEnergyCost(
-    4 + escalation + getMountainColdPenalty(location) + weatherProfile.energySurcharge
+    4 + escalation + getMountainColdPenalty(location) + timeProfile.energySurcharge + weatherProfile.energySurcharge
   );
   if (state.energy < energyCost) { log("Zu wenig Energie, um Spuren zu lesen."); return; }
   if (!beginExpedition(location)) return;
@@ -504,6 +516,7 @@ function trackLocation() {
     0.45
       + state.attributes.wahrnehmung * 0.06
       + timeProfile.trackChanceBonus
+      - weatherProfile.perceptionPenalty
   );
   const trackReward = location.trackReward || null;
   if (Math.random() < perceptionChance) {
