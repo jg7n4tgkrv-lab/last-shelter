@@ -69,8 +69,8 @@ const EVENT_DB = {
     weatherIds: ["Sturm"],
     text: "Ein Blitz hat ein altes Relais freigelegt. Zwischen den nassen Kabeln blinkt noch ein schwaches Licht.",
     choices: [
-      { id: "salvage", name: "Relais bergen", desc: "Benötigt Wahrnehmung 2 · −4 Energie · +1 Metall · +14 XP", icon: "images/icons/metal-ingot.png", requirement: { attr: "wahrnehmung", min: 2 } },
-      { id: "shelter", name: "Schutz suchen", desc: "+2 Sicherheit · +5 XP", icon: "images/icons/flee.png" }
+      { id: "salvage", name: "Relais bergen", desc: "Benötigt Wahrnehmung 2 · −4 Energie · +1 Metall · +14 XP", icon: "images/icons/metal-ingot.png", requirement: { attr: "wahrnehmung", min: 2 }, setFlags: ["storm_relay_salvaged"] },
+      { id: "shelter", name: "Schutz suchen", desc: "+2 Sicherheit · +5 XP", icon: "images/icons/flee.png", setFlags: ["storm_relay_sheltered"] }
     ]
   },
   lookout_signal: {
@@ -122,8 +122,8 @@ const EVENT_DB = {
     timeOfDayIds: ["Morgen", "Mittag"],
     text: "Zwischen den Fichten entdeckst du die Reste eines alten Beobachtungspostens.",
     choices: [
-      { id: "search", name: "Wachposten durchsuchen", desc: "Benötigt Wahrnehmung 2 · +1 Leder · +12 XP", icon: "images/icons/compass.png", requirement: { attr: "wahrnehmung", min: 2 } },
-      { id: "mark", name: "Stelle markieren", desc: "+3 Sicherheit · +5 XP", icon: "images/icons/shelter.png" }
+      { id: "search", name: "Wachposten durchsuchen", desc: "Benötigt Wahrnehmung 2 · +1 Leder · +12 XP", icon: "images/icons/compass.png", requirement: { attr: "wahrnehmung", min: 2 }, setFlags: ["watchpost_searched"] },
+      { id: "mark", name: "Stelle markieren", desc: "+3 Sicherheit · +5 XP", icon: "images/icons/shelter.png", setFlags: ["watchpost_marked"] }
     ]
   },
   wolf_pack: {
@@ -266,6 +266,33 @@ const EVENT_DB = {
       { id:"antidote", name:"Gegengift einsetzen", desc:"Benötigt 1 Gegengift · +1 Heilkräuter · +10 XP", icon:"images/icons/poison.png", requirement:{ type:"consumable", item:"gegenmittel", amount:1 } },
       { id:"careful", name:"Vorsichtig hindurch", desc:"−5 Energie · −4 Leben · +5 XP", icon:"images/icons/herbs.png" },
       { id:"retreat", name:"Zurückweichen", desc:"Sicherer Weg zurück · Sicherheit +1", icon:"images/icons/flee.png" }
+    ]
+  },
+  relay_echo: {
+    title: "Antwort aus dem Relais",
+    tone: "positive",
+    weatherIds: ["Sturm", "Nebel"],
+    timeOfDayIds: ["Abend", "Nacht"],
+    requiresFlags: ["storm_relay_salvaged"],
+    cooldown: 8,
+    text: "Das geborgene Relais springt im Wind noch einmal an. Ein schwaches Signal antwortet aus der Dunkelheit.",
+    choices: [
+      { id: "follow", name: "Dem Signal folgen", desc: "−3 Energie · +2 Sicherheit · +12 XP", icon: "images/icons/compass.png", setFlags: ["relay_signal_followed"] },
+      { id: "secure", name: "Frequenz sichern", desc: "+3 Sicherheit · +6 XP", icon: "images/icons/shelter.png", setFlags: ["relay_signal_secured"] }
+    ]
+  },
+  watchpost_echo: {
+    title: "Zeichen am Wachposten",
+    tone: "neutral",
+    locationIds: ["wald"],
+    timeOfDayIds: ["Morgen", "Mittag"],
+    requiresFlags: ["watchpost_marked"],
+    requiresLocationProgress: { locationId: "wald", min: 2 },
+    once: true,
+    text: "Am markierten Wachposten findest du ein frisches Zeichen im Staub. Jemand hat deinen Hinweis gesehen.",
+    choices: [
+      { id: "search", name: "Nach einer Antwort suchen", desc: "Benötigt Wahrnehmung 2 · +1 Leder · +10 XP", icon: "images/icons/compass.png", requirement: { attr: "wahrnehmung", min: 2 } },
+      { id: "wait", name: "Zeichen ergänzen", desc: "+1 Moral · +1 Sicherheit · +5 XP", icon: "images/icons/shelter.png" }
     ]
   }
 };
