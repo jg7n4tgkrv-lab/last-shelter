@@ -1019,7 +1019,15 @@ body {
 .actionSection { margin: 4px 0 15px; }
 .actionSectionHead { display: flex; align-items: flex-end; justify-content: space-between; margin: 0 2px 9px; }
 .actionSectionHead h2 { margin: 3px 0 0; color: #eee9d5; font-size: 18px; }
-.actionHint { color: #788275; font-size: 10px; white-space: nowrap; }
+.actionHint {
+  color: #788275;
+  font-size: 10px;
+  max-width: 52%;
+  min-width: 0;
+  line-height: 1.25;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
 .actionCards { display: grid; gap: 8px; }
 .actionCard {
   width: 100%;
@@ -1375,6 +1383,7 @@ button,
   #main.exploreFixed #screenExplore .actionHint {
     max-width: 52%;
     overflow: hidden;
+    white-space: nowrap;
     text-overflow: ellipsis;
   }
 
@@ -2020,15 +2029,15 @@ button,
   </div>
 </div>
 
-<script src="js/data.js?v=20260920-phase15-time-effects"></script>
-<script src="js/state.js?v=20260920-phase15-time-effects"></script>
-<script src="js/exploration.js?v=20260920-phase15-time-effects"></script>
-<script src="js/events.js?v=20260920-phase15-time-effects"></script>
-<script src="js/character.js?v=20260920-phase15-time-effects"></script>
-<script src="js/combat.js?v=20260920-phase15-time-effects"></script>
-<script src="js/camp.js?v=20260920-phase15-time-effects"></script>
-<script src="js/ui.js?v=20260920-phase15-time-effects"></script>
-<script src="js/main.js?v=20260920-phase15-time-effects"></script>
+<script src="js/data.js?v=20260920-phase16-weather"></script>
+<script src="js/state.js?v=20260920-phase16-weather"></script>
+<script src="js/exploration.js?v=20260920-phase16-weather"></script>
+<script src="js/events.js?v=20260920-phase16-weather"></script>
+<script src="js/character.js?v=20260920-phase16-weather"></script>
+<script src="js/combat.js?v=20260920-phase16-weather"></script>
+<script src="js/camp.js?v=20260920-phase16-weather"></script>
+<script src="js/ui.js?v=20260920-phase16-weather"></script>
+<script src="js/main.js?v=20260920-phase16-weather"></script>
 
 
 </body>
