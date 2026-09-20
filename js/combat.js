@@ -449,19 +449,23 @@ function winCombat() {
     state.bossesDefeated[combat.bossLocationId] = true;
     const bossReward = ITEM_DB[combat.bossReward];
     if (bossReward) {
-      addExpeditionLoot(combat.bossReward, "equipment");
-      lootMsg += ` Einzigartige Beute: ${bossReward.name} (${getRarityLabel(bossReward)}).`;
+      const secured = addExpeditionLoot(combat.bossReward, "equipment");
+      lootMsg += secured
+        ? ` Einzigartige Beute: ${bossReward.name} (${getRarityLabel(bossReward)}).`
+        : " Die einzigartige Beute konnte wegen des vollen Lagers nicht gesichert werden.";
     }
   }
   if (Math.random() < 0.65 + expeditionLootBonus) {
-    addExpeditionLoot("Fleisch");
-    lootMsg += " Fleisch gefunden.";
+    const secured = addExpeditionLoot("Fleisch");
+    lootMsg += secured ? " Fleisch gefunden." : " Fleisch blieb wegen des vollen Lagers zurück.";
   }
   if (Math.random() < 0.4 + expeditionLootBonus) {
     const lootTable = getLootTableForEnemy(combat.enemyId);
     const itemId = lootTable[Math.floor(Math.random() * lootTable.length)];
-    addExpeditionLoot(itemId, "equipment");
-    lootMsg += ` Beute gefunden: ${ITEM_DB[itemId].name} (${getRarityLabel(ITEM_DB[itemId])}).`;
+    const secured = addExpeditionLoot(itemId, "equipment");
+    lootMsg += secured
+      ? ` Beute gefunden: ${ITEM_DB[itemId].name} (${getRarityLabel(ITEM_DB[itemId])}).`
+      : " Weitere Beute blieb wegen des vollen Lagers zurück.";
   }
   const resultLabel = combat.boss ? "Gebietsjäger besiegt" : "Sieg";
   state.pendingCardReward = drawCardRewardChoices(3);
