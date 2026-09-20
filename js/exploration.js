@@ -231,12 +231,16 @@ function renderActionCards() {
   const location = getSelectedLocation();
   const label = document.getElementById("selectedLocationLabel");
   const actionDiv = document.getElementById("actionCards");
+  const actionHint = document.querySelector(".actionHint");
   if (!label || !actionDiv) return;
+
+  const timeProfile = getTimeOfDayExplorationProfile();
+  const weatherProfile = getWeatherExplorationProfile();
+  label.textContent = location.name;
+  if (actionHint) actionHint.textContent = `${weatherProfile.note} · ${timeProfile.note} · ${location.identity} · ${getDangerLabel(location)} · ${getDailyGoalHint()}`;
 
   const escalation = getExpeditionEscalation();
   const coldPenalty = getMountainColdPenalty(location);
-  const timeProfile = getTimeOfDayExplorationProfile();
-  const weatherProfile = getWeatherExplorationProfile();
   const gatherEnergyCost = getEffectiveExplorationEnergyCost(
     Math.max(1, 5 + escalation + coldPenalty - timeProfile.gatherEnergyReduction + timeProfile.energySurcharge)
       + weatherProfile.energySurcharge
@@ -331,9 +335,6 @@ function renderActionCards() {
     return;
   }
 
-  label.textContent = location.name;
-  const actionHint = document.querySelector(".actionHint");
-  if (actionHint) actionHint.textContent = `${weatherProfile.note} · ${timeProfile.note} · ${location.identity} · ${getDangerLabel(location)} · ${getDailyGoalHint()}`;
   actionDiv.className = "actionCards";
   const actionDisabledLabel = canCarryLoot ? "Nicht genug Energie" : "Lager voll · Zum Shelter zurück";
   actionDiv.innerHTML = `
