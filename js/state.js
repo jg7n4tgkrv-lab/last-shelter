@@ -1,7 +1,7 @@
 /* Last Shelter – state and save services
    Phase 1 foundation: runtime state, persistence and pure state helpers.
 */
-const CURRENT_SAVE_VERSION = 4;
+const CURRENT_SAVE_VERSION = 5;
 
 let state = {
   saveVersion: CURRENT_SAVE_VERSION,
@@ -12,7 +12,7 @@ let state = {
   perks: [],
   equipmentInventory: [], equipped: { weapon: null, armor: null, tool: null, accessory: null },
   consumables: [],
-  timeHour: 8, weather: "Klar", pendingEvent: null,
+  timeHour: 8, weather: "Klar", pendingEvent: null, eventHistory: [], eventFlags: {},
   morale: 60, safety: 50, locationProgress: {}, bossesUnlocked: {}, bossesDefeated: {}, runStats: { expeditions:0, victories:0 }, pendingCardReward: [], dailyGoal: null, expedition: null
 };
 
@@ -41,7 +41,7 @@ function loadGame() {
       pendingLevelUps: 0,
       perks: [],
       equipmentInventory: [], equipped: { weapon: null, armor: null, tool: null, accessory: null },
-      consumables: [], timeHour: 8, weather: "Klar", pendingEvent: null,
+      consumables: [], timeHour: 8, weather: "Klar", pendingEvent: null, eventHistory: [], eventFlags: {},
       morale: 60, safety: 50, locationProgress: {}, runStats: { expeditions:0, victories:0 }, pendingCardReward: [], dailyGoal: null, expedition: null
     }, loaded);
     if (!Number.isFinite(state.saveVersion)) state.saveVersion = 1;
@@ -78,6 +78,14 @@ function loadGame() {
     if (state.timeHour === undefined) state.timeHour = 8;
     if (!state.weather) state.weather = "Klar";
     if (!state.pendingEvent || !EVENT_DB[state.pendingEvent.id]) state.pendingEvent = null;
+    if (!Array.isArray(state.eventHistory)) state.eventHistory = [];
+    state.eventHistory = state.eventHistory
+      .filter(eventId => typeof eventId === "string" && EVENT_DB[eventId])
+      .slice(-32);
+    if (!state.eventFlags || typeof state.eventFlags !== "object" || Array.isArray(state.eventFlags)) state.eventFlags = {};
+    state.eventFlags = Object.fromEntries(
+      Object.entries(state.eventFlags).filter(([flag, value]) => typeof flag === "string" && Boolean(value))
+    );
     if (!Number.isFinite(state.morale)) state.morale = 60;
     if (!Number.isFinite(state.safety)) state.safety = 50;
     state.morale = Math.max(0, Math.min(100, state.morale));
