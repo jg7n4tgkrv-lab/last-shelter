@@ -57,14 +57,14 @@ function renderCamp() {
         </div>
       </div>
       ${shelterModuleHtml}
-      <button class="campActionBtn shelterUpgrade${canUpgrade ? "" : " disabled"}" onclick="upgradeShelter()">
+      <button type="button" class="campActionBtn shelterUpgrade${canUpgrade ? "" : " disabled"}" onclick="upgradeShelter()" ${canUpgrade ? "" : "disabled"}>
         <span class="cIcon2"><img src="images/icons/chop-wood.png" alt=""></span>
         <span class="btnText">
           ${nextStage ? `Zu ${nextStage.name} ausbauen` : "Maximale Lagerstufe erreicht"}
           <span class="btnSub">${nextStage ? `${upgradeCost} Holz benötigt · vorhanden: ${countItem("Holz")} · +10 Energie · +10 Sicherheit` : "Dein Unterschlupf ist vollständig ausgebaut."}</span>
         </span>
       </button>
-      <button class="campActionBtn" onclick="sleepAtCamp()">
+      <button type="button" class="campActionBtn" onclick="sleepAtCamp()">
         <span class="cIcon2"><img src="images/icons/sleep.png" alt=""></span>
         <span class="btnText">
           Schlafen und neuen Tag beginnen
@@ -82,7 +82,7 @@ Object.entries(FOOD_DB).forEach(([foodId, food]) => {
   const hungerValue = food.hunger + hungerBonus;
   const foodEffectLabel = hungerBonus > 0 ? ` · Feuerstelle +${hungerBonus}` : "";
   foodButtons.push(`
-    <button class='campActionBtn' onclick='eatFood("${foodId}")'>
+    <button type='button' class='campActionBtn' onclick='eatFood("${foodId}")'>
       <span class='cIcon2'><img src="${food.icon}" alt=""></span>
       <span class='btnText'>
         ${food.label} essen (${count})
@@ -95,7 +95,7 @@ Object.entries(FOOD_DB).forEach(([foodId, food]) => {
 const wasserCount = countItem("Wasser");
 if (wasserCount > 0) {
   foodButtons.push(`
-    <button class='campActionBtn' onclick='drinkWater()'>
+    <button type='button' class='campActionBtn' onclick='drinkWater()'>
       <span class='cIcon2'><img src="${RESOURCE_DB.Wasser.icon}" alt=""></span>
       <span class='btnText'>
         Wasser trinken (${wasserCount})
@@ -108,7 +108,7 @@ document.getElementById("eatBtnWrap").innerHTML =
   foodButtons.length > 0
     ? foodButtons.join("")
     : `
-      <button class="campActionBtn disabled">
+      <button type="button" class="campActionBtn disabled" disabled>
         <span class="cIcon2">
           <img src="images/icons/berries.png" alt="">
         </span>
@@ -126,7 +126,7 @@ const bandageEffectLabel = getHealingItemBonus() > 0 ? ` · Krankenstation +${ge
 
 if (bandageCount > 0) {
   treatmentButtons.push(`
-    <button class="campActionBtn" onclick="useBandage()">
+    <button type="button" class="campActionBtn" onclick="useBandage()">
       <span class="cIcon2"><img src="images/icons/heal.png" alt=""></span>
       <span class="btnText">
         Verband benutzen (${bandageCount})
@@ -138,7 +138,7 @@ if (bandageCount > 0) {
 
 if (antidoteCount > 0) {
   treatmentButtons.push(`
-    <button class="campActionBtn disabled">
+    <button type="button" class="campActionBtn disabled" disabled>
       <span class="cIcon2"><img src="images/icons/poison.png" alt=""></span>
       <span class="btnText">
         Gegengift (${antidoteCount})
@@ -152,7 +152,7 @@ document.getElementById("bandageBtnWrap").innerHTML =
   treatmentButtons.length > 0
     ? treatmentButtons.join("")
     : `
-      <button class="campActionBtn disabled">
+      <button type="button" class="campActionBtn disabled" disabled>
         <span class="cIcon2">
           <img src="images/icons/heal.png" alt="">
         </span>
@@ -169,6 +169,8 @@ document.getElementById("bandageBtnWrap").innerHTML =
     const costLabel = formatRecipeCost(recipe);
     const haveLabel = Object.keys(recipe.cost).map(item => `${item}: ${countItem(item)}`).join(" · ");
     const btn = document.createElement("button");
+    btn.type = "button";
+    btn.disabled = !canCraft;
     btn.className = "campActionBtn" + (canCraft ? "" : " disabled");
     btn.innerHTML = `
   <span class="cIcon2">
@@ -290,20 +292,24 @@ function resolveNightRisk() {
   if (!chance || Math.random() >= chance) {
     return {
       type: "quiet",
-      label: state.safety >= 70 ? "Sichere Nacht" : "Ruhige Nacht"
+      label: state.safety >= 70 ? "Sichere Nacht" : "Ruhige Nacht",
+      moraleDelta: 0,
+      safetyDelta: 0
     };
   }
 
   const supplies = state.inventory.filter(item => FOOD_DB[item] || RESOURCE_DB[item]);
-  changeCampStatus(-5, -8);
+  const moraleDelta = -5;
+  const safetyDelta = -8;
+  changeCampStatus(moraleDelta, safetyDelta);
   if (supplies.length === 0) {
-    return { type: "raid", label: "Überfall abgewehrt" };
+    return { type: "raid", label: "Überfall: nichts zu holen", moraleDelta, safetyDelta };
   }
 
   const lostItem = supplies[Math.floor(Math.random() * supplies.length)];
   removeOneItem(lostItem);
   const itemName = FOOD_DB[lostItem]?.label || RESOURCE_DB[lostItem]?.label || lostItem;
-  return { type: "raid", label: `Überfall: ${itemName} verloren` };
+  return { type: "raid", label: `Überfall: ${itemName} verloren`, moraleDelta, safetyDelta };
 }
 
 function sleepAtCamp() {
@@ -314,10 +320,12 @@ function sleepAtCamp() {
   }
   const oldHealth = state.health;
   const oldHunger = state.hunger;
+  const oldMorale = state.morale;
+  const oldSafety = state.safety;
+  const nightReport = resolveNightRisk();
   const sleepHealthRecovery = getSleepHealthRecovery();
   const sleepEnergyRecovery = getSleepEnergyRecovery();
   const sleepQuality = getSleepQualityLabel();
-  const nightReport = resolveNightRisk();
   state.energy = sleepEnergyRecovery;
   state.health = Math.min(getMaxHealth(), state.health + sleepHealthRecovery);
   state.hunger = Math.max(0, state.hunger - 15);
@@ -334,6 +342,8 @@ function sleepAtCamp() {
   showMorningSummary({
     healthGain: state.health - oldHealth,
     hungerCost: oldHunger - state.hunger,
+    moraleDelta: state.morale - oldMorale,
+    safetyDelta: state.safety - oldSafety,
     nightReport
   });
 }
@@ -352,7 +362,7 @@ function showMorningSummary(summary) {
     <div class="morningFact">Energie<strong>${state.energy}/${getMaxEnergy()}</strong></div>
     <div class="morningFact">Leben<strong>+${summary.healthGain}</strong></div>
     <div class="morningFact">Hunger<strong>−${summary.hungerCost}</strong></div>
-    <div class="morningFact">Lagerstatus<strong>+5 Moral · +2 Sicherheit</strong></div>
+    <div class="morningFact">Lagerstatus<strong>${summary.moraleDelta >= 0 ? "+" : ""}${summary.moraleDelta} Moral · ${summary.safetyDelta >= 0 ? "+" : ""}${summary.safetyDelta} Sicherheit</strong></div>
   `;
   overlay.classList.add("active");
 
