@@ -26,9 +26,13 @@ function getWorldEventChance(location) {
 }
 
 function getWorldEventWeight(event) {
-  if (event?.tone === "positive" && (state.morale >= 70 || state.safety >= 70)) return 1.35;
-  if (event?.tone === "risky" && (state.morale <= 25 || state.safety <= 25)) return 1.35;
-  return 1;
+  let weight = 1;
+  if (event?.tone === "positive" && (state.morale >= 70 || state.safety >= 70)) weight *= 1.35;
+  if (event?.tone === "risky" && (state.morale <= 25 || state.safety <= 25)) weight *= 1.35;
+  if (event?.weatherIds?.includes(state.weather)) {
+    weight *= state.weather === "Sturm" ? 1.65 : 1.25;
+  }
+  return weight;
 }
 
 function pickWorldEventId(eventIds) {
