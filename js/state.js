@@ -49,6 +49,7 @@ function loadGame() {
     state.deck = state.deck.filter(cardId => CARD_DB[cardId]);
     if (state.deck.length === 0) state.deck = [...DEFAULT_DECK];
     if (!Array.isArray(state.inventory)) state.inventory = [];
+    state.inventory = state.inventory.filter(itemId => FOOD_DB[itemId] || RESOURCE_DB[itemId]);
     if (!Array.isArray(state.equipmentInventory)) state.equipmentInventory = [];
     state.equipmentInventory = state.equipmentInventory.filter(itemId => ITEM_DB[itemId]);
     if (!Array.isArray(state.shelterModules)) state.shelterModules = [];
@@ -116,6 +117,7 @@ function loadGame() {
         if (!Array.isArray(expedition.loot.equipment)) expedition.loot.equipment = [];
         if (!Array.isArray(expedition.loot.consumables)) expedition.loot.consumables = [];
       }
+      expedition.loot.inventory = expedition.loot.inventory.filter(itemId => FOOD_DB[itemId] || RESOURCE_DB[itemId]);
       expedition.loot.equipment = expedition.loot.equipment.filter(itemId => ITEM_DB[itemId]);
       expedition.loot.consumables = expedition.loot.consumables.filter(itemId => RECIPES.some(recipe => recipe.id === itemId));
       expedition.awaitingDecision = Boolean(expedition.awaitingDecision);
@@ -141,12 +143,18 @@ function saveGame() {
 
 function addExpeditionLoot(itemId, type = "inventory") {
   if (!itemId) return false;
+  const validTypes = ["inventory", "equipment", "consumables"];
+  const targetType = validTypes.includes(type) ? type : "inventory";
+  const validItem = targetType === "inventory"
+    ? Boolean(FOOD_DB[itemId] || RESOURCE_DB[itemId])
+    : targetType === "equipment"
+      ? Boolean(ITEM_DB[itemId])
+      : RECIPES.some(recipe => recipe.id === itemId);
+  if (!validItem) return false;
   if (!hasInventorySpace()) {
     if (typeof log === "function") log("Dein Lager ist voll. Kehre zum Shelter zurück.");
     return false;
   }
-  const validTypes = ["inventory", "equipment", "consumables"];
-  const targetType = validTypes.includes(type) ? type : "inventory";
   if (state.expedition?.loot && Array.isArray(state.expedition.loot[targetType])) {
     state.expedition.loot[targetType].push(itemId);
     return true;
