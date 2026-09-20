@@ -17,12 +17,11 @@ function getWorldEventChance(location) {
     : 0;
   const moraleModifier = state.morale <= 25 ? 0.08 : state.morale >= 70 ? -0.04 : 0;
   const safetyModifier = state.safety <= 25 ? 0.10 : state.safety >= 70 ? -0.06 : 0;
-  const timeOfDay = getTimeOfDay();
-  const timeModifier = timeOfDay === "Nacht" ? 0.10 : timeOfDay === "Abend" ? 0.05 : 0;
+  const timeProfile = getTimeOfDayExplorationProfile();
   const weatherModifier = getWeatherExplorationProfile().eventChanceBonus;
   return Math.max(
     0.08,
-    Math.min(0.64, 0.16 + (location.danger * 0.18) + expeditionRiskBonus + moraleModifier + safetyModifier + timeModifier + weatherModifier)
+    Math.min(0.64, 0.16 + (location.danger * 0.18) + expeditionRiskBonus + moraleModifier + safetyModifier + timeProfile.eventChanceBonus + weatherModifier)
   );
 }
 
