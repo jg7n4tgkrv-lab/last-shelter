@@ -1,6 +1,37 @@
 /* Last Shelter – World event system */
 
+function hasEventFlag(flag) {
+  return Boolean(flag && state.eventFlags && state.eventFlags[flag]);
+}
+
+function hasAllEventFlags(flags) {
+  return !Array.isArray(flags) || flags.every(hasEventFlag);
+}
+
+function hasAnyEventFlag(flags) {
+  return Array.isArray(flags) && flags.some(hasEventFlag);
+}
+
+function applyEventChoiceFlags(choice) {
+  if (!state.eventFlags || typeof state.eventFlags !== "object") state.eventFlags = {};
+  (Array.isArray(choice?.setFlags) ? choice.setFlags : []).forEach(flag => {
+    if (typeof flag === "string" && flag) state.eventFlags[flag] = true;
+  });
+  (Array.isArray(choice?.clearFlags) ? choice.clearFlags : []).forEach(flag => {
+    if (typeof flag === "string" && flag) delete state.eventFlags[flag];
+  });
+}
+
+function recordWorldEvent(eventId) {
+  if (!eventId) return;
+  if (!Array.isArray(state.eventHistory)) state.eventHistory = [];
+  state.eventHistory.push(eventId);
+  state.eventHistory = state.eventHistory.slice(-32);
+}
+
 function canChooseWorldEvent(choice) {
+  if (!hasAllEventFlags(choice?.requiresFlags)) return false;
+  if (hasAnyEventFlag(choice?.forbiddenFlags)) return false;
   const requirement = choice?.requirement;
   if (!requirement) return true;
   if (requirement.type === "consumable") {
@@ -55,6 +86,20 @@ function isWorldEventAvailable(event, location) {
   if (event.weatherIds && !event.weatherIds.includes(state.weather)) return false;
   if (event.timeOfDayIds && !event.timeOfDayIds.includes(getTimeOfDay())) return false;
   if (Number.isFinite(event.minLevel) && state.level < event.minLevel) return false;
+  if (!hasAllEventFlags(event.requiresFlags)) return false;
+  if (hasAnyEventFlag(event.forbiddenFlags)) return false;
+  if (Array.isArray(event.requiresEventHistory) && !event.requiresEventHistory.every(eventId => state.eventHistory.includes(eventId))) return false;
+  if (Array.isArray(event.forbiddenEventHistory) && event.forbiddenEventHistory.some(eventId => state.eventHistory.includes(eventId))) return false;
+  if (event.requiresBossDefeated && !state.bossesDefeated?.[event.requiresBossDefeated]) return false;
+  if (event.requiresBossUnlocked && !state.bossesUnlocked?.[event.requiresBossUnlocked]) return false;
+  if (event.requiresLocationProgress) {
+    const progressRule = event.requiresLocationProgress;
+    const progress = Number.isFinite(state.locationProgress?.[progressRule.locationId])
+      ? state.locationProgress[progressRule.locationId]
+      : 0;
+    if (Number.isFinite(progressRule.min) && progress < progressRule.min) return false;
+    if (Number.isFinite(progressRule.max) && progress > progressRule.max) return false;
+  }
   if (event.requiredShelterModule && !hasShelterModule(event.requiredShelterModule)) return false;
   if (event.requiredEquipment) {
     const carried = (state.equipmentInventory || []).includes(event.requiredEquipment);
@@ -68,8 +113,18 @@ function isWorldEventAvailable(event, location) {
   return true;
 }
 
+function isWorldEventOnCooldown(eventId, event) {
+  const history = Array.isArray(state.eventHistory) ? state.eventHistory : [];
+  if (event?.once && history.includes(eventId)) return true;
+  const cooldown = Number.isFinite(event?.cooldown) ? Math.max(0, Math.floor(event.cooldown)) : 3;
+  return cooldown > 0 && history.slice(-cooldown).includes(eventId);
+}
+
 function getAvailableWorldEventIds(location) {
-  return Object.keys(EVENT_DB).filter(id => isWorldEventAvailable(EVENT_DB[id], location));
+  const candidates = Object.keys(EVENT_DB).filter(id => isWorldEventAvailable(EVENT_DB[id], location));
+  const fresh = candidates.filter(id => !isWorldEventOnCooldown(id, EVENT_DB[id]));
+  if (fresh.length > 0) return fresh;
+  return candidates.filter(id => !(EVENT_DB[id]?.once && state.eventHistory.includes(id)));
 }
 
 function maybeTriggerWorldEvent(location) {
@@ -121,12 +176,34 @@ function chooseWorldEvent(eventId, choiceId) {
   const event = EVENT_DB[eventId];
   const choice = event?.choices.find(item => item.id === choiceId);
   if (!choice || !canChooseWorldEvent(choice)) return;
+  recordWorldEvent(eventId);
+  applyEventChoiceFlags(choice);
   state.pendingEvent = null;
   const eventOverlay = document.getElementById("eventOverlay");
   eventOverlay.classList.remove("active");
   eventOverlay.setAttribute("aria-hidden", "true");
 
-  if (eventId === "river_fishing_spot" && choiceId === "cast") {
+  if (eventId === "relay_echo" && choiceId === "follow") {
+    state.energy = Math.max(0, state.energy - 3);
+    state.xp += 12;
+    changeCampStatus(2, 1);
+    log("Du bist dem Relais-Signal gefolgt. −3 Energie, +2 Sicherheit und +12 XP.");
+  } else if (eventId === "relay_echo" && choiceId === "secure") {
+    state.xp += 6;
+    changeCampStatus(0, 3);
+    log("Du hast die Frequenz des Relais gesichert. +3 Sicherheit und +6 XP.");
+  } else if (eventId === "watchpost_echo" && choiceId === "search") {
+    const stored = addExpeditionLoot("Leder");
+    state.xp += 10;
+    changeCampStatus(2, 0);
+    log(stored
+      ? "Du hast am Wachposten frisches Leder gefunden. +10 XP."
+      : "Du hast am Wachposten gesucht, aber dein Lager ist voll. +10 XP.");
+  } else if (eventId === "watchpost_echo" && choiceId === "wait") {
+    state.xp += 5;
+    changeCampStatus(1, 1);
+    log("Du hast das Zeichen ergänzt. +1 Moral, +1 Sicherheit und +5 XP.");
+  } else if (eventId === "river_fishing_spot" && choiceId === "cast") {
     const firstStored = addExpeditionLoot("Fisch");
     const secondStored = addExpeditionLoot("Fisch");
     state.xp += 10;
