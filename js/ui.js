@@ -9,6 +9,19 @@ function shuffle(arr) {
   return a;
 }
 
+function hasActiveBossAction() {
+  const location = LOCATIONS.find(loc => loc.id === selectedLocationId);
+  return Boolean(location && state.bossesUnlocked?.[location.id] && !state.bossesDefeated?.[location.id]);
+}
+
+function updateExploreLayoutMode() {
+  const main = document.getElementById("main");
+  if (!main) return;
+  const compactExplore = currentTab === "screenExplore" && !hasActiveBossAction();
+  main.classList.toggle("exploreFixed", compactExplore);
+  main.classList.toggle("exploreExpanded", currentTab === "screenExplore" && !compactExplore);
+}
+
 function switchTab(tabId) {
   currentTab = tabId;
   document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
@@ -17,7 +30,7 @@ function switchTab(tabId) {
   const main = document.getElementById("main");
   if (main) {
     main.scrollTop = 0;
-    main.classList.toggle("exploreFixed", tabId === "screenExplore");
+    updateExploreLayoutMode();
   }
   if (tabId === "screenCamp") renderCamp();
   if (tabId === "screenCharacter") renderCharacter();
@@ -190,12 +203,21 @@ function createDailyGoal(day) {
 }
 
 function ensureDailyGoal() {
-  if (!state.dailyGoal || state.dailyGoal.day !== state.day) {
+  const template = DAILY_GOALS.find(goal => goal.type === state.dailyGoal?.type);
+  if (!state.dailyGoal || state.dailyGoal.day !== state.day || !template) {
     state.dailyGoal = createDailyGoal(state.day);
+    return;
   }
+  state.dailyGoal = {
+    ...state.dailyGoal,
+    type: template.type,
+    label: template.label,
+    target: template.target,
+    day: state.day
+  };
   if (!Number.isFinite(state.dailyGoal.progress)) state.dailyGoal.progress = 0;
-  state.dailyGoal.progress = Math.max(0, Math.min(state.dailyGoal.target, state.dailyGoal.progress));
-  state.dailyGoal.completed = state.dailyGoal.progress >= state.dailyGoal.target;
+  state.dailyGoal.progress = Math.max(0, Math.min(template.target, state.dailyGoal.progress));
+  state.dailyGoal.completed = state.dailyGoal.progress >= template.target;
 }
 
 function getDailyGoalHint() {
@@ -242,8 +264,7 @@ function showVitalDelta(elementId, delta) {
 
 function render() {
   updateBodyClass();
-  const main = document.getElementById("main");
-  if (main) main.classList.toggle("exploreFixed", currentTab === "screenExplore");
+  updateExploreLayoutMode();
   const maxHp = getMaxHealth();
 
   document.getElementById("quickStats").innerHTML = `
@@ -471,12 +492,17 @@ function log(msg) {
 }
 
 function checkLevelUp() {
-  const needed = state.level * 50;
-  if (state.xp >= needed) {
+  let levelsGained = 0;
+  while (state.xp >= state.level * 50) {
+    state.xp -= state.level * 50;
     state.level += 1;
-    state.xp = 0;
     state.pendingLevelUps = (state.pendingLevelUps || 0) + 1;
+    levelsGained += 1;
+  }
+  if (levelsGained === 1) {
     log(`Level Up! Du bist jetzt Level ${state.level}.`);
+  } else if (levelsGained > 1) {
+    log(`${levelsGained} Level-Ups! Du bist jetzt Level ${state.level}.`);
   }
 }
 
